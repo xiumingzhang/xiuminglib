@@ -22,7 +22,6 @@ import sys
 import os.path as osp
 sys.path.insert(0, osp.abspath('../../'))
 
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
