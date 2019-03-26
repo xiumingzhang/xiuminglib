@@ -4,5 +4,4 @@ matplotlib
 opencv-python
 
 # Blender
-python==3.5
 bpy
