@@ -4,5 +4,5 @@ matplotlib
 opencv-python
 
 # Blender
-future-fstrings
+python==3.5
 bpy
