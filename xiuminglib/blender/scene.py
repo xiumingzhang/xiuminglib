@@ -7,7 +7,11 @@ July 2017
 
 from os import makedirs, remove
 from os.path import abspath, dirname, exists
-import bpy
+try:
+    import bpy
+except ModuleNotFoundError:
+    # For building the doc
+    pass
 
 import config
 logger, thisfile = config.create_logger(abspath(__file__))

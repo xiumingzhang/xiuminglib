@@ -9,11 +9,15 @@ from os import remove, rename
 from os.path import abspath, dirname, basename
 from time import time
 import numpy as np
-import bpy
-import bmesh
-from mathutils import Vector, Matrix, Quaternion
-from mathutils.bvhtree import BVHTree
-from xiuminglib.blender import object as xb_object
+try:
+    import bpy
+    import bmesh
+    from mathutils import Vector, Matrix, Quaternion
+    from mathutils.bvhtree import BVHTree
+except ModuleNotFoundError:
+    # For building the doc
+    pass
+from .object import get_bmesh
 
 import config
 logger, thisfile = config.create_logger(abspath(__file__))
@@ -590,7 +594,7 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
     trees = {}
     for obj_name in obj_names:
         obj = objs[obj_name]
-        bm = xb_object.get_bmesh(obj)
+        bm = get_bmesh(obj)
         trees[obj_name] = BVHTree.FromBMesh(bm)
 
     xyzs = [None] * uvs.shape[0]

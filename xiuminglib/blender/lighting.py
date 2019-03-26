@@ -7,8 +7,12 @@ July 2017
 
 from os.path import abspath
 import numpy as np
-import bpy
-from mathutils import Vector
+try:
+    import bpy
+    from mathutils import Vector
+except ModuleNotFoundError:
+    # For building the doc
+    pass
 
 import config
 logger, thisfile = config.create_logger(abspath(__file__))

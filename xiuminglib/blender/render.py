@@ -9,7 +9,11 @@ from os import makedirs
 from os.path import abspath, dirname, exists, join
 from shutil import move
 from time import time
-import bpy
+try:
+    import bpy
+except ModuleNotFoundError:
+    # For building the doc
+    pass
 
 import config
 logger, thisfile = config.create_logger(abspath(__file__))

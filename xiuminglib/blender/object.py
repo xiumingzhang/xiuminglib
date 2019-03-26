@@ -10,9 +10,13 @@ Contributor: Xingyuan Sun
 import re
 from os.path import abspath, basename
 import numpy as np
-import bpy
-import bmesh
-from mathutils import Matrix, Vector
+try:
+    import bpy
+    import bmesh
+    from mathutils import Matrix, Vector
+except ModuleNotFoundError:
+    # For building the doc
+    pass
 
 import config
 logger, thisfile = config.create_logger(abspath(__file__))
