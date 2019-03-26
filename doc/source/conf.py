@@ -19,8 +19,8 @@
 #
 import os
 import sys
-import os.path as osp
-sys.path.insert(0, osp.abspath('../../'))
+
+sys.path.insert(0, '../../')
 
 # -- General configuration ------------------------------------------------
 
