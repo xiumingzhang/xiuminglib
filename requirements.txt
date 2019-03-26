@@ -1,4 +1,5 @@
 numpy
 scipy
-opencv-python
 matplotlib
+opencv-python
+bpy
