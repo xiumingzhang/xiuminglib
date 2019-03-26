@@ -21,6 +21,8 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('../../'))
 
+html_favicon = os.path.abspath('./source/_static/xiu.ico')
+
 
 # -- General configuration ------------------------------------------------
 
