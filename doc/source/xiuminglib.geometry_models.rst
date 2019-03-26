@@ -1,5 +1,5 @@
-xiuminglib.geometry_models package
-==================================
+xiuminglib\.geometry\_models package
+====================================
 
 .. automodule:: xiuminglib.geometry_models
     :members:
@@ -9,8 +9,8 @@ xiuminglib.geometry_models package
 Submodules
 ----------
 
-xiuminglib.geometry_models.ObjMtl module
-----------------------------------------
+xiuminglib\.geometry\_models\.ObjMtl module
+-------------------------------------------
 
 .. automodule:: xiuminglib.geometry_models.ObjMtl
     :members:

@@ -1,5 +1,5 @@
-xiuminglib.blender package
-==========================
+xiuminglib\.blender package
+===========================
 
 .. automodule:: xiuminglib.blender
     :members:
@@ -9,40 +9,40 @@ xiuminglib.blender package
 Submodules
 ----------
 
-xiuminglib.blender.camera module
---------------------------------
+xiuminglib\.blender\.camera module
+----------------------------------
 
 .. automodule:: xiuminglib.blender.camera
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.blender.lighting module
-----------------------------------
+xiuminglib\.blender\.lighting module
+------------------------------------
 
 .. automodule:: xiuminglib.blender.lighting
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.blender.object module
---------------------------------
+xiuminglib\.blender\.object module
+----------------------------------
 
 .. automodule:: xiuminglib.blender.object
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.blender.render module
---------------------------------
+xiuminglib\.blender\.render module
+----------------------------------
 
 .. automodule:: xiuminglib.blender.render
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.blender.scene module
--------------------------------
+xiuminglib\.blender\.scene module
+---------------------------------
 
 .. automodule:: xiuminglib.blender.scene
     :members:

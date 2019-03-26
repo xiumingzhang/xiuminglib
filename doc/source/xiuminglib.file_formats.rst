@@ -1,5 +1,5 @@
-xiuminglib.file_formats package
-===============================
+xiuminglib\.file\_formats package
+=================================
 
 .. automodule:: xiuminglib.file_formats
     :members:
@@ -9,8 +9,8 @@ xiuminglib.file_formats package
 Submodules
 ----------
 
-xiuminglib.file_formats.exr module
-----------------------------------
+xiuminglib\.file\_formats\.exr module
+-------------------------------------
 
 .. automodule:: xiuminglib.file_formats.exr
     :members:
