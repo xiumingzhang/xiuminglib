@@ -2,7 +2,4 @@ numpy
 scipy
 matplotlib
 opencv-python
-
-# Blender
-future-fstrings
 bpy
