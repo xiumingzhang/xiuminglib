@@ -1,7 +1,6 @@
 numpy
 scipy
 matplotlib
-
 opencv-python
 
 # If you need Blender, then
