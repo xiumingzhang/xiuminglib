@@ -17,10 +17,11 @@ try:
 except ModuleNotFoundError:
     # For building the doc
     pass
-from .object import get_bmesh
 
 import config
 logger, thisfile = config.create_logger(abspath(__file__))
+
+from .object import get_bmesh
 
 
 def add_camera(xyz=(0, 0, 0),

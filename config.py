@@ -1,7 +1,6 @@
 import logging
 import logging_colorer # noqa: F401 # pylint: disable=unused-import
 
-
 logging_warn = logging.WARN
 
 
