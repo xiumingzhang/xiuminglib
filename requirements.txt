@@ -2,4 +2,4 @@ numpy
 scipy
 matplotlib
 opencv-python
-bpy
+bpy-build
