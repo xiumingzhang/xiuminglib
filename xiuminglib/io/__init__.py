@@ -1,9 +1,6 @@
 __all__ = [
-    'camera',
-    'lighting',
-    'object',
-    'scene',
-    'render',
+    'EXR',
+    'ObjMtl',
 ]
 
 from . import * # noqa: F403 # pylint: disable=wildcard-import

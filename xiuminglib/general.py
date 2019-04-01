@@ -1,10 +1,3 @@
-"""
-General Utility Functions
-
-Xiuming Zhang, MIT CSAIL
-April 2018
-"""
-
 import sys
 from os import makedirs
 from os.path import abspath, join, exists, dirname

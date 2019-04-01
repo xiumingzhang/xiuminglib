@@ -1,10 +1,3 @@
-"""
-Utility functions for Blender renderings
-
-Xiuming Zhang, MIT CSAIL
-July 2017
-"""
-
 from os import makedirs
 from os.path import abspath, dirname, exists, join
 from shutil import move

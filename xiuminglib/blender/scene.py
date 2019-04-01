@@ -1,10 +1,3 @@
-"""
-Utility functions for manipulating Blender scenes
-
-Xiuming Zhang, MIT CSAIL
-July 2017
-"""
-
 from os import makedirs, remove
 from os.path import abspath, dirname, exists
 try:

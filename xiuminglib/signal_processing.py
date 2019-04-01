@@ -1,10 +1,3 @@
-"""
-Functions for Signal Processing Techniques
-
-Xiuming Zhang, MIT CSAIL
-August 2017
-"""
-
 import numpy as np
 from scipy.sparse import issparse
 from scipy.sparse.linalg import eigsh

@@ -1,10 +1,3 @@
-"""
-Utility functions for manipulating cameras in Blender
-
-Xiuming Zhang, MIT CSAIL
-July 2017
-"""
-
 from os import remove, rename
 from os.path import abspath, dirname, basename
 from time import time

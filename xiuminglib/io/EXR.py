@@ -1,10 +1,3 @@
-"""
-Handling (Multi-Layer) OpenEXR Files
-
-Xiuming Zhang, MIT CSAIL
-August 2018
-"""
-
 from os import makedirs
 from os.path import abspath, dirname, exists, join, basename
 import numpy as np

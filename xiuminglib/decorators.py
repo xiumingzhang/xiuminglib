@@ -1,10 +1,3 @@
-"""
-Decorators
-
-Xiuming Zhang, MIT CSAIL
-April 2017
-"""
-
 from time import time, sleep
 from os import makedirs
 from os.path import abspath, join, dirname

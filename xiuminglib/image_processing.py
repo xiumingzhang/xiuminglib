@@ -1,10 +1,3 @@
-"""
-Image Processing Functions
-
-Xiuming Zhang, MIT CSAIL
-June 2017
-"""
-
 from os.path import abspath
 from copy import deepcopy
 import numpy as np

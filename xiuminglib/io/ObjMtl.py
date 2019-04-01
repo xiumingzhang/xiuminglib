@@ -1,10 +1,3 @@
-"""
-Class for Obj and Mtl
-
-Xiuming Zhang, MIT CSAIL
-June 2017
-"""
-
 from os import makedirs
 from os.path import abspath, basename, dirname, exists, join
 from shutil import copy

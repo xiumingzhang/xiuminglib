@@ -1,10 +1,3 @@
-"""
-Utility Functions for Simple Geometry Processing
-
-Xiuming Zhang, MIT CSAIL
-June 2017
-"""
-
 from os.path import abspath
 import numpy as np
 

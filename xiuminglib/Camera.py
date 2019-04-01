@@ -1,10 +1,3 @@
-"""
-Camera Class
-
-Xiuming Zhang, MIT CSAIL
-November 2017
-"""
-
 import numpy as np
 
 

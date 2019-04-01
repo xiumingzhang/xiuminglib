@@ -1,10 +1,3 @@
-"""
-Tracker classes
-
-Xiuming Zhang, MIT CSAIL
-November 2017
-"""
-
 from os.path import join
 import numpy as np
 import cv2

@@ -1,11 +1,6 @@
 """
-Utility Functions for Visualizations
-
-Xiuming Zhang, MIT CSAIL
-June 2017
+This module should be imported before ``skimage`` to avoid the ``matplotlib`` backend problem.
 """
-
-# Should be imported before skimage to avoid the matplotlib backend problem
 
 from os import makedirs, environ
 from os.path import dirname, exists, abspath, join

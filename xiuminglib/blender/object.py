@@ -1,12 +1,3 @@
-"""
-Utility functions for manipulating objects in Blender
-
-Xiuming Zhang, MIT CSAIL
-July 2017
-
-Contributor: Xingyuan Sun
-"""
-
 import re
 from os.path import abspath, basename
 import numpy as np

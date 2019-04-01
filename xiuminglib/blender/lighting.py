@@ -1,10 +1,3 @@
-"""
-Utility functions for manipulating Blender lighting
-
-Xiuming Zhang, MIT CSAIL
-July 2017
-"""
-
 from os.path import abspath
 import numpy as np
 try:
