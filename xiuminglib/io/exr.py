@@ -22,17 +22,18 @@ class EXR():
         self.data = self.load()
 
     def load(self):
-        """Loads an EXR as a dictionary of NumPy arrays.
+        r"""Loads an EXR as a dictionary of NumPy arrays.
 
         Requires writing a ``.npz`` to ``/tmp/`` and then loading it, because
         the conversion process has to be done in Python 2.x as a subprocess call,
-        unfortuantely (in-memory loading with OpenCV handles <=3 channels).
+        unfortuantely. If :math:`\leq3` channels, can use OpenCV for in-memory loading.
 
         Returns:
             data (dict): Loaded EXR data.
         """
         from time import time
-        from subprocess import Popen, PIPE
+        from subprocess import Popen
+        logger_name = thisfile + '->EXR:load()'
         npz_f = '/tmp/%s_t%s.npz' % \
             (basename(self.exr_f).replace('.exr', ''), time())
         # Convert to .npz
@@ -40,11 +41,12 @@ class EXR():
         # Has to go through IO. Maybe there's a better way?
         cwd = join(dirname(abspath(__file__)), '..', '..', 'cli')
         bash_cmd = 'python2 exr2npz.py %s %s' % (self.exr_f, npz_f)
-        process = Popen(bash_cmd.split(), stdout=PIPE, cwd=cwd)
-        out, err = process.communicate()
-        print(err)
+        process = Popen(bash_cmd.split(), cwd=cwd)
+        _, _ = process.communicate()
         # Load this .npz
         data = np.load(npz_f)
+        logger.name = logger_name
+        logger.info("Loaded %s", self.exr_f)
         return data
 
     def extract_depth(self, alpha_exr, outpath, vis_raw=False):
@@ -59,7 +61,7 @@ class EXR():
             vis_raw (bool, optional): Whether to visualize the raw values as an image.
                 Defaults to False.
         """
-        logger_name = thisfile + '->extract_depth()'
+        logger_name = thisfile + '->EXR:extract_depth()'
         dtype = 'uint8'
         dtype_max = np.iinfo(dtype).max
         # Load alpha
@@ -185,6 +187,7 @@ def main():
     tmp_dir = environ['TMP_DIR']
     exr_f = join(tmp_dir, 'test.exr')
     exr = EXR(exr_f)
+    exr.extract_normal(join(tmp_dir, 'test.png'), vis=True)
 
 
 if __name__ == '__main__':

@@ -65,14 +65,6 @@ xiuminglib\.image\_processing module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.logging\_colorer module
------------------------------------
-
-.. automodule:: xiuminglib.logging_colorer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 xiuminglib\.signal\_processing module
 -------------------------------------
 
