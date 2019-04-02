@@ -1,6 +1,5 @@
-"""
-This module should be imported before ``skimage`` to avoid the ``matplotlib`` backend problem.
-"""
+"""This module should be imported before ``skimage`` to
+avoid the ``matplotlib`` backend problem."""
 
 from os import makedirs, environ
 from os.path import dirname, exists, abspath, join
@@ -15,7 +14,7 @@ import matplotlib.colors as mcolors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
 
-import config
+from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 

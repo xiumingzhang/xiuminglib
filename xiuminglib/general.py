@@ -5,7 +5,7 @@ import re
 from glob import glob
 import numpy as np
 
-import config
+from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 

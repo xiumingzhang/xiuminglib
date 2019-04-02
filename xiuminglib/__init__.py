@@ -1,13 +1,14 @@
 __all__ = [
     'blender',
-    'Camera',
+    'camera',
+    'config',
     'decorators',
     'general',
     'geometry',
     'image_processing',
     'io',
     'signal_processing',
-    'Tracker',
+    'tracker',
     'visualization',
 ]
 

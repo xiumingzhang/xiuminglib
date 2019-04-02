@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import cv2
 
-import config
+from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 

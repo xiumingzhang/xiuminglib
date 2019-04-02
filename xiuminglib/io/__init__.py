@@ -1,6 +1,6 @@
 __all__ = [
-    'EXR',
-    'ObjMtl',
+    'exr',
+    'objmtl',
 ]
 
 from . import * # noqa: F403 # pylint: disable=wildcard-import

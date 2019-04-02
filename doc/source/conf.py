@@ -94,7 +94,7 @@ todo_include_todos = True
 #
 html_theme = 'sphinx_rtd_theme'
 
-html_favicon = os.path.abspath('./source/_static/xiu.ico')
+html_favicon = os.path.abspath('./_static/xiu.ico')
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

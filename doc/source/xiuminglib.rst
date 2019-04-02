@@ -12,24 +12,23 @@ Subpackages
 .. toctree::
 
     xiuminglib.blender
-    xiuminglib.file_formats
-    xiuminglib.geometry_models
+    xiuminglib.io
 
 Submodules
 ----------
 
-xiuminglib\.Camera module
+xiuminglib\.camera module
 -------------------------
 
-.. automodule:: xiuminglib.Camera
+.. automodule:: xiuminglib.camera
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.Tracker module
---------------------------
+xiuminglib\.config module
+-------------------------
 
-.. automodule:: xiuminglib.Tracker
+.. automodule:: xiuminglib.config
     :members:
     :undoc-members:
     :show-inheritance:
@@ -66,10 +65,26 @@ xiuminglib\.image\_processing module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib\.logging\_colorer module
+-----------------------------------
+
+.. automodule:: xiuminglib.logging_colorer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib\.signal\_processing module
 -------------------------------------
 
 .. automodule:: xiuminglib.signal_processing
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib\.tracker module
+--------------------------
+
+.. automodule:: xiuminglib.tracker
     :members:
     :undoc-members:
     :show-inheritance:

@@ -2,7 +2,7 @@ from time import time, sleep
 from os import makedirs
 from os.path import abspath, join, dirname
 
-import config
+from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 
