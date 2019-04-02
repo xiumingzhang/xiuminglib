@@ -15,7 +15,7 @@ import numpy as np
 import OpenEXR
 import Imath
 
-from xiuminglib import config
+import config
 logger, thisfile = config.create_logger(abspath(__file__))
 logger.name = thisfile
 

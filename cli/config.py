@@ -1,4 +1,4 @@
-"""Library setup including setting logging colors, etc."""
+"""CLI setup including setting logging colors, etc."""
 
 import logging
 from platform import system
