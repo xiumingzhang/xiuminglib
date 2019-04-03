@@ -24,12 +24,12 @@ class EXR():
     def load(self):
         r"""Loads an EXR as a dictionary of NumPy arrays.
 
-        Requires writing a ``.npz`` to ``/tmp/`` and then loading it, because
+        Requires writing a .npz to ``/tmp/`` and then loading it, because
         the conversion process has to be done in Python 2.x as a subprocess call,
         unfortuantely. If :math:`\leq3` channels, can use OpenCV for in-memory loading.
 
         Returns:
-            data (dict): Loaded EXR data.
+            dict: Loaded EXR data.
         """
         from time import time
         from subprocess import Popen
@@ -50,16 +50,16 @@ class EXR():
         return data
 
     def extract_depth(self, alpha_exr, outpath, vis_raw=False):
-        """Combines an aliased, raw depth map and its alpha map into a ``.npy`` image.
+        """Combines an aliased, raw depth map and its alpha map into a .npy image.
 
         Output has black background, with bright values for closeness to the camera.
         If the alpha map is anti-aliased, the result depth map will be nicely anti-aliased.
 
         Args:
             alpha_exr (str): Path to the EXR file of the anti-aliased alpha map.
-            outpath (str): Path to the result ``.npy`` file.
+            outpath (str): Path to the result .npy file.
             vis_raw (bool, optional): Whether to visualize the raw values as an image.
-                Defaults to False.
+                Defaults to ``False``.
         """
         logger_name = thisfile + '->EXR:extract_depth()'
         dtype = 'uint8'
@@ -91,14 +91,14 @@ class EXR():
         logger.info("Depth image extractd to %s", outpath)
 
     def extract_normal(self, outpath, vis=False):
-        """Converts an RGBA EXR normal map to a ``.npy`` normal map.
+        """Converts an RGBA EXR normal map to a .npy normal map.
 
         The background is black, complying with industry standards (e.g., Adobe AE).
 
         Args:
-            outpath (str): Path to the result ``.npy`` file.
+            outpath (str): Path to the result .npy file.
             vis (bool, optional): Whether to visualize the normal vectors as an image.
-                Defaults to False.
+                Defaults to ``False``.
         """
         logger_name = thisfile + '->extract_normal()'
         dtype = 'uint8'
@@ -122,12 +122,12 @@ class EXR():
         logger.info("Normal image extractd to %s", outpath)
 
     def extract_intrinsic_images_from_lighting_passes(self, outdir, vis=False):
-        """Extract intrinsic images from an EXR of lighting passes into multiple ``.npy`` files.
+        """Extract intrinsic images from an EXR of lighting passes into multiple .npy files.
 
         Args:
-            outdir (str): Directory to save the result ``.npy`` files to.
+            outdir (str): Directory to save the result .npy files to.
             vis (bool, optional): Whether to visualize the values as images.
-                Defaults to False.
+                Defaults to ``False``.
         """
         from xiuminglib import visualization as xv
         logger_name = thisfile + '->extract_intrinsic_images_from_lighting_passes()'

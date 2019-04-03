@@ -8,52 +8,33 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 class Obj(object):
+    """Wavefront .obj Object.
+
+    Face, vertex, or other indices here all start from 1.
+
+    Attributes:
+        o (str, optional): Object name. Defaults to ``None``.
+        v (numpy.ndarray, optional): Vertex coordinates. Defaults to ``None``.
+        f (list, optional): Faces' vertex indices (1-indexed), e.g., ``[[1, 2, 3], [4, 5, 6],
+            [7, 8, 9, 10], ...]``. Defaults to ``None``.
+        vn (numpy.ndarray, optional): Vertex normals of shape N-by-3, normalized or unnormalized.
+            Defaults to ``None``.
+        fn (list, optional): Faces' vertex normal indices, e.g., ``[[1, 1, 1], [],
+            [2, 2, 2, 2], ...]``. Must be of the same length as ``f``. Defaults to ``None``.
+        vt (numpy.ndarray, optional): Vertex texture coordinates of shape N-by-2. Coordinates
+            must be normalized to :math:`[0, 1]`. Defaults to ``None``.
+        ft (list, optional): Faces' texture vertex indices, e.g., ``[[1, 2, 3], [4, 5, 6], [],
+            ...]``. Must be of the same length as ``f``. Defaults to ``None``.
+        s (bool, optional): Group smoothing. Defaults to ``False``.
+        mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``. Defaults to ``None``.
+        usemtl (str, optional): Material name (defined in .mtl file). Defaults to ``None``.
+        diffuse_map_path (str, optional): Path to diffuse texture map. Defaults to ``None``.
+        diffuse_map_scale (float, optional): Scale of diffuse texture map. Defaults to 1.
+    """
     def __init__(self, o=None, v=None, f=None, vn=None, fn=None, vt=None, ft=None,
                  s=False, mtllib=None, usemtl=None, diffuse_map_path=None, diffuse_map_scale=1):
-        """
-        Class constructor
-
-        Args:
-            o: Object name
-                String
-                Optional; defaults to None
-            v: Vertex coordinates
-                *-by-3 numpy array of floats
-                Optional; defaults to None
-            f: Faces' vertex indices
-                List of lists of integers starting from 1, e.g., '[[1, 2, 3], [4, 5, 6], [7, 8, 9, 10], ...]'
-                Optional; defaults to None
-            vn: Vertex normals
-                *-by-3 numpy array of floats, normalized or unnormalized
-                Optional; defaults to None
-            fn: Faces' vertex normal indices
-                Same type and length as 'f', e.g., '[[1, 1, 1], [], [2, 2, 2, 2], ...]'
-                Optional; defaults to None
-            vt: Vertex texture coordinates
-                *-by-2 numpy array of floats in [0, 1]
-                Optional; defaults to None
-            ft: Faces' texture vertex indices
-                Same type and length as 'f', e.g., '[[1, 2, 3], [4, 5, 6], [], ...]'
-                Optional; defaults to None
-            s: Group smoothing
-                Boolean
-                Optional; defaults to False
-            mtllib: Material file name
-                String, e.g., 'cube.mtl'
-                Optional; defaults to None
-            usemtl: Material name (defined in .mtl file)
-                String
-                Optional; defaults to None
-            diffuse_map_path: Path to diffuse texture map
-                String
-                Optional; defaults to None
-            diffuse_map_scale: Scale of diffuse texture map
-                Float
-                Optional; defaults to 1
-        """
         self.mtllib = mtllib
         self.o = o
-
         # Vertices
         if v is not None:
             assert (len(v.shape) == 2 and v.shape[1] == 3), "'v' must be *-by-3"
@@ -64,50 +45,44 @@ class Obj(object):
         self.v = v
         self.vt = vt
         self.vn = vn
-
         # Faces
         if f is not None:
             if ft is not None:
-                assert (len(ft) == len(f)), "'ft' must be of the same length as 'f' (use '[]' to fill)"
+                assert (len(ft) == len(f)), \
+                    "'ft' must be of the same length as 'f' (use '[]' to fill)"
             if fn is not None:
-                assert (len(fn) == len(f)), "'fn' must be of the same length as 'f' (use '[]' to fill)"
+                assert (len(fn) == len(f)), \
+                    "'fn' must be of the same length as 'f' (use '[]' to fill)"
         self.f = f
         self.ft = ft
         self.fn = fn
-
         self.usemtl = usemtl
         self.s = s
         self.diffuse_map_path = diffuse_map_path
         self.diffuse_map_scale = diffuse_map_scale
 
-    # Populate attributes with contents read from file
     def load_file(self, obj_file):
-        """
-        Load a (basic) .obj file as an object
+        """Loads a (basic) .obj file as an object.
+
+        Populates attributes with contents read from file.
 
         Args:
-            obj_file: Path to .obj file
-                String
-
-        Returns:
-            self: updated object
+            obj_file (str): Path to .obj file.
         """
         fid = open(obj_file, 'r')
         lines = [l.strip('\n') for l in fid.readlines()]
         lines = [l for l in lines if len(l) > 0] # remove empty lines
-
         # Check if there's only one object
         n_o = len([l for l in lines if l[0] == 'o'])
         if n_o > 1:
-            raise ValueError(".obj file containing multiple objects is not supported -- consider using 'assimp' instead")
-
+            raise ValueError((".obj file containing multiple objects is not supported "
+                              "-- consider using ``assimp`` instead"))
         # Count for array initializations
         n_v = len([l for l in lines if l[:2] == 'v '])
         n_vt = len([l for l in lines if l[:3] == 'vt '])
         n_vn = len([l for l in lines if l[:3] == 'vn '])
         lines_f = [l for l in lines if l[:2] == 'f ']
         n_f = len(lines_f)
-
         # Initialize arrays
         mtllib = None
         o = None
@@ -121,7 +96,6 @@ class Obj(object):
         # This guarantees 'f[i]' always corresponds to 'ft[i]' and 'fn[i]'
         ft = [None] * n_f
         fn = [None] * n_f
-
         # Load data line by line
         n_ft, n_fn = 0, 0
         i_v, i_vt, i_vn, i_f = 0, 0, 0, 0
@@ -172,7 +146,6 @@ class Obj(object):
                 i_f += 1
             else:
                 raise ValueError("Unidentified line type: %s" % l)
-
         # Update self
         self.mtllib = mtllib
         self.o = o
@@ -187,8 +160,7 @@ class Obj(object):
 
     # Print model info
     def print_info(self):
-        logger.name = thisfile + '->Obj:print_info()'
-
+        logger_name = thisfile + '->Obj:print_info()'
         # Basic stats
         mtllib = self.mtllib
         o = self.o
@@ -208,7 +180,7 @@ class Obj(object):
             n_fn = sum(len(x) > 0 for x in self.fn) # pylint: disable=len-as-condition
         else:
             n_fn = 0
-
+        logger.name = logger_name
         logger.info("-------------------------------------------------------")
         logger.info("Object name            'o'            %s", o)
         logger.info("Material file          'mtllib'       %s", mtllib)
@@ -222,7 +194,6 @@ class Obj(object):
         logger.info("# geometric faces      'f x/o/o'      %d", n_f)
         logger.info("# texture faces        'f o/x/o'      %d", n_ft)
         logger.info("# normal faces         'f o/o/x'      %d", n_fn)
-
         # How many triangles, quads, etc.
         if n_f > 0:
             logger.info("")
@@ -235,22 +206,18 @@ class Obj(object):
 
     # Set vn and fn according to v and f
     def set_face_normals(self):
-        """
-        Set face normals according to geometric vertices and their orders in forming faces
+        """Sets face normals according to geometric vertices and their orders in forming faces.
 
         Returns:
-            vn: Normal vectors
-                'len(f)'-by-3 numpy arrays
-            fn: Normal faces
-                'len(f)'-long list of lists of integers starting from 1
-                Each member list consists of the same integer, e.g., '[[1, 1, 1], [2, 2, 2, 2], ...]'
+            tuple:
+                - **vn** (*numpy.ndarray*) -- Normal vectors.
+                - **fn** (*list*) -- Normal faces. Each member list consists of the same integer,
+                  e.g., ``[[1, 1, 1], [2, 2, 2, 2], ...]``.
         """
-        logger.name = thisfile + '->Obj:set_face_normals()'
-
+        logger_name = thisfile + '->Obj:set_face_normals()'
         n_f = len(self.f)
         vn = np.zeros((n_f, 3))
         fn = [None] * n_f
-
         # For each face
         for i, verts_id in enumerate(self.f):
             # Vertices must be coplanar to be valid, so we can just pick the first three
@@ -263,41 +230,34 @@ class Obj(object):
                 raise ValueError("Normal vector of zero length probably due to numerical issues?")
             vn[i, :] = normal / np.linalg.norm(normal) # normalize
             fn[i] = [i + 1] * len(verts_id)
-
         # Set normals and return
         self.vn = vn
         self.fn = fn
+        logger.name = logger_name
         logger.info("Face normals recalculated with 'v' and 'f' -- 'vn' and 'fn' updated")
         return vn, fn
 
     # Output object to file
     def write_file(self, objpath):
-        """
-        Write the current model to a .obj file
-        """
-        logger.name = thisfile + '->Obj:write_file()'
-
+        """Writes the current model to a .obj file."""
+        logger_name = thisfile + '->Obj:write_file()'
         mtllib = self.mtllib
         o = self.o
         v, vt, vn = self.v, self.vt, self.vn
         usemtl = self.usemtl
         s = self.s
         f, ft, fn = self.f, self.ft, self.fn
-
         # mkdir if necessary
         outdir = dirname(objpath)
         if not exists(outdir):
             makedirs(outdir)
-
         # Write .obj
         with open(objpath, 'w') as fid:
             # Material file
             if mtllib is not None:
                 fid.write('mtllib %s\n' % mtllib)
-
             # Object name
             fid.write('o %s\n' % o)
-
             # Vertices
             for i in range(v.shape[0]):
                 fid.write('v %f %f %f\n' % tuple(v[i, :]))
@@ -307,17 +267,14 @@ class Obj(object):
             if vn is not None:
                 for i in range(vn.shape[0]):
                     fid.write('vn %f %f %f\n' % tuple(vn[i, :]))
-
             # Material name
             if usemtl is not None:
                 fid.write('usemtl %s\n' % usemtl)
-
             # Group smoothing
             if s:
                 fid.write('s on\n')
             else:
                 fid.write('s off\n')
-
             # Faces
             if ft is None and fn is None: # just f (1 2 3)
                 for v_id in f:
@@ -360,50 +317,40 @@ class Obj(object):
                     else:
                         raise ValueError(
                             "If not empty, 'ft[%d]' or 'fn[%d]' doesn't match length of 'f[%d]'" % (i, i, i))
+        logger.name = logger_name
         logger.info("Done writing to %s", objpath)
 
 
 class Mtl(object):
+    r"""Wavefront .mtl object.
+
+    Attributes:
+        obj (Obj): ``Obj`` object for which this ``Mtl`` object is created.
+        Ns (float, optional): Specular exponent, normally :math:`\in[0, 1000]`.
+            Defaults to 96.078431.
+        Ka (tuple, optional): Ambient reflectivity, each float normally :math:`\in[0, 1]`.
+            Values outside increase or decrease relectivity accordingly.
+            Defaults to ``(1, 1, 1)``.
+        Kd (tuple, optional): Diffuse reflectivity. Same range as ``Ka``.
+            Defaults to ``(0.64, 0.64, 0.64)``.
+        Ks (tuple, optional): Specular reflectivity. Same range as ``Ka``.
+            Defaults to ``(0.5, 0.5, 0.5)``.
+        Ni (float, optional): Optical density, a.k.a. index of refraction :math:`\in[0.001, 10]`.
+            1 means light doesn't bend as it passes through. Increasing it increases the amount of bending.
+            Glass has an index of refraction of about 1.5. Values of less than 1.0 produce bizarre results
+            and are not recommended. Defaults to 1.
+        d (float, optional): Amount this material dissolves into the background :math:`\in[0, 1]`.
+            1.0 is fully opaque (default), and 0 is fully dissolved (completely transparent).
+            Unlike a real transparent material, the dissolve does not depend upon material thickness,
+            nor does it have any spectral character. Dissolve works on all illumination models.
+        illum (int): Illumination model :math:`\in[0, 1, ..., 10]`. Defaults to 2.
+    """
     def __init__(self, obj, Ns=96.078431, Ka=(1, 1, 1), Kd=(0.64, 0.64, 0.64),
                  Ks=(0.5, 0.5, 0.5), Ni=1, d=1, illum=2): # flake8: noqa
-        """
-        Class constructor
-
-        Args:
-            obj: Obj object for which this Mtl object is created
-                Instance of Obj
-            Ns: Specular exponent
-                Float normally ranging from 0 to 1000
-                Optional; defaults to 96.078431
-            Ka: Ambient reflectivity
-                3-tuple of floats normally ranging from 0 to 1; values outside increase or decrease relectivity accordingly
-                Optional; defaults to (1, 1, 1)
-            Kd: Diffuse reflectivity
-                Same as Ka
-                Optional; defaults to (0.64, 0.64, 0.64)
-            Ks: Specular reflectivity
-                Same as Ka
-                Optional; defaults to (0.5, 0.5, 0.5)
-            Ni: Optical density, a.k.a. index of refraction
-                Float ranging from 0.001 to 10; 1 means light doesn't bend as it passes through
-                    Increasing it increases the amount of bending
-                    Glass has an index of refraction of about 1.5
-                    Values of less than 1.0 produce bizarre results and are not recommended
-                Optional; defaults to 1
-            d: Amount this material dissolves into the background
-                Float ranging from 0 to 1; 1.0 is fully opaque (default), and 0 is fully dissolved (completely transparent)
-                    Unlike a real transparent material, the dissolve does not depend upon material thickness nor does it have any spectral character
-                    Dissolve works on all illumination models
-                Optional; defaults to 1
-            illum: Illumination model
-                Integer ranging from 0 to 10; see xiuminglib/example-obj-mtl/cube.mtl for details
-                Optional; defaults to 2
-        """
         self.mtlfile = obj.mtllib
         self.newmtl = obj.usemtl
         self.map_Kd_path = obj.diffuse_map_path
         self.map_Kd_scale = obj.diffuse_map_scale
-
         self.Ns = Ns
         self.Ka = Ka
         self.Kd = Kd
@@ -412,10 +359,8 @@ class Mtl(object):
         self.d = d
         self.illum = illum
 
-    # Print material info
     def print_info(self):
         logger.name = thisfile + '->Mtl:print_info()'
-
         logger.info("-----------------------------------------------------------")
         logger.info("Material file                          %s", self.mtlfile)
         logger.info("Material name           'newmtl'       %s", self.newmtl)
@@ -430,24 +375,22 @@ class Mtl(object):
         logger.info("Illumination model      'illum'        %d", self.illum)
         logger.info("-----------------------------------------------------------")
 
-    # Output object to file
-    def write_file(self, mtldir):
-        """
-        Write to a .mtl file
+    def write_file(self, outdir):
+        """Unit tests that can also serve as example usage.
+
+        Args:
+            outdir (str): Output directory.
         """
         import cv2
-
-        logger.name = thisfile + '->Mtl:write_file()'
-
+        logger_name = thisfile + '->Mtl:write_file()'
         # Validate inputs
-        assert (self.mtlfile is not None and self.newmtl is not None), "'mtlfile' and 'newmtl' must not be 'None'"
-
+        assert (self.mtlfile is not None and self.newmtl is not None), \
+            "'mtlfile' and 'newmtl' must not be 'None'"
         # mkdir if necessary
-        if not exists(mtldir):
-            makedirs(mtldir)
-
+        if not exists(outdir):
+            makedirs(outdir)
         # Write .mtl
-        mtlpath = join(mtldir, self.mtlfile)
+        mtlpath = join(outdir, self.mtlfile)
         with open(mtlpath, 'w') as fid:
             fid.write('newmtl %s\n' % self.newmtl)
             fid.write('Ns %f\n' % self.Ns)
@@ -457,23 +400,22 @@ class Mtl(object):
             fid.write('Ni %f\n' % self.Ni)
             fid.write('d %f\n' % self.d)
             fid.write('illum %d\n' % self.illum)
-
             map_Kd_path = self.map_Kd_path
             map_Kd_scale = self.map_Kd_scale
             if map_Kd_path is not None:
                 fid.write('map_Kd %s\n' % basename(map_Kd_path))
                 if map_Kd_scale == 1:
-                    copy(map_Kd_path, mtldir)
+                    copy(map_Kd_path, outdir)
                 else:
                     im = cv2.imread(map_Kd_path, cv2.IMREAD_UNCHANGED)
                     im = cv2.resize(im, None, fx=map_Kd_scale, fy=map_Kd_scale)
-                    cv2.imwrite(join(mtldir, basename(map_Kd_path)), im)
-
+                    cv2.imwrite(join(outdir, basename(map_Kd_path)), im)
+        logger.name = logger_name
         logger.info("Done writing to %s", mtlpath)
 
 
-# Test
-if __name__ == '__main__':
+def main():
+    """Unit tests that can also serve as example usage."""
     objf = '../../../toy-data/obj-mtl_cube/cube.obj'
     myobj = Obj()
     myobj.print_info()
@@ -483,3 +425,7 @@ if __name__ == '__main__':
     myobj.write_file(objf_reproduce)
     myobj.set_face_normals()
     myobj.print_info()
+
+
+if __name__ == '__main__':
+    main()

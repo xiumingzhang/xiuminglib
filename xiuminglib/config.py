@@ -16,8 +16,8 @@ def create_logger(file_abspath, level=logging.INFO):
 
     Returns:
         tuple:
-            - **logger** (:class:`logging.Logger`) -- Logger created.
-            - **thisfile** (:class:`str`) -- Partial path to the user file, starting from package name.
+            - **logger** (*logging.Logger*) -- Logger created.
+            - **thisfile** (*str*) -- Partial path to the user file, starting from package name.
     """
     logging.basicConfig(level=level)
     logger = logging.getLogger()
