@@ -14,17 +14,13 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def remove_objects(name_pattern, regex=False):
-    """
-    Remove object(s) from current scene
+    """Removes object(s) from current scene
 
     Args:
-        name_pattern: Name or name pattern of object(s) to remove
-            String
-        regex: Whether to interpret `name_pattern` as a regex
-            Boolean
-            Optional; defaults to False
+        name_pattern (str): Name or name pattern of object(s) to remove.
+        regex (bool, optional): Whether to interpret ``name_pattern`` as a regex.
     """
-    logger.name = thisfile + '->remove_objects()'
+    logger_name = thisfile + '->remove_objects()'
 
     objs = bpy.data.objects
     removed = []
@@ -55,6 +51,7 @@ def remove_objects(name_pattern, regex=False):
     # Scene update necessary, as matrix_world is updated lazily
     bpy.context.scene.update()
 
+    logger.name = logger_name
     logger.info("Removed from scene: %s", removed)
 
 
@@ -64,33 +61,23 @@ def import_object(model_path,
                   scale=1,
                   merge=False,
                   name=None):
-    """
-    Import external object to current scene, the low-level way
+    """Imports external object to current scene, the low-level way.
 
     Args:
-        model_path: Path to object to add
-            String
-        rot_mat: 3D rotation matrix PRECEDING translation
-            3-by-3 array_like
-            Optional; defaults to identity matrix
-        trans_vec: 3D translation vector FOLLOWING rotation
-            3-array_like
-            Optional; defaults to zero vector
-        scale: Scale of the object
-            Float
-            Optional; defaults to 1
-        merge: Merge objects into one
-            Boolean
-            Optional; defaults to False
-        name: Object name after import
-            String
-            Optional; defaults to name specified in model
+        model_path (str): Path to object to add.
+        rot_mat (array_like, optional): 3-by-3 rotation matrix *preceding* translation.
+        trans_vec (array_like, optional): 3D translation vector *following* rotation.
+        scale (float, optional): Scale of the object.
+        merge (bool, optional): Whether to merge objects into one.
+        name (str, optional): Object name after import.
+
+    Raises:
+        NotImplementedError: If the model is not an .obj file.
 
     Returns:
-        obj: Handle(s) of imported object(s)
-            bpy_types.Object or list thereof
+        bpy_types.Object or list(bpy_types.Object): Imported object(s).
     """
-    logger.name = thisfile + '->import_object()'
+    logger_name = thisfile + '->import_object()'
 
     # Import
     if model_path.endswith('.obj'):
@@ -133,6 +120,7 @@ def import_object(model_path,
     # Scene update necessary, as matrix_world is updated lazily
     bpy.context.scene.update()
 
+    logger.name = logger_name
     logger.info("Imported: %s", model_path)
 
     if len(obj_list) == 1:
@@ -141,24 +129,18 @@ def import_object(model_path,
 
 
 def add_cylinder_between(pt1, pt2, r, name=None):
-    """
-    Add a cylinder specified by two end points and radius
-        Useful for visualizing rays in ray tracing
+    """Adds a cylinder specified by two end points and radius.
+
+    Super useful for visualizing rays in ray tracing while debugging.
 
     Args:
-        pt1: Global coordinates of point 1
-            Array_like containing three floats
-        pt2: Global coordinates of point 2
-            Array_like containing three floats
-        r: Cylinder radius
-            Radius
-        name: Cylinder name
-            String
-            Optional; defaults to Blender defaults
+        pt1 (array_like): Global coordinates of point 1.
+        pt2 (array_like): Global coordinates of point 2.
+        r (float): Cylinder radius.
+        name (str, optional): Cylinder name.
 
     Returns:
-        cylinder_obj: Handle of added cylinder
-            bpy_types.Object
+        bpy_types.Object: Cylinder added.
     """
     pt1 = np.array(pt1)
     pt2 = np.array(pt2)
@@ -188,27 +170,17 @@ def add_cylinder_between(pt1, pt2, r, name=None):
 
 
 def add_rectangular_plane(center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2), name=None):
-    """
-    Add a rectangular plane specified by its center location, dimensions,
-        and where its +z points to
+    """Adds a rectangular plane specified by its center location, dimensions,
+    and where its :math:`+z` points to.
 
     Args:
-        center_loc: Plane center location in world coordinates
-            Array_like containing three floats
-            Optional; defaults to world origin
-        point_to: Direction to which plane's +z points to in world coordinates
-            Array_like containing three floats
-            Optional; defaults to world +z
-        size: Sizes in x and y directions (0 in z)
-            Array_like containing two floats
-            Optional; defaults to a square with side length 2
-        name: Plane name
-            String
-            Optional; defaults to Blender defaults
+        center_loc (array_like, optional): Plane center location in world coordinates.
+        point_to (array_like, optional): Direction to which plane's :math:`+z` points to in world coordinates.
+        size (array_like, optional): Sizes in x and y directions (0 in z).
+        name (str, optional): Plane name.
 
     Returns:
-        plane_obj: Handle of added plane
-            bpy_types.Object
+        bpy_types.Object: Plane added.
     """
     center_loc = np.array(center_loc)
     point_to = np.array(point_to)
@@ -238,22 +210,17 @@ def add_rectangular_plane(center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2),
 
 
 def create_mesh(verts, faces, name):
-    """
-    Create a mesh from vertices and faces
+    """Creates a mesh from vertices and faces.
 
     Args:
-        verts: Local coordinates of the vertices
-            Array_like of shape (n, 3)
-        faces: Faces specified by ordered vertex indices
-            List of tuples of natural numbers < n
-        name: Mesh name
-            String
+        verts (array_like): Local coordinates of the vertices. Of shape N-by-3.
+        faces (list(tuple)): Faces specified by ordered vertex indices.
+        name (str): Mesh name.
 
     Returns:
-        mesh_data: Mesh data created
-            bpy_types.Mesh
+        bpy_types.Mesh: Mesh data created.
     """
-    logger.name = thisfile + '->create_mesh()'
+    logger_name = thisfile + '->create_mesh()'
 
     verts = np.array(verts)
 
@@ -262,35 +229,26 @@ def create_mesh(verts, faces, name):
     mesh_data.from_pydata(verts, [], faces)
     mesh_data.update()
 
+    logger.name = logger_name
     logger.info("Mesh '%s' created", name)
 
     return mesh_data
 
 
 def create_object_from_mesh(mesh_data, obj_name, location=(0, 0, 0), rotation_euler=(0, 0, 0), scale=(1, 1, 1)):
-    """
-    Create object from mesh data
+    """Creates object from mesh data.
 
     Args:
-        mesh_data: Mesh data
-            bpy_types.Mesh
-        obj_name: Object name
-            String
-        location: Object location in world coordinates
-            3-tuple of floats
-            Optional; defaults to world origin
-        rotation_euler: Object rotation in radians
-            3-tuple of floats
-            Optional; defaults to aligning with world coordinates
-        scale: Object scale
-            3-tuple of floats
-            Optional; defaults to unit scale
+        mesh_data (bpy_types.Mesh): Mesh data.
+        obj_name (str): Object name.
+        location (tuple, optional): Object location in world coordinates.
+        rotation_euler (tuple, optional): Object rotation in radians.
+        scale (tuple, optional): Object scale.
 
     Returns:
-        obj: Object created
-            bpy_types.Object
+        bpy_types.Object: Object created.
     """
-    logger.name = thisfile + '->create_object_from_mesh()'
+    logger_name = thisfile + '->create_object_from_mesh()'
 
     # Create
     obj = bpy.data.objects.new(obj_name, mesh_data)
@@ -306,6 +264,7 @@ def create_object_from_mesh(mesh_data, obj_name, location=(0, 0, 0), rotation_eu
     obj.rotation_euler = rotation_euler
     obj.scale = scale
 
+    logger.name = logger_name
     logger.info("Object '%s' created from mesh data and selected", obj_name)
 
     # Scene update necessary, as matrix_world is updated lazily
@@ -315,10 +274,9 @@ def create_object_from_mesh(mesh_data, obj_name, location=(0, 0, 0), rotation_eu
 
 
 def _clear_nodetree_for_active_material(obj):
-    """
-    Internal helper function clears the node tree of active material
-        so that desired node tree can be cleanly set up.
-        If no active material, one will be created
+    """Internal helper function clears the node tree of active material.
+
+    So that desired node tree can be cleanly set up. If no active material, one will be created.
     """
     # Create material if none
     if obj.active_material is None:
@@ -343,21 +301,22 @@ def _clear_nodetree_for_active_material(obj):
 
 
 def color_vertices(obj, vert_ind, colors):
-    """
-    Color each vertex of interest with the given color; i.e., same color for all its loops
-        Useful for making a 3D heatmap
+    r"""Colors each vertex of interest with the given color.
+
+    Colors are defined for vertex loops, in fact. This function uses the same color
+    for all loops of a vertex. Useful for making a 3D heatmap.
 
     Args:
-        obj: Object
-            bpy_types.Object
-        vert_ind: Index/indices of vertex/vertices to color
-            Integer or list thereof
-        colors: RGB value(s) to paint on vertex/vertices
-            Tuple of three floats in [0, 1] or list thereof
-                - If one tuple, this color will be applied to all
-                - If list of tuples, must be of same length as vert_ind
+        obj (bpy_types.Object): Object.
+        vert_ind (int or list(int)): Index/indices of vertex/vertices to color.
+        colors (tuple or list(tuple)): RGB value(s) to paint on vertex/vertices.
+            Values :math:`\in [0, 1]`. If one tuple, this color will be applied to all vertices.
+            If list of tuples, must be of the same length as ``vert_ind``.
+
+    Raises:
+        ValueError: If color length is wrong.
     """
-    logger.name = thisfile + '->color_vertices()'
+    logger_name = thisfile + '->color_vertices()'
 
     # Validate inputs
     if isinstance(vert_ind, int):
@@ -418,26 +377,28 @@ def color_vertices(obj, vert_ind, colors):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
+    logger.name = logger_name
     logger.info("Vertex color(s) added to '%s'", obj.name)
     logger.warning("    ..., so node tree of '%s' has changed", obj.name)
 
 
 def setup_diffuse_nodetree(obj, texture, roughness=0):
-    """
-    Set up a diffuse texture node tree for the bundled texture, an external
-        texture map (carelessly mapped), or a pure color. Mathematically,
-        it's either Lambertian (no roughness) or Oren-Nayar (with roughness)
+    r"""Sets up a diffuse texture node tree for the bundled texture.
+
+    Bundled texture can be an external texture map (carelessly mapped), or a pure color.
+    Mathematically, the BRDF model used is either Lambertian (no roughness) or Oren-Nayar (with roughness).
 
     Args:
-        obj: Object bundled with texture map
-            bpy_types.Object
-        texture: 'bundled', path to the texture image, or RGBA values
-            String or a 4-tuple of floats ranging from 0 to 1
-        roughness: Roughness in Oren-Nayar model
-            Float
-            Optional; defaults to 0, i.e., Lambertian
+        obj (bpy_types.Object): Object bundled with texture map.
+        texture (str or tuple): If string, must be ``'bundled'`` or path to the texture image.
+            If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
+        roughness (float, optional): Roughness in Oren-Nayar model. 0 gives Lambertian.
+
+    Raises:
+        NotImplementedError: If rendering engine is not Cycles.
+        TypeError: If ``texture`` is of wrong type.
     """
-    logger.name = thisfile + '->setup_diffuse_nodetree()'
+    logger_name = thisfile + '->setup_diffuse_nodetree()'
 
     scene = bpy.context.scene
     engine = scene.render.engine
@@ -483,22 +444,22 @@ def setup_diffuse_nodetree(obj, texture, roughness=0):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
+    logger.name = logger_name
     logger.info("Diffuse node tree set up for '%s'", obj.name)
 
 
 def setup_glossy_nodetree(obj, color=(1, 1, 1, 1), roughness=0):
-    """
-    Set up a glossy node tree for a pure color. To extend it with texture maps,
-        see setup_diffuse_nodetree()
+    r"""Sets up a glossy node tree for a pure color.
+
+    To extend it with texture maps, see :func:`setup_diffuse_nodetree`.
 
     Args:
-        obj: Object bundled with texture map
-            bpy_types.Object
-        color: RGBA values
-            4-tuple of floats ranging from 0 to 1
-        roughness: Roughness
-            Float
-            Optional; defaults to 0, i.e., perfectly reflective
+        obj (bpy_types.Object): Object bundled with texture map.
+        color (tuple, optional): RGBA values :math:`\in [0, 1]`.
+        roughness (float, optional): Roughness. 0 means perfectly reflective.
+
+    Raises:
+        NotImplementedError: If rendering engine is not Cycles.
     """
     logger_name = thisfile + '->setup_glossy_nodetree()'
 
@@ -525,20 +486,17 @@ def setup_glossy_nodetree(obj, color=(1, 1, 1, 1), roughness=0):
 
 
 def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
-    """
-    Set up an emission node tree for the object
+    r"""Sets up an emission node tree for the object.
 
     Args:
-        obj: Object bundled with texture map
-            bpy_types.Object
-        color: Emission RGBA
-            4-tuple of floats ranging from 0 to 1
-            Optional; defaults to opaque white
-        strength: Emission strength
-            Float
-            Optional; defaults to 1
+        obj (bpy_types.Object): Object bundled with texture map.
+        color (tuple, optional): Emission RGBA :math:`\in [0, 1]`.
+        strength (float, optional): Emission strength.
+
+    Raises:
+        NotImplementedError: If the rendering engine is not Cycles.
     """
-    logger.name = thisfile + '->setup_emission_nodetree()'
+    logger_name = thisfile + '->setup_emission_nodetree()'
 
     scene = bpy.context.scene
     engine = scene.render.engine
@@ -556,18 +514,20 @@ def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
+    logger.name = logger_name
     logger.info("Emission node tree set up for '%s'", obj.name)
 
 
 def setup_holdout_nodetree(obj):
-    """
-    Set up a holdout node tree for the object
+    """Sets up a holdout node tree for the object.
 
     Args:
-        obj: Object bundled with texture map
-            bpy_types.Object
+        obj (bpy_types.Object): Object bundled with texture map.
+
+    Raises:
+        NotImplementedError: If the rendering engine is not Cycles.
     """
-    logger.name = thisfile + '->setup_holdout_nodetree()'
+    logger_name = thisfile + '->setup_holdout_nodetree()'
 
     scene = bpy.context.scene
     engine = scene.render.engine
@@ -583,20 +543,18 @@ def setup_holdout_nodetree(obj):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
+    logger.name = logger_name
     logger.info("Holdout node tree set up for '%s'", obj.name)
 
 
 def get_bmesh(obj):
-    """
-    Get Blender mesh data from object
+    """Gets Blender mesh data from object.
 
     Args:
-        obj: Object
-            bpy_types.Object
+        obj (bpy_types.Object): Object.
 
     Returns:
-        bm: Blender mesh data
-            BMesh
+        BMesh: Blender mesh data.
     """
     bm = bmesh.new()
     bm.from_mesh(obj.data)
@@ -608,17 +566,13 @@ def get_bmesh(obj):
 
 
 def subdivide_mesh(obj, n_subdiv=2):
-    """
-    Subdivide mesh of object
+    """Subdivides mesh of object.
 
     Args:
-        obj: Object whose mesh is to be subdivided
-            bpy_types.Object
-        n_subdiv: Number of subdivision levels
-            Integer
-            Optional; defaults to 2
+        obj (bpy_types.Object): Object whose mesh is to be subdivided.
+        n_subdiv (int, optional): Number of subdivision levels.
     """
-    logger.name = thisfile + '->subdivide_mesh()'
+    logger_name = thisfile + '->subdivide_mesh()'
 
     scene = bpy.context.scene
 
@@ -641,22 +595,22 @@ def subdivide_mesh(obj, n_subdiv=2):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
+    logger.name = logger_name
     logger.info("Subdivided mesh of '%s'", obj.name)
 
 
 def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
-    """
-    Select vertices or their associated edges/faces in edit mode
+    """Selects vertices or their associated edges/faces in edit mode.
 
     Args:
-        obj: Object
-            bpy_types.Object
-        vert_ind: A single vertex index or a list of many
-            Non-negative integer or list thereof
-        select_type: Type of mesh elements to select
-            'vertex', 'edge' or 'face'
+        obj (bpy_types.Object): Object.
+        vert_ind (int or list(int)): Vertex index/indices.
+        select_type (str): Type of mesh elements to select: ``'vertex'``, ``'edge'`` or ``'face'``.
+
+    Raises:
+        ValueError: If ``select_type`` value is invalid.
     """
-    logger.name = thisfile + '->select_mesh_elements_by_vertices()'
+    logger_name = thisfile + '->select_mesh_elements_by_vertices()'
 
     if isinstance(vert_ind, int):
         vert_ind = [vert_ind]
@@ -703,27 +657,20 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
+    logger.name = logger_name
     logger.info("Selected %s elements of '%s'", select_type, obj.name)
 
 
 def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=4):
-    """
-    Add a sphere
+    """Adds a sphere.
 
     Args:
-        location: Location of the sphere center
-            Array_like of three floats
-            Optional; defaults to the origin
-        scale: Scale of the sphere
-            Float
-            Optional; defaults to 1
-        n_subdiv: Control of how round the sphere is
-            Positive integer
-            Optional; defaults to 4
+        location (array_like, optional): Location of the sphere center.
+        scale (float, optional): Scale of the sphere.
+        n_subdiv (int, optional): Control of how round the sphere is.
 
     Returns:
-        sphere: Sphere created
-            bpy_types.Object
+        bpy_types.Object: Sphere created.
     """
     bpy.ops.mesh.primitive_ico_sphere_add()
     sphere = bpy.context.active_object
