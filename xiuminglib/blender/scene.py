@@ -11,15 +11,11 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def save_blend(outpath, delete_overwritten=False):
-    """
-    Save current scene to .blend file
+    """Saves current scene to a .blend file.
 
     Args:
-        outpath: Path to save scene to, e.g., '~/foo.blend'
-            String
-        delete_overwritten: Whether to delete or keep as .blend1 the same-name file
-            Boolean
-            Optional; defaults to False
+        outpath (str): Path to save scene to, e.g., ``'~/foo.blend'``.
+        delete_overwritten (bool, optional): Whether to delete or keep as .blend1 the same-name file.
     """
     logger_name = thisfile + '->save_blend()'
 
