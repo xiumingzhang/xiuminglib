@@ -16,29 +16,20 @@ def set_cycles(w=None, h=None,
                n_samples=None, max_bounces=None, min_bounces=None,
                transp_bg=None,
                color_mode=None, color_depth=None):
-    """
-    Set up Cycles as rendering engine
+    """Sets up Cycles as rendering engine.
+
+    ``None`` means no change.
 
     Args:
-        w, h: Width, height of render in pixels
-            Positive integer
-            Optional; no change if not given
-        n_samples: Number of samples
-            Positive integer
-            Optional; no change if not given
-        max_bounces, min_bounces: Maximum, minimum number of light bounces
-            Setting max_bounces to 0 for direct lighting only
-            Natural number
-            Optional; no change if not given
-        transp_bg: Whether world background is transparent
-            Boolean
-            Optional; no change if not given
-        color_mode: Color mode
-            'BW', 'RGB' or 'RGBA'
-            Optional; no change if not given
-        color_depth: Color depth
-            '8' or '16'
-            Optional; no change if not given
+        w (int, optional): Width of render in pixels.
+        h (int, optional): Height of render in pixels.
+        n_samples (int, optional): Number of samples.
+        max_bounces (int, optional): Maximum number of light bounces.
+            Setting max_bounces to 0 for direct lighting only.
+        min_bounces (int, optional): Minimum number of light bounces.
+        transp_bg (bool, optional): Whether world background is transparent.
+        color_mode (str, optional): Color mode: ``'BW'``, ``'RGB'`` or ``'RGBA'``.
+        color_depth (str, optional): Color depth: ``'8'`` or ``'16'``.
     """
     logger_name = thisfile + '->set_cycles()'
 
@@ -108,28 +99,17 @@ def easyset(w=None, h=None,
             color_mode=None,
             file_format=None,
             color_depth=None):
-    """
-    Set some of the scene attributes more easily
+    """Sets some of the scene attributes more easily.
 
     Args:
-        w, h: Width, height of render in pixels
-            Integer
-            Optional; no change if not given
-        n_samples: Number of samples
-            Integer
-            Optional; no change if not given
-        ao: Ambient occlusion
-            Boolean
-            Optional; no change if not given
-        color_mode: Color mode of rendering
-            'BW', 'RGB', or 'RGBA'
-            Optional; no change if not given
-        file_format: File format of the render
-            'PNG', 'OPEN_EXR', etc.
-            Optional; no change if not given
-        color_depth: Color depth of rendering
-            '8' or '16' for .png; '16' or '32' for .exr
-            Optional; no change if not given
+        w (int, optional): Width of render in pixels.
+        h (int, optional): Height of render in pixels.
+        n_samples (int, optional): Number of samples.
+        ao (bool, optional): Ambient occlusion.
+        color_mode (str, optional): Color mode of rendering: ``'BW'``, ``'RGB'``, or ``'RGBA'``.
+        file_format (str, optional): File format of the render: ``'PNG'``, ``'OPEN_EXR'``, etc.
+        color_depth (str, optional): Color depth of rendering: ``'8'`` or ``'16'`` for .png;
+            ``'16'`` or ``'32'`` for .exr.
     """
     scene = bpy.context.scene
 
@@ -255,28 +235,23 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
 
 
 def render(outpath, cam=None, obj_names=None, text=None):
-    """
-    Render current scene to images with cameras in scene
+    """Renders current scene with cameras in scene.
 
     Args:
-        outpath: Path to save render to, e.g., '~/foo.png'
-            String
-        cam: Camera through which scene is rendered
-            bpy_types.Object or None
-            Optional; defaults to None (the only camera in scene)
-        obj_names: Name(s) of object(s) of interest
-            String or list thereof
-            Optional; defaults to None (all objects)
-        text: What text to be overlaid on image and how
-            Dictionary of the following format
+        outpath (str): Path to save render to.
+        cam (bpy_types.Object, optional): Camera through which scene is rendered. If ``None``,
+            use the only camera in scene.
+        obj_names (str or list(str), optional): Name(s) of object(s) of interest. If ``None``,
+            all objects are of interest and will appear in the render.
+        text (dict, optional): What text to be overlaid on image and how, following the format::
+
             {
                 'contents': 'Hello World!',
                 'bottom_left_corner': (50, 50),
                 'font_scale': 1,
                 'bgr': (255, 0, 0),
-                'thickness': 2
+                'thickness': 2,
             }
-            Optional; defaults to None
     """
     logger_name = thisfile + '->render()'
 
@@ -307,28 +282,25 @@ def render(outpath, cam=None, obj_names=None, text=None):
 
 
 def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
-    """
-    Render raw (.exr) depth map, in the form of an aliased z map and an anti-aliased alpha map,
-        of the specified object(s) from the specified camera
+    """Renders raw depth map in .exr of the specified object(s) from the specified camera.
+
+    The EXR data contain an aliased z map and an anti-aliased alpha map. See
+    :func:`xiuminglib.io.exr.EXR.extract_depth` for how to extract data.
 
     Args:
-        outprefix: Where to save the .exr maps, e.g., '~/depth'
-            String
-        cam: Camera through which scene is rendered
-            bpy_types.Object or None
-            Optional; defaults to None (the only camera in scene)
-        obj_names: Name(s) of object(s) of interest
-            String or list thereof
-            Optional; defaults to None (all objects)
-        ray_depth: Whether to render ray or plane depth
-            Boolean
-            Optional; defaults to False (plane depth)
+        outprefix (str): Where to save the .exr maps to, e.g., ``'~/depth'``.
+        cam (bpy_types.Object, optional): Camera through which scene is rendered. If ``None``,
+            there must be the just one camera in the scene.
+        obj_names (str or list(str), optional): Name(s) of object(s) of interest.
+            ``None`` means all objects.
+        ray_depth (bool, optional): Whether to render ray or plane depth.
     """
     logger_name = thisfile + '->render_depth()'
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     if ray_depth:
+        # TODO
         raise NotImplementedError("Ray depth")
 
     # Use Blender Render for anti-aliased results -- faster than Cycles,
@@ -362,22 +334,17 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
 
 
 def render_mask(outpath, cam=None, obj_names=None, soft=False):
-    """
-    Render binary or soft mask of objects from the specified camera,
-        with bright being the foreground
+    """Renders binary or soft mask of objects from the specified camera.
+
+    Foreground is bright.
 
     Args:
-        outpath: Path to save render to, e.g., '~/foo.png'
-            String
-        cam: Camera through which scene is rendered
-            bpy_types.Object or None
-            Optional; defaults to None (the only camera in scene)
-        obj_names: Name(s) of object(s) of interest
-            String or list thereof
-            Optional; defaults to None (all objects)
-        soft: Whether to render the mask soft or not
-            Boolean
-            Optional; defaults to False
+        outpath (str): Path to save render to.
+        cam (bpy_types.Object, optional): Camera through which scene is rendered.
+            If ``None``, there must be just one camera in scene.
+        obj_names (str or list(str), optional): Name(s) of object(s) of interest.
+            ``None`` means all objects.
+        soft (bool, optional): Whether to render the mask soft or hard.
     """
     logger_name = thisfile + '->render_mask()'
 
@@ -406,25 +373,21 @@ def render_mask(outpath, cam=None, obj_names=None, soft=False):
 
 
 def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
-    """
-    Render raw (.exr) normal map of the specified object(s) from the specified camera
-        RGB at each pixel is the (almost unit) normal vector at that location
+    """Renders raw normal map in .exr of the specified object(s) from the specified camera.
+
+    RGB at each pixel is the (almost unit) normal vector at that location.
+    See :func:`xiuminglib.io.exr.EXR.extract_normal` for how to extract data.
 
     Args:
-        outpath: Where to save the .exr (i.e., raw) normal map
-            String
-        cam: Camera through which scene is rendered
-            bpy_types.Object or None
-            Optional; defaults to None (the only camera in scene)
-        obj_names: Name(s) of object(s) of interest
-            String or list thereof. Use 'ref-ball' for reference normal ball
-            Optional; defaults to None (all objects)
-        camera_space: Whether to render normal in the camera or world space
-            Boolean
-            Optional; defaults to True
+        outpath (str): Where to save the .exr (i.e., raw) normal map to.
+        cam (bpy_types.Object, optional): Camera through which scene is rendered.
+            If ``None``, there must be only one camera in scene.
+        obj_names (str or list(str), optional): Name(s) of object(s) of interest.
+            Use ``'ref-ball'`` for the reference normal ball. ``None`` means all objects.
+        camera_space (bool, optional): Whether to render normal in the camera or world space.
     """
-    from xiuminglib.blender.object import add_sphere
-    from xiuminglib.blender.camera import point_camera_to, get_2d_bounding_box
+    from .object import add_sphere
+    from .camera import point_camera_to, get_2d_bounding_box
 
     logger_name = thisfile + '->render_normal()'
 
@@ -478,22 +441,18 @@ def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
 
 
 def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
-    """
-    Render select Cycles' lighting passes of the specified object(s)
-        from the specified camera, into a single multi-layer .exr file
+    """Renders select Cycles' lighting passes of the specified object(s) from the specified camera.
+
+    Data are in a single multi-layer .exr file. For how to use the data, see
+    :func:`xiuminglib.io.exr.EXR.extract_intrinsic_images_from_lighting_passes`.
 
     Args:
-        outpath: Where to save the lighting passes
-            String
-        cam: Camera through which scene is rendered
-            bpy_types.Object or None
-            Optional; defaults to None (the only camera in scene)
-        obj_names: Name(s) of object(s) of interest
-            String or list thereof
-            Optional; defaults to None (all objects)
-        n_samples: Number of path tracing samples per pixel
-            Natural number
-            Optional; defaults to 64
+        outpath (str): Where to save the lighting passes to.
+        cam (bpy_types.Object, optional): Camera through which scene is rendered.
+            If ``None``, there must be only one camera in scene.
+        obj_names (str or list(str), optional): Name(s) of object(s) of interest.
+            ``None`` means all objects.
+        n_samples (int, optional): Number of path tracing samples per pixel.
     """
     logger_name = thisfile + '->render_lighting_passes()'
 
