@@ -59,7 +59,6 @@ class EXR():
             alpha_exr (str): Path to the EXR file of the anti-aliased alpha map.
             outpath (str): Path to the result .npy file.
             vis_raw (bool, optional): Whether to visualize the raw values as an image.
-                Defaults to ``False``.
         """
         logger_name = thisfile + '->EXR:extract_depth()'
         dtype = 'uint8'
@@ -98,7 +97,6 @@ class EXR():
         Args:
             outpath (str): Path to the result .npy file.
             vis (bool, optional): Whether to visualize the normal vectors as an image.
-                Defaults to ``False``.
         """
         logger_name = thisfile + '->extract_normal()'
         dtype = 'uint8'
@@ -127,7 +125,6 @@ class EXR():
         Args:
             outdir (str): Directory to save the result .npy files to.
             vis (bool, optional): Whether to visualize the values as images.
-                Defaults to ``False``.
         """
         from xiuminglib import visualization as xv
         logger_name = thisfile + '->extract_intrinsic_images_from_lighting_passes()'

@@ -13,23 +13,22 @@ class Obj(object):
     Face, vertex, or other indices here all start from 1.
 
     Attributes:
-        o (str, optional): Object name. Defaults to ``None``.
-        v (numpy.ndarray, optional): Vertex coordinates. Defaults to ``None``.
+        o (str, optional): Object name.
+        v (numpy.ndarray, optional): Vertex coordinates.
         f (list, optional): Faces' vertex indices (1-indexed), e.g., ``[[1, 2, 3], [4, 5, 6],
-            [7, 8, 9, 10], ...]``. Defaults to ``None``.
+            [7, 8, 9, 10], ...]``.
         vn (numpy.ndarray, optional): Vertex normals of shape N-by-3, normalized or unnormalized.
-            Defaults to ``None``.
         fn (list, optional): Faces' vertex normal indices, e.g., ``[[1, 1, 1], [],
-            [2, 2, 2, 2], ...]``. Must be of the same length as ``f``. Defaults to ``None``.
+            [2, 2, 2, 2], ...]``. Must be of the same length as ``f``.
         vt (numpy.ndarray, optional): Vertex texture coordinates of shape N-by-2. Coordinates
-            must be normalized to :math:`[0, 1]`. Defaults to ``None``.
+            must be normalized to :math:`[0, 1]`.
         ft (list, optional): Faces' texture vertex indices, e.g., ``[[1, 2, 3], [4, 5, 6], [],
-            ...]``. Must be of the same length as ``f``. Defaults to ``None``.
-        s (bool, optional): Group smoothing. Defaults to ``False``.
-        mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``. Defaults to ``None``.
-        usemtl (str, optional): Material name (defined in .mtl file). Defaults to ``None``.
-        diffuse_map_path (str, optional): Path to diffuse texture map. Defaults to ``None``.
-        diffuse_map_scale (float, optional): Scale of diffuse texture map. Defaults to 1.
+            ...]``. Must be of the same length as ``f``.
+        s (bool, optional): Group smoothing.
+        mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``. D
+        usemtl (str, optional): Material name (defined in .mtl file).
+        diffuse_map_path (str, optional): Path to diffuse texture map.
+        diffuse_map_scale (float, optional): Scale of diffuse texture map.
     """
     def __init__(self, o=None, v=None, f=None, vn=None, fn=None, vt=None, ft=None,
                  s=False, mtllib=None, usemtl=None, diffuse_map_path=None, diffuse_map_scale=1):
@@ -327,23 +326,19 @@ class Mtl(object):
     Attributes:
         obj (Obj): ``Obj`` object for which this ``Mtl`` object is created.
         Ns (float, optional): Specular exponent, normally :math:`\in[0, 1000]`.
-            Defaults to 96.078431.
         Ka (tuple, optional): Ambient reflectivity, each float normally :math:`\in[0, 1]`.
             Values outside increase or decrease relectivity accordingly.
-            Defaults to ``(1, 1, 1)``.
         Kd (tuple, optional): Diffuse reflectivity. Same range as ``Ka``.
-            Defaults to ``(0.64, 0.64, 0.64)``.
         Ks (tuple, optional): Specular reflectivity. Same range as ``Ka``.
-            Defaults to ``(0.5, 0.5, 0.5)``.
         Ni (float, optional): Optical density, a.k.a. index of refraction :math:`\in[0.001, 10]`.
             1 means light doesn't bend as it passes through. Increasing it increases the amount of bending.
             Glass has an index of refraction of about 1.5. Values of less than 1.0 produce bizarre results
-            and are not recommended. Defaults to 1.
+            and are not recommended.
         d (float, optional): Amount this material dissolves into the background :math:`\in[0, 1]`.
             1.0 is fully opaque (default), and 0 is fully dissolved (completely transparent).
             Unlike a real transparent material, the dissolve does not depend upon material thickness,
             nor does it have any spectral character. Dissolve works on all illumination models.
-        illum (int): Illumination model :math:`\in[0, 1, ..., 10]`. Defaults to 2.
+        illum (int): Illumination model :math:`\in[0, 1, ..., 10]`.
     """
     def __init__(self, obj, Ns=96.078431, Ka=(1, 1, 1), Kd=(0.64, 0.64, 0.64),
                  Ks=(0.5, 0.5, 0.5), Ni=1, d=1, illum=2): # flake8: noqa

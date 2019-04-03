@@ -27,44 +27,25 @@ def add_camera(xyz=(0, 0, 0),
                sensor_height=18,
                clip_start=0.1,
                clip_end=100):
-    """
-    Add camera to current scene
+    """Adds a camera to  the current scene.
 
     Args:
-        xyz: Location
-            3-tuple of floats
-            Optional; defaults to (0, 0, 0)
-        rot_vec_rad: Rotation angle in radians around x, y and z
-            3-tuple of floats
-            Optional; defaults to (0, 0, 0)
-        name: Light object name
-            String
-            Optional
-        proj_model: Camera projection model
-            'PERSP', 'ORTHO', or 'PANO'
-            Optional; defaults to 'PERSP'
-        f: Focal length in mm
-            Float
-            Optional; defaults to 35
-        sensor_fit: Sensor fit; also see get_camera_matrix()
-            'HORIZONTAL' or 'VERTICAL'
-            Optional; defaults to 'HORIZONTAL'
-        sensor_width: Sensor width in mm
-            Float
-            Optional; defaults to 32
-        sensor_height: Sensor height in mm
-            Float
-            Optional; defaults to 18
-        clip_start: Near clipping distance
-            Float
-            Optional; defaults to 0.1
-        clip_end: Far clipping distance
-            Float
-            Optional; defaults to 100
+        xyz (tuple, optional): Location. Defaults to ``(0, 0, 0)``.
+        rot_vec_rad (tuple, optional): Rotations in radians around x, y and z.
+            Defaults to ``(0, 0, 0)``.
+        name (str, optional): Camera object name.
+        proj_model (str, optional): Camera projection model. Must be ``'PERSP'``,
+            ``'ORTHO'``, or ``'PANO'``. Defaults to ``'PERSP'``.
+        f (float, optional): Focal length in mm. Defaults to 35.
+        sensor_fit (str, optional): Sensor fit. Must be ``'HORIZONTAL'`` or ``'VERTICAL'``.
+            See also :func:`get_camera_matrix`. Defaults to ``'HORIZONTAL'``.
+        sensor_width (float, optional): Sensor width in mm. Defaults to 32.
+        sensor_height (float, optional): Sensor height in mm. Defaults to 18.
+        clip_start (float, optional): Near clipping distance. Defaults to 0.1.
+        clip_end (float, optional): Far clipping distance. Defaults to 100.
 
     Returns:
-        cam: Handle of added camera
-            bpy_types.Object
+        bpy_types.Object: Camera added.
     """
     logger_name = thisfile + '->add_camera()'
 
@@ -100,36 +81,9 @@ def easyset(cam,
             sensor_fit=None,
             sensor_width=None,
             sensor_height=None):
-    """
-    Set camera parameters more easily
+    """Sets camera parameters more easily.
 
-    Args:
-        cam: Handle of camera
-            bpy_types.Object
-        xyz: Location
-            3-tuple of floats
-            Optional; defaults to None (no change)
-        rot_vec_rad: Rotation angle in radians around x, y and z
-            3-tuple of floats
-            Optional; defaults to None (no change)
-        name: Light object name
-            String
-            Optional; defaults to None (no change)
-        proj_model: Camera projection model
-            'PERSP', 'ORTHO', or 'PANO'
-            Optional; defaults to None (no change)
-        f: Focal length in mm
-            Float
-            Optional; defaults to None (no change)
-        sensor_fit: Sensor fit; also see get_camera_matrix()
-            'HORIZONTAL' or 'VERTICAL'
-            Optional; defaults to None (no change)
-        sensor_width: Sensor width in mm
-            Float
-            Optional; defaults to None (no change)
-        sensor_height: Sensor height in mm
-            Float
-            Optional; defaults to None (no change)
+    See :func:`add_camera` for arguments. ``None`` will result in no change.
     """
     if name is not None:
         cam.name = name
@@ -157,17 +111,13 @@ def easyset(cam,
 
 
 def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
-    """
-    Point camera to target
+    """Points camera to target.
 
     Args:
-        cam: Camera object
-            bpy_types.Object
-        xyz_target: Target point in world coordinates
-            Array_like of 3 floats
-        up: World vector, when projected, points up in the image plane
-            Array_like of 3 floats
-            Optional; defaults to (0, 0, 1)
+        cam (bpy_types.Object): Camera object.
+        xyz_target (array_like): Target point in world coordinates.
+        up (array_like, optional): World vector that, when projected,
+            points up in the image plane.
     """
     logger_name = thisfile + '->point_camera_to()'
 
@@ -222,21 +172,19 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
 
 
 def intrinsics_compatible_with_scene(cam, eps=1e-6):
-    """
-    Check if camera intrinsic parameters (sensor size and pixel aspect ratio)
-        are comptible with the current scene (render resolutions and their scale),
-        assuming the entire sensor is active
+    r"""Checks if camera intrinsic parameters are comptible with the current scene.
+
+    Intrinsic parameters include sensor size and pixel aspect ratio, and scene
+    parameters refer to render resolutions and their scale. The entire sensor is
+    assumed active.
 
     Args:
-        cam: Camera object
-            bpy_types.Object
-        eps: Epsilon for numerical comparison; considered equal if abs(a - b) / b < eps
-            Float
-            Optional; defaults to 1e-6
+        cam (bpy_types.Object): Camera object
+        eps (float, optional): :math:`\epsilon` for numerical comparison. Considered
+            equal if :math:`\frac{|a - b|}{b} < \epsilon`.
 
     Returns:
-        comptible: Result
-            Boolean
+        bool: Check result.
     """
     logger.name = thisfile + '->intrinsics_compatible_with_scene()'
 
@@ -270,13 +218,14 @@ def intrinsics_compatible_with_scene(cam, eps=1e-6):
 
 
 def correct_sensor_height(cam):
-    """
-    Make render resolutions (w_pix, h_pix), sensor size (w_mm, h_mm), and pixel aspect ratio (r)
-        compatible by changing sensor height to w_mm * h_pix / w_pix / r
+    r"""To make render resolutions, sensor size, and pixel aspect ratio comptible.
+
+    If render resolutions are :math:`(w_\text{pix}, h_\text{pix})`, sensor sizes
+    are :math:`(w_\text{mm}, h_\text{mm})`, and pixel aspect ratio is :math:`r`,
+    then :math:`h_\text{mm}\leftarrow\frac{h_\text{pix}}{w_\text{pix}r}w_\text{mm}`.
 
     Args:
-        cam: Camera object
-            bpy_types.Object
+        cam (bpy_types.Object): Camera.
     """
     logger_name = thisfile + '->correct_sensor_height()'
 
@@ -298,25 +247,27 @@ def correct_sensor_height(cam):
 
 
 def get_camera_matrix(cam, keep_disparity=False):
-    """
-    Get camera matrix, intrinsics, and extrinsics from a Blender camera
-        You can ask for a 4-by-4 projection that projects (x, y, z, 1) to
-            (u, v, 1, d), where d is the disparity, reciprocal of depth
+    r"""Gets camera matrix, intrinsics, and extrinsics from a camera.
+
+    You can ask for a 4-by-4 projection that projects :math:`(x, y, z, 1)` to
+    :math:`(u, v, 1, d)`, where :math:`d` is the disparity, reciprocal of depth.
 
     Args:
-        cam: Camera object
-            bpy_types.Object
-        keep_disparity: Whether matrices keep disparity or not
-            Boolean
-            Optional; defaults to False
+        cam (bpy_types.Object): Camera.
+        keep_disparity (bool, optional): Whether matrices keep disparity or not.
+
+    Raises:
+        ValueError: If render settings and camera intrinsics mismatch. Run
+            :func:`intrinsics_compatible_with_scene` for advice.
 
     Returns:
-        cam_mat: Camera matrix, product of intrinsics and extrinsics
-            4-by-4 Matrix if `keep_disparity`; else, 3-by-4
-        int_mat: Camera intrinsics
-            4-by-4 Matrix if `keep_disparity`; else, 3-by-3
-        ext_mat: Camera extrinsics
-            4-by-4 Matrix if `keep_disparity`; else, 3-by-4
+        tuple:
+            - **cam_mat** (*mathutils.Matrix*) -- Camera matrix, product of intrinsics and
+              extrinsics. 4-by-4 if ``keep_disparity``; else, 3-by-4.
+            - **int_mat** (*mathutils.Matrix*) -- Camera intrinsics. 4-by-4 if
+              ``keep_disparity``; else, 3-by-3.
+            - **ext_mat** (*mathutils.Matrix*) -- Camera extrinsics. 4-by-4 if
+              ``keep_disparity``; else, 3-by-4.
     """
     logger_name = thisfile + '->get_camera_matrix()'
 
@@ -425,27 +376,25 @@ def get_camera_matrix(cam, keep_disparity=False):
 
 
 def get_camera_zbuffer(cam, save_to=None, hide=None):
-    """
-    Get z-buffer of Blender camera
-        Values are z components in camera-centered coordinate system:
-            - x is horizontal
-            - y is down (to align with the actual pixel coordinates)
-            - right-handed: positive z is look-at direction and means "in front of camera"
-        Origin is camera center, not image plane (focal length away from origin)
+    """Gets :math:`z`-buffer of the camera.
+
+    Values are :math:`z` components in camera-centered coordinate system, where
+
+    - :math:`x` is horizontal;
+    - :math:`y` is down (to align with the actual pixel coordinates);
+    - right-handed: positive :math:`z` is look-at direction and means "in front of camera."
+
+    Origin is camera center, not image plane (one focal length away from origin).
 
     Args:
-        cam: Camera object
-            bpy_types.Object
-        save_to: Path to which the .exr z-buffer will be saved
-            String
-            Optional; defaults to None (don't save)
-        hide: Names of objects to be hidden while rendering this camera's z-buffer
-            String or list thereof
-            Optional; defaults to None
+        cam (bpy_types.Object): Camera.
+        save_to (str, optional): Path to which the .exr :math:`z`-buffer will be saved.
+            None means don't save.
+        hide (str or list(str)): Names of objects to be hidden while rendering
+            this camera's :math:`z`-buffer.
 
     Returns:
-        zbuffer: Camera z-buffer
-            2D numpy array
+        numpy.ndarray: Camera :math:`z`-buffer.
     """
     import cv2
 
@@ -537,35 +486,33 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
 
 
 def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
-    """
-    Backproject 2D coordinates to 3D
-        Since a 2D point could be projected from any point on a 3D line, this function will return
-            the 3D point at which this line (ray) intersects with an object for the first time
+    """Backprojects 2D coordinates to 3D.
+
+    Since a 2D point could be projected from any point on a 3D line,
+    this function will return the 3D point at which this line (ray)
+    intersects with an object for the first time.
 
     Args:
-        uvs: UV coordinates
-            Array_like of length 2 or shape (n, 2)
-            (0, 0)
-            +------------> (w, 0)
-            |           u
-            |
-            |
-            |
-            v v (0, h)
-        cam: Camera object
-            bpy_types.Object
-        obj_names: Names of objects of interest
-            String or list thereof
-            Optional; defaults to None (all objects)
-        world_coords: Whether to return world or local coordinates
-            Boolean
-            Optional; defaults to False
+        uvs (array_like): UV coordinates of length 2 or shape N-by-2,
+            in the following convention::
+                (0, 0)
+                +------------> (w, 0)
+                |           u
+                |
+                |
+                |
+                v v (0, h)
+        cam (bpy_types.Object): Camera.
+        obj_names (str or list(str), optional): Names of objects of interest.
+            ``None`` means all objects.
+        world_coords (bool, optional): Whether to return world or local coordinates.
 
     Returns:
-        xyzs: 3D local coordinates
-            Vector or None (if no intersections) or list thereof
-        intersect_objnames: Name(s) of object(s) responsible for intersections
-            String or None (if no intersections) or list thereof
+        tuple:
+            - **xyzs** (*mathutils.Vector or list(mathutils.Vector)*) -- 3D local coordinates.
+              Value being ``None`` means no intersections.
+            - **intersect_objnames** (*str or list(str)*) -- Name(s) of object(s) responsible
+              for intersections. ``None`` means no intersection.
     """
     logger_name = thisfile + '->backproject_uv_to_3d()'
 
@@ -642,35 +589,29 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
 
 
 def get_visible_vertices(cam, obj, ignore_occlusion=False, perc_z_eps=1e-6, hide=None):
-    """
-    Get vertices that are visible (projected within frame AND unoccluded) from Blender camera
-        Rasterized z-buffer (instead of ray tracing) used for speed
-        Depth considered the same within a percentage window, so inaccurate when object's
-            own depth variation is small compared with its overall depth
-        Since z-buffer may cover other objects, this function takes occlusion by other objects into account,
-            but you can opt to ignore z-buffer such that occluded vertices are also considered visible
+    r"""Gets vertices that are visible (projected within frame *and* unoccluded) from camera.
+
+    Warning:
+        Depth is considered the same within certain percentage, so the results may be inaccurate
+        when object's own depth variation is small compared with its overall depth.
+
+    Rasterized :math:`z`-buffer (instead of ray tracing) used for speed.
+    Since :math:`z`-buffer may cover other objects, this function takes occlusion by other.
+    objects into account, but you can opt to ignore the :math:`z`-buffer such that occluded
+    vertices are also considered visible.
 
     Args:
-        cam: Camera object
-            bpy_types.Object
-        obj: Object of interest
-            bpy_types.Object
-        ignore_occlusion: Whether to ignore occlusion (including self-occlusion)
-            Boolean
-            Optional; defaults to False
-        perc_z_eps: Threshold for percentage difference between the query z_q and buffered z_b
-                z_q considered equal to z_b when abs(z_q - z_b) / z_b < perc_z_eps
-            Float
-            Optional; defaults to 1e-6
-            Useless if ignore_occlusion
-        hide: Names of objects to be hidden while rendering this camera's z-buffer
-            String or list thereof
-            Optional; defaults to None
-            Useless if ignore_occlusion
+        cam (bpy_types.Object): Camera.
+        obj (bpy_types.Object): Object of interest.
+        ignore_occlusion (bool, optional): Whether to ignore occlusion (including self-occlusion).
+        perc_z_eps (float, optional): Threshold for percentage difference between the query :math:`z_q`
+            and buffered :math:`z_b`. :math:`z_q` is considered equal to :math:`z_b` when
+            :math:`\frac{|z_q - z_b|}{z_b} <` this. Useless if ``ignore_occlusion``.
+        hide (str or list(str), optional): Names of objects to be hidden while rendering this camera's
+            :math:`z`-buffer. Useless if ``ignore_occlusion``.
 
     Returns:
-        visible_vert_ind: Indices of vertices that are visible
-            List of non-negative integers
+        list: Indices of vertices that are visible.
     """
     logger_name = thisfile + '->get_visible_vertices()'
 
@@ -719,19 +660,17 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, perc_z_eps=1e-6, hide
 
 
 def get_2d_bounding_box(obj, cam):
-    """
-    Get 2D bounding box of the object in the camera frame
-        This is different from projecting the 3D bounding box to 2D
+    """Gets a 2D bounding box of the object in the camera frame.
+
+    This is different from projecting the 3D bounding box to 2D.
 
     Args:
-        obj: Object of interest
-            bpy_types.Object
-        cam: Camera object
-            bpy_types.Object
+        obj (bpy_types.Object): Object of interest.
+        cam (bpy_types.Object): Camera.
 
     Returns:
-        corners: 2D coordinates of bounding box corners
-            Numpy array of shape (4, 2); corners are ordered counterclockwise
+        numpy.ndarray: 2D coordinates of the bounding box corners.
+        Of shape 4-by-2. Corners are ordered counterclockwise, following::
             (0, 0)
             +------------> (w, 0)
             |           u
