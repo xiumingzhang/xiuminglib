@@ -12,16 +12,13 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def point_light_to(light, target):
-    """
-    Point directional light to a target
+    """Points directional light to a target.
 
     Args:
-        light: Light object
-            bpy_types.Object
-        target: Target location to which light rays point
-            3-tuple of floats
+        light (bpy_types.Object): Light object.
+        target (tuple(float)): Target location to which light rays point.
     """
-    logger.name = thisfile + '->point_light_to()'
+    logger_name = thisfile + '->point_light_to()'
 
     target = Vector(target)
 
@@ -33,35 +30,24 @@ def point_light_to(light, target):
     rot_quat = direction.to_track_quat('-Z', 'Y')
     light.rotation_euler = rot_quat.to_euler()
 
+    logger.name = logger_name
     logger.info("Lamp '%s' points to %s now", light.name, target)
 
 
 def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=1, size=0.1):
-    """
-    Add a sun lamp that emits parallel light rays
+    """Adds a sun lamp that emits parallel light rays.
 
     Args:
-        xyz: Location only used to compute light ray direction
-            3-tuple of floats
-            Optional; defaults to (0, 0, 0)
-        rot_vec_rad: Rotation angle in radians around x, y and z
-            3-tuple of floats
-            Optional; defaults to (0, 0, 0)
-        name: Light object name
-            String
-            Optional
-        energy: Light intensity
-            Float
-            Optional; defaults to 1
-        size: Light size for ray shadow tracing; larger for softer shadows
-            Float
-            Optional; defaults to 0.1
+        xyz (tuple(float), optional): Location only used to compute light ray direction.
+        rot_vec_rad (tuple(float), optional): Rotations in radians around x, y and z.
+        name (str, optional): Light name.
+        energy (float, optional): Light intensity.
+        size (float, optional): Light size for ray shadow tracing. Use larger for softer shadows.
 
     Returns:
-        sun: Handle of added light
-            bpy_types.Object
+        bpy_types.Object: Light added.
     """
-    logger.name = thisfile + '->add_light_sun()'
+    logger_name = thisfile + '->add_light_sun()'
 
     bpy.ops.object.lamp_add(type='SUN', location=xyz, rotation=rot_vec_rad)
     sun = bpy.context.active_object
@@ -78,37 +64,27 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=1, siz
     else:
         raise NotImplementedError(engine)
 
+    logger.name = logger_name
     logger.info("Sun lamp (parallel light) added")
 
     return sun
 
 
 def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=100, size=0.1):
-    """
-    Add area light that emits light rays the lambertian way
+    """Adds area light that emits light rays the lambertian way.
 
     Args:
-        xyz: Location
-            3-tuple of floats
-            Optional; defaults to (0, 0, 0)
-        rot_vec_rad: Rotation angle in radians around x, y and z
-            3-tuple of floats
-            Optional; defaults to (0, 0, 0)
-        name: Light object name
-            String
-            Optional
-        energy: Light intensity
-            Float
-            Optional; defaults to 100
-        size: Light size for ray shadow tracing; larger for softer shadows
-            Float
-            Optional; defaults to 0.1
+        xyz (tuple(float), optional): Location.
+        rot_vec_rad (tuple(float), optional): Rotations in radians around x, y and z.
+        name (str, optional): Light name.
+        energy (float, optional): Light intensity.
+        size (float, optional): Light size for ray shadow tracing.
+            Use larger values for softer shadows.
 
     Returns:
-        area: Handle of added light
-            bpy_types.Object
+        bpy_types.Object: Light added.
     """
-    logger.name = thisfile + '->add_light_area()'
+    logger_name = thisfile + '->add_light_area()'
 
     if (np.abs(rot_vec_rad) > 2 * np.pi).any():
         logger.warning("Some input value falls outside [-2pi, 2pi]. Sure inputs are in radians?")
@@ -128,31 +104,24 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=100, 
     else:
         raise NotImplementedError(engine)
 
-    logger.info("%s: Area light added")
+    logger.name = logger_name
+    logger.info("Area light added")
 
     return area
 
 
 def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
-    """
-    Add omnidirectional point lamp
+    """Adds omnidirectional point lamp.
 
     Args:
-        xyz: Location
-            3-tuple of floats
-            Optional; defaults to (0, 0, 0)
-        name: Light object name
-            String
-            Optional
-        energy: Light intensity
-            Float
-            Optional; defaults to 100
+        xyz (tuple(float), optional): Location.
+        name (str, optional): Light name.
+        energy (float, optional): Light intensity.
 
     Returns:
-        point: Handle of added light
-            bpy_types.Object
+        bpy_types.Object: Light added.
     """
-    logger.name = thisfile + '->add_light_point()'
+    logger_name = thisfile + '->add_light_point()'
 
     bpy.ops.object.lamp_add(type='POINT', location=xyz)
     point = bpy.context.active_object
@@ -169,6 +138,7 @@ def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
     else:
         raise NotImplementedError(engine)
 
+    logger.name = logger_name
     logger.info("Omnidirectional point light added")
 
     return point
