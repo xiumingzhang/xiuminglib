@@ -5,27 +5,19 @@ from scipy.special import sph_harm
 
 
 def get(arr, top=True, n=1, n_std=None):
-    """
-    Get top (or bottom) n value(s) from an m-D array_like
+    """Gets top (or bottom) N value(s) from an M-D array.
 
     Args:
-        arr: Array, which will be flattened if high-D
-            m-D array_like
-        top: Whether to find the top or bottom n
-            Boolean
-            Optional; defaults to True
-        n: Number of values to return
-            Positive integer
-            Optional; defaults to 1
-        n_std: Definition of outliers to exclude, assuming Gaussian
-            Positive float
-            Optional; defaults to None (assuming no outlier)
+        arr (array_like): Array, which will be flattened if high-D.
+        top (bool, optional): Whether to find the top or bottom N.
+        n (int, optional): Number of values to return.
+        n_std (float, optional): Definition of outliers to exclude, assuming Gaussian.
+            ``None`` means assuming no outlier.
 
     Returns:
-        ind: Indice(s) that give the extrema
-            m-tuple of numpy arrays of n integers
-        val: Extremum values, i.e., `arr[ind]`
-            Numpy array of length n
+        tuple:
+            - **ind** (*tuple*) -- Indices that give the extrema, M-tuple of arrays of N integers.
+            - **val** (*numpy.ndarray*) -- Extremum values, i.e., ``arr[ind]``.
     """
     arr = np.array(arr, dtype=float)
 
@@ -51,22 +43,19 @@ def get(arr, top=True, n=1, n_std=None):
 
 
 def smooth_1d(arr, win_size, kernel_type='half'):
-    """
-    Smooth 1D signal
+    """Smooths 1D signal.
 
     Args:
-        arr: 1D signal to smooth
-            1D array_like of floats
-        win_size: Size of the smoothing window
-            Odd natural number
-        kernel_type: Kernel type
-            'half' (e.g., normalized [2^-2, 2^-1, 2^0, 2^-1, 2^-2]) or
-            'equal' (e.g., normalized [1, 1, 1, 1, 1]
-            Optional (defaults to 'half')
+        arr (array_like): 1D signal to smooth.
+        win_size (int): Size of the smoothing window. Use odd number.
+        kernel_type (str, optional): Kernel type: ``'half'`` (e.g., normalized :math:`[2^{-2}, 2^{-1},
+            2^0, 2^{-1}, 2^{-2}]`) or ``'equal'`` (e.g., normalized :math:`[1, 1, 1, 1, 1]`).
+
+    Raises:
+        ValueError: If kernel type is wrong.
 
     Returns:
-        arr_smooth: Smoothed 1D signal
-            1D numpy array of floats
+        numpy.ndarray: Smoothed 1D signal.
     """
     assert np.mod(win_size, 2) == 1, "Even window size provided"
     arr = np.array(arr).ravel()
@@ -93,29 +82,30 @@ def smooth_1d(arr, win_size, kernel_type='half'):
 
 
 def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
-    """
-    Perform principal component (PC) analysis on data via eigendecomposition of covariance matrix
-        See unit_test() for example usages (incl. reconstructing data with top k PC's)
+    """Performs principal component (PC) analysis on data.
+
+    Via eigendecomposition of covariance matrix. See :func:`main` for example usages,
+    including reconstructing data with top K PCs.
 
     Args:
-        data_mat: Data matrix of n data points in the m-D space
-            Array_like, dense or sparse, of shape (m, n); each column is a point
-        n_pcs: Number of top PC's requested
-            Positive integer < m
-            Optional; defaults to m - 1
-        eig_method: Method for eigendecomposition of the symmetric covariance matrix
-            'numpy.linalg.eigh' or 'scipy.sparse.linalg.eigsh'
-            Optional; defaults to 'scipy.sparse.linalg.eigsh'
+        data_mat (array_like): Data matrix of N data points in the M-D space, of shape
+            M-by-N, where each column is a point.
+        n_pcs (int, optional): Number of top PCs requested. ``None`` means :math:`M-1`.
+        eig_method (str, optional): Method for eigendecomposition of the symmetric covariance matrix:
+            ``'numpy.linalg.eigh'`` or ``'scipy.sparse.linalg.eigsh'``.
+
+    Raises:
+        NotImplementedError: If ``eig_method`` is not implemented.
 
     Returns:
-        pcvars: PC variances (eigenvalues of covariance matrix) in descending order
-            Numpy array of length n_pcs
-        pcs: Corresponding PC's (normalized eigenvectors)
-            Numpy array of shape (m, n_pcs); each column is a PC
-        projs: Data points centered and then projected to the n_pcs-D PC space
-            Numpy array of shape (n_pcs, n); each column is a point
-        data_mean: Mean that can be used to recover raw data
-            Numpy array of length m
+        tuple:
+            - **pcvars** (*numpy.ndarray*) -- PC variances (eigenvalues of covariance matrix)
+              in descending order.
+            - **pcs** (*numpy.ndarray*) -- Corresponding PCs (normalized eigenvectors), of shape
+              M-by-``n_pcs``. Each column is a PC.
+            - **projs** (*numpy.ndarray*) -- Data points centered and then projected to the
+              ``n_pcs``-D PC space. Of shape ``n_pcs``-by-N. Each column is a point.
+            - **data_mean** (*numpy.ndarray*) -- Mean that can be used to recover raw data. Of length M.
     """
     if issparse(data_mat):
         data_mat = data_mat.toarray()
@@ -170,20 +160,19 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
 
 
 def matrix_for_discrete_fourier_transform(n):
-    """
-    Generate transform matrix for discrete Fourier transform (DFT) W
-        To transform an image I, apply it twice: WIW
-        See unit_test() for example usages
+    """Generates transform matrix :math:`W` for discrete Fourier transform (DFT).
+
+    To transform an image :math:`I`, apply it twice: :math:`WIW`.
+    See :func:`main` for example usages.
 
     Args:
-        n: Signal length; this will be either image height or width if you are doing 2D DFT
-            to an image, i.e., wmat_h.dot(im).dot(wmat_w).
-            Natural number
+        n (int): Signal length. This will be either image height or width if you are doing 2D DFT
+            to an image, i.e., ``wmat_h.dot(im).dot(wmat_w)``.
 
     Returns:
-        wmat: Transform matrix whose row i, when dotting with signal (column) vector, gives the
-            coefficient for i-th Fourier component, where i < n
-            Numpy complex array of shape (n, n)
+        numpy.ndarray: Transform matrix whose row :math:`i`, when dotting with signal (column) vector,
+        gives the coefficient for the :math:`i`-th Fourier component, where :math:`i < N`.
+        Of shape N-by-N.
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
 
@@ -194,33 +183,28 @@ def matrix_for_discrete_fourier_transform(n):
 
 
 def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
-    """
-    Generate transform matrix for discrete real spherical harmonic (SH) expansion
-        See unit_test() for example usages
+    r"""Generates transform matrix for discrete real spherical harmonic (SH) expansion.
+
+    See :func:`main` for example usages.
 
     Args:
-        l: Up to which band (starting form 0); the number of harmonics is (l + 1) ** 2;
-            in other words, all harmonics within each band (-l <= m <= l) are used
-            Natural number
-        n_lat: Number of discretization levels of colatitude (colatitude-azimuth convention; [0, pi]) or
-            latitude (latitude-longitude convention; [-pi/2, pi/2]); with the same step size, n_azimuth
-            will be twice as big, since azimuth (colatitude-azimuth convention; [0, 2pi]) or latitude
-            (latitude-longitude convention; [-pi, pi]) spans 2pi
-            Natural number
-        coord_convention: Coordinate system convention to use
-            'colatitude-azimuth' or 'latitude-longitude'
-            Optional; defaults to 'colatitude-azimuth'
-
-            Colatitude-azimuth convention / latitude-longitude convention
+        l (int): Up to which band (starting form 0). The number of harmonics is :math:`(l+1)^2`.
+            In other words, all harmonics within each band (:math:`-l\leq m\leq l`) are used.
+        n_lat (int): Number of discretization levels of colatitude (for colatitude-azimuth convention; :math:`[0, \pi]`)
+            or latitude (for latitude-longitude convention; :math:`[-\frac{\pi}{2}, \frac{\pi}{2}]`).
+            With the same step size, ``n_azimuth`` will be twice as big, since azimuth (in colatitude-azimuth convention;
+            :math:`[0, 2\pi]`) or latitude (in latitude-longitude convention; :math:`[-\pi, \pi]`) spans :math:`2\pi`.
+        coord_convention (str, optional): Coordinate system convention to use: ``'colatitude-azimuth'``
+            or ``'latitude-longitude'``. Colatitude-azimuth vs. latitude-longitude convention::
 
                 3D
-                                                               ^ z (colat = 0 / lat = pi/2)
-                                                               |
-                                                               |
-                          (azi = 3pi/2 / lng = -pi/2) ---------+---------> y (azi = pi/2 / lng = pi/2)
-                                                             ,'|
-                                                           ,'  |
-              (colat = pi/2, azi = 0 / lat = 0, lng = 0) x     | (colat = pi / lat = -pi/2)
+                                                   ^ z (colat = 0; lat = pi/2)
+                                                   |
+                          (azi = 3pi/2;            |
+                           lng = -pi/2)   ---------+---------> y (azi = pi/2; lng = pi/2)
+                                                 ,'|
+                    (colat = pi/2, azi = 0;    ,'  |
+                     lat = 0, lng = 0)        x    | (colat = pi; lat = -pi/2)
 
                 2D
                      (0, 0)                                  (pi/2, 0)
@@ -232,22 +216,23 @@ def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-a
                      (pi, 0)                                     |
                                                             (-pi/2, 0)
 
-        _check_orthonormality: Whether to check orthonormality or not
-            Boolean
-            Internal use only and optional; defaults to False
+        _check_orthonormality (bool, optional): Whether to check orthonormality or not.
+            Intended for internal use.
+
+    Raises:
+        NotImplementedError: If the coordinate convention specified is not implemented.
 
     Returns:
-        ymat: Transform matrix whose row i, when dotted with flattened image (column) vector,
-            gives the coefficient for i-th harmonic, where i = (l + 1) * l + m; the spherical
-            function to transform (in the form of 2D image indexed by two angles) should be
-            flattened, with .ravel(), in row-major order: the row index varies the slowest,
-            and the column index the quickest
-            Numpy array of shape ((l + 1) ** 2, 2 * n_lat ** 2)
-        areas_on_unit_sphere: Area of the unit sphere covered by each sample point; this is
-            proportional to sine of colatitude and has nothing to do with azimuth/longitude;
-            Used as weights for discrete summation to approximate continuous integration;
-            Flattened also in row-major order
-            Numpy array of length n_lat * (2 * n_lat)
+        tuple:
+            - **ymat** (*numpy.ndarray*) -- Transform matrix whose row :math:`i`, when dotted with flattened image
+              (column) vector, gives the coefficient for :math:`i`-th harmonic, where :math:`i=l(l+1)+m`.
+              The spherical function to transform (in the form of 2D image indexed by two angles) should be
+              flattened, with ``.ravel()``, in row-major order: the row index varies the slowest,
+              and the column index the quickest. Of shape ``((l + 1) ** 2, 2 * n_lat ** 2)``.
+            - **areas_on_unit_sphere** (*numpy.ndarray*) -- Area of the unit sphere covered by each sample point.
+              This is proportional to sine of colatitude and has nothing to do with azimuth/longitude.
+              Used as weights for discrete summation to approximate continuous integration.
+              Flattened also in row-major order. Of length ``n_lat * (2 * n_lat)``.
     """
     # Generate the l and m values for each matrix location
     l_mat = np.zeros(((l + 1) ** 2, n_lat * 2 * n_lat))
@@ -338,8 +323,9 @@ def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-a
     return ymat, areas_on_unit_sphere
 
 
-def unit_test(func_name):
-    # Unit tests and example usages
+def main(func_name):
+    """Unit tests that can also serve as example usage."""
+    import pdb
 
     if func_name == 'pca':
         pts = np.random.rand(5, 8) # 8 points in 5D
@@ -402,7 +388,4 @@ def unit_test(func_name):
 
 
 if __name__ == '__main__':
-    import pdb
-
-    func_to_test = 'matrix_for_real_spherical_harmonics'
-    unit_test(func_to_test)
+    main('matrix_for_real_spherical_harmonics')
