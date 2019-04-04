@@ -8,20 +8,18 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def binarize(im, threshold=None):
-    """
-    Binarizes images
+    """Binarizes images.
 
     Args:
-        im: Image to binarize
-            Numpy array of any integer type (uint8, uint16, etc.)
-                - If h-by-w-3, convert to grayscale and treat as h-by-w
-        threshold: Threshold for binarization
-            Float
-            Optional; defaults to None (midpoint of the dtype)
+        im (numpy.ndarray): Image to binarize. Of any integer type (``uint8``, ``uint16``, etc.).
+            If H-by-W-by-3, will be converted to grayscale and treated as H-by-W.
+        threshold (float, optional): Threshold for binarization. ``None`` means midpoint of the ``dtype``.
+
+    Raises:
+        ValueError: If ``im`` has wrong dimensions.
 
     Returns:
-        im_bin: Binarized image
-            h-by-w numpy array of only 0's and 1's
+        numpy.ndarray: Binarized image. Of only 0's and 1's.
     """
     im_copy = deepcopy(im)
 
@@ -30,38 +28,30 @@ def binarize(im, threshold=None):
         im_copy = cv2.cvtColor(im_copy, cv2.COLOR_BGR2GRAY)
 
     if im_copy.ndim == 2: # h-by-w
-
         # Compute threshold from data type
         if threshold is None:
             maxval = np.iinfo(im_copy.dtype).max
             threshold = maxval / 2.
-
         im_bin = im_copy
         logicalmap = im_copy > threshold
         im_bin[logicalmap] = 1
         im_bin[np.logical_not(logicalmap)] = 0
     else:
-        raise TypeError("'im' is neither h-by-w nor h-by-w-by-3")
+        raise ValueError("'im' is neither h-by-w nor h-by-w-by-3")
 
     return im_bin
 
 
 def remove_islands(im, min_n_pixels, connectivity=4):
-    """
-    Removes small islands of pixels from a binary image
+    """Removes small islands of pixels from a binary image.
 
     Args:
-        im: Input binary image
-            2D numpy array of only 0's and 1's
-        min_n_pixels: Minimum island size to keep
-            Integer
-        connectivity: Definition of "connected"
-            Either 4 or 8
-            Optional; defaults to 4
+        im (numpy.ndarray): Input binary image. Of only 0's and 1's.
+        min_n_pixels (int): Minimum island size to keep.
+        connectivity (int, optional): Definition of "connected": either 4 or 8.
 
     Returns:
-        im_clean: Output image with small islands removed
-            2D numpy array of 0's and 1's
+        numpy.ndarray: Output image with small islands removed.
     """
     # Validate inputs
     assert (len(im.shape) == 2), "'im' needs to have exactly two dimensions"
@@ -86,34 +76,34 @@ def remove_islands(im, min_n_pixels, connectivity=4):
 
 
 def query_float_locations(im, query_pts, method='bilinear'):
-    """
-    Query interpolated values of float lactions on image using
-        1. Bilinear interpolation (default)
-            - Can break big matrices into patches and work locally
-        2. Bivariate spline interpolation
-            - Fitting a global spline, so memory-intensive and shows global effects
+    """Queries interpolated values of float lactions on image.
 
-    Pixel values are considered as values at pixel centers. E.g., if im[0, 1] is 0.68,
-        then f(0.5, 1.5) is deemed to evaluate to 0.68 exactly
+    Uses
+        -- Bilinear interpolation: Can break big matrices into patches and work locally, or
+        -- Bivariate spline interpolation: Fitting a global spline, so memory-intensive
+           and shows global effects.
+    Pixel values are considered as values at pixel centers. E.g., if ``im[0, 1]`` is :math:``0.68``,
+    then :math:`f(0.5, 1.5)` is deemed to evaluate to :math:`0.68` exactly.
 
     Args:
-        im: Rectangular grid of data
-            h-by-w or h-by-w-by-c numpy array
-            Each of c channels is interpolated independently
-        query_pts: Query locations
-            Array_like of shape (n, 2) or (2,)
-            +-----------> dim1
+        im (numpy.ndarray): H-by-W or H-by-W-by-C Rectangular grid of data.
+            Each of C channels is interpolated independently.
+        query_pts (array_like): Query locations of shape N-by-2 or length 2::
+
+            +---------> dim1
             |
             |
             |
             v dim0
-        method: Interpolation method
-            'spline' or 'bilinear'
-            Optional; defaults to 'bilinear'
+
+        method (str, optional): Interpolation method: ``'spline'`` or ``'bilinear'``.
+
+    Raises:
+        ValueError: If input is of a wrong shape or dimensions.
+        NotImplementedError: If interpolation method is not implemented.
 
     Returns:
-        interp_val: Interpolated values at query locations
-            Numpy array of shape (n, c) or (c,)
+        numpy.ndarray: Interpolated values at query locations.
     """
     from scipy.interpolate import RectBivariateSpline, interp2d
 
@@ -209,22 +199,20 @@ def query_float_locations(im, query_pts, method='bilinear'):
 
 
 def find_local_extrema(im, want_maxima, kernel_size=3):
-    """
-    Find local maxima or minima in an image
+    """Finds local maxima or minima in an image.
 
     Args:
-        im: Single-channel (e.g., grayscale) or multi-channel (e.g., RGB) images
-            h-by-w or h-by-w-by-c numpy array
-            Extrema are found independently for each of the c channels
-        want_maxima: Whether maxima or minima is wanted
-            Boolean
-        kernel_size: Side length of the square window under consideration
-            Integer larger than 1
-            Optional; defaults to 3
+        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or H-by-W-by-C for multi-channel
+            (e.g., RGB) images. Extrema are found independently for each of the C channels.
+        want_maxima (bool): Whether maxima or minima are wanted.
+        kernel_size (int, optional): Side length of the square window under consideration. Must be
+            larger than 1.
+
+    Raises:
+        ValueError: If the input image has wrong dimensions.
 
     Returns:
-        is_extremum: Binary map indicating if each pixel is a local extremum
-            Boolean numpy array of the same size as 'im'
+        numpy.ndarray: Binary map indicating if each pixel is a local extremum.
     """
     from scipy.ndimage.filters import minimum_filter, maximum_filter
 
@@ -266,28 +254,32 @@ def find_local_extrema(im, want_maxima, kernel_size=3):
 
 
 def compute_gradients(im):
-    """
-    Compute magnitudes and orientations of image gradients with Scharr operators
+    """Computes magnitudes and orientations of image gradients.
+
+    With Scharr operators::
+
         [ 3 0 -3 ]           [ 3  10  3]
         [10 0 -10]    and    [ 0   0  0]
         [ 3 0 -3 ]           [-3 -10 -3]
 
     Args:
-        im: Single-channel (e.g., grayscale) or multi-channel (e.g., RGB) images
-            h-by-w or h-by-w-by-c numpy array
-            Gradients are computed independently for each of the c channels
+        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or H-by-W-by-C if multi-channel
+            (e.g., RGB) images. Gradients are computed independently for each of the C channels.
+
+    Raises:
+        ValueError: If ``im`` has wrong dimensions.
 
     Returns:
-        grad_mag: Magnitude image of channel gradients; same depth as 'im'
-            Numpy array of the same size as 'im'
-        grad_orient: Orientation image of channel gradients (in radians)
-            Numpy array of the same size as 'im'
-                   y ^ pi/2
-                     |
-            pi       |
-             --------+--------> 0
-            -pi      |       x
-                     | -pi/2
+        tuple:
+            - **grad_mag** (*numpy.ndarray*) -- Magnitude image of the gradients.
+            - **grad_orient** (*numpy.ndarray*) -- Orientation image of the gradients (in radians)::
+
+                       y ^ pi/2
+                         |
+                pi       |
+                 --------+--------> 0
+                -pi      |       x
+                         | -pi/2
     """
     # Figure out image size and number of channels
     if im.ndim == 3:
@@ -332,19 +324,16 @@ def compute_gradients(im):
 
 
 def gamma_correct(im, gamma):
-    """
-    Apply gamma correction to image
+    r"""Applies gamma correction to image.
 
     Args:
-        im: Single-channel (e.g., grayscale) or multi-channel (e.g., RGB) images
-            h-by-w or h-by-w-by-c numpy array
-        gamma: Gamma value < 1 shifts image towards the darker end of the spectrum,
-            while value > 1 towards the brighter
-            Positive float
+        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or H-by-W-by-C multi-channel
+            (e.g., RGB) images.
+        gamma (float): Gamma value :math:`< 1` shifts image towards the darker end of the spectrum,
+            while value :math:`> 1` towards the brighter.
 
     Returns:
-        im_corrected: Gamma-corrected image
-            Boolean numpy array of the same size as 'im'
+        numpy.ndarray: Gamma-corrected image.
     """
     assert im.dtype in ('uint8', 'uint16')
 
