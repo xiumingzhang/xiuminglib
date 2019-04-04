@@ -7,9 +7,7 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def timeit(somefunc):
-    """
-    Outputs the time a function takes to execute
-    """
+    """Outputs the time a function takes to execute."""
     logger_name = thisfile + '->@timeit'
 
     def wrapper(*arg, **kwargs):
@@ -27,10 +25,9 @@ def timeit(somefunc):
 
 
 def existok(makedirs_func):
-    """
-    Implements the exist_ok flag in >= 3.2, which avoids race conditions,
+    """Implements the ``exist_ok`` flag in 3.2+, which avoids race conditions,
     where one parallel worker checks the folder doesn't exist and wants to
-    create it with another worker doing so faster
+    create it with another worker doing so faster.
     """
     logger_name = thisfile + '->@existok'
 
@@ -42,11 +39,12 @@ def existok(makedirs_func):
                 raise
             logger.name = logger_name
             logger.debug("%s already exists, but that is OK", args[0])
+
     return wrapper
 
 
-# Tests
-if __name__ == '__main__':
+def main():
+    """Unit tests that can also serve as example usage."""
     # timeit
     @timeit
     def findsums(x, y, z):
@@ -55,6 +53,10 @@ if __name__ == '__main__':
     print(findsums(1, 2, 3))
     # existok
     newdir = join(dirname(__file__), 'test')
-    makedirs = existok(makedirs)
-    makedirs(newdir)
-    makedirs(newdir)
+    makedirs_ = existok(makedirs)
+    makedirs_(newdir)
+    makedirs_(newdir)
+
+
+if __name__ == '__main__':
+    main()

@@ -29,7 +29,7 @@ def create_logger(file_abspath, level=logging.INFO):
 # ---------------------------- Logging Colors
 
 
-def add_coloring_to_emit_windows(fn):
+def _add_coloring_to_emit_windows(fn):
     # add methods we need to the class
     def _out_handle(self):
         return windll.kernel32.GetStdHandle(self.STD_OUTPUT_HANDLE)
@@ -93,7 +93,7 @@ def add_coloring_to_emit_windows(fn):
     return new
 
 
-def add_coloring_to_emit_ansi(fn):
+def _add_coloring_to_emit_ansi(fn):
     # Add methods we need to the class
     def new(*args):
         levelno = args[1].levelno
@@ -117,9 +117,9 @@ def add_coloring_to_emit_ansi(fn):
 if system() == 'Windows':
     # Windows does not support ANSI escapes and we are using API calls to set the console color
     from ctypes import windll
-    logging.StreamHandler.emit = add_coloring_to_emit_windows(
+    logging.StreamHandler.emit = _add_coloring_to_emit_windows(
         logging.StreamHandler.emit)
 else:
     # All non-Windows platforms are supporting ANSI escapes so we use them
-    logging.StreamHandler.emit = add_coloring_to_emit_ansi(
+    logging.StreamHandler.emit = _add_coloring_to_emit_ansi(
         logging.StreamHandler.emit)
