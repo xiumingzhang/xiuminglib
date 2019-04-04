@@ -14,8 +14,12 @@ class EXR():
     When data loaded are physically meaningful, these methods assume the EXR files
     are produced by :mod:`xiuminglib.blender.render` and hence follow certain formats.
 
-    Attributes:
+    Args:
         exr_path (str): Path to the EXR file.
+
+    Attributes:
+        exr_path (str)
+        data (dict): Data loaded.
     """
     def __init__(self, exr_path):
         self.exr_f = exr_path

@@ -2,33 +2,33 @@ import numpy as np
 
 
 class PerspCamera(object):
-    def __init__(self, f=50., im_res=(256, 256), loc=(0, 0, 0), lookat=(0, 0, 0), up=(0, 1, 0)):
-        """
-        Initialize a perspective camera in 35mm format
-        Note:
-            (0) Sensor width of 35mm format is actually 36mm
-            (1) Assuming unit pixel aspect ratio (i.e., f_x = f_y) and
-                no skewing between sensor plane and optical axis
-            (2) Active sensor size may be smaller than sensor_size, depending on im_res
-            (3) aov is a hardware property, having nothing to do with im_res
+    r"""Perspective camera in 35mm format.
 
-        Args:
-            f: 35mm format-equivalent focal length in millimeters
-                Float
-                Optional; defaults to 50
-            im_res: Image height and width in pixels
-                Array_like of two positive integers
-                Optional; defaults to (256, 256)
-            loc: Camera location (in object space)
-                Array_like of three floats
-                Optional; defaults to (0, 0, 0)
-            lookat: Where the camera points to (in object space)
-                Array_like of three floats
-                Optional; defaults to object center
-            up: Vector (in object space) that, when projected, points upward in image
-                Array_like of three floats
-                Optional; defaults to (0, 1, 0)
-        """
+    Args:
+        f (float, optional): 35mm format-equivalent focal length in mm.
+        im_res (array_like, optional): Image height and width in pixels.
+        loc (array_like, optional): Camera location in object space.
+        lookat (array_like, optional): Where the camera points to in object space,
+            so default :math:`(0, 0, 0)` is the object center.
+        up (array_like, optional): Vector in object space that, when projected,
+            points upward in image. 
+
+    Attributes:
+        f_mm (float): See ``f``. 
+        im_h (float): See ``im_res``.
+        im_w (float): See ``im_res``.
+        loc (numpy.ndarray)
+        lookat (numpy.ndarray)
+        up (numpy.ndarray)
+
+    Note:
+        - Sensor width of 35mm format is actually 36mm.
+        - Assuming unit pixel aspect ratio (i.e., :math:`f_x = f_y`) and
+          no skewing between sensor plane and optical axis.
+        - Active sensor size may be smaller than ``sensor_size``, depending on ``im_res``.
+        - aov is a hardware property, having nothing to do with im_res
+    """
+    def __init__(self, f=50., im_res=(256, 256), loc=(0, 0, 0), lookat=(0, 0, 0), up=(0, 1, 0)):
         self.f_mm = f
         self.im_h, self.im_w = im_res
         self.loc = np.array(loc)

@@ -12,7 +12,7 @@ class Obj(object):
 
     Face, vertex, or other indices here all start from 1.
 
-    Attributes:
+    Args:
         o (str, optional): Object name.
         v (numpy.ndarray, optional): Vertex coordinates.
         f (list, optional): Faces' vertex indices (1-indexed), e.g., ``[[1, 2, 3], [4, 5, 6],
@@ -25,10 +25,24 @@ class Obj(object):
         ft (list, optional): Faces' texture vertex indices, e.g., ``[[1, 2, 3], [4, 5, 6], [],
             ...]``. Must be of the same length as ``f``.
         s (bool, optional): Group smoothing.
-        mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``. D
+        mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``.
         usemtl (str, optional): Material name (defined in .mtl file).
         diffuse_map_path (str, optional): Path to diffuse texture map.
         diffuse_map_scale (float, optional): Scale of diffuse texture map.
+
+    Attributes:
+        o (str)
+        v (numpy.ndarray)
+        f (list)
+        vn (numpy.ndarray)
+        fn (list)
+        vt (numpy.ndarray)
+        ft (list)
+        s (bool)
+        mtllib (str)
+        usemtl (str)
+        diffuse_map_path (str)
+        diffuse_map_scale (float)
     """
     def __init__(self, o=None, v=None, f=None, vn=None, fn=None, vt=None, ft=None,
                  s=False, mtllib=None, usemtl=None, diffuse_map_path=None, diffuse_map_scale=1):
@@ -323,7 +337,7 @@ class Obj(object):
 class Mtl(object):
     r"""Wavefront .mtl object.
 
-    Attributes:
+    Args:
         obj (Obj): ``Obj`` object for which this ``Mtl`` object is created.
         Ns (float, optional): Specular exponent, normally :math:`\in[0, 1000]`.
         Ka (tuple, optional): Ambient reflectivity, each float normally :math:`\in[0, 1]`.
@@ -338,7 +352,20 @@ class Mtl(object):
             1.0 is fully opaque (default), and 0 is fully dissolved (completely transparent).
             Unlike a real transparent material, the dissolve does not depend upon material thickness,
             nor does it have any spectral character. Dissolve works on all illumination models.
-        illum (int): Illumination model :math:`\in[0, 1, ..., 10]`.
+        illum (int, optional): Illumination model :math:`\in[0, 1, ..., 10]`.
+
+    Attributes:
+        mtlfile (str): Material file name, set to ``obj.mtllib``.
+        newmtl (str): Material name, set to ``obj.usemtl``.
+        map_Kd_path (str): Path to the diffuse map, set to ``obj.diffuse_map_path``.
+        map_Kd_scale (float): Scale of the diffuse map, set to ``obj.diffuse_map_scale``.
+        Ns (float)
+        Ka (tuple)
+        Kd (tuple)
+        Ks (tuple)
+        Ni (float)
+        d (float)
+        illum (int)
     """
     def __init__(self, obj, Ns=96.078431, Ka=(1, 1, 1), Kd=(0.64, 0.64, 0.64),
                  Ks=(0.5, 0.5, 0.5), Ni=1, d=1, illum=2): # flake8: noqa
