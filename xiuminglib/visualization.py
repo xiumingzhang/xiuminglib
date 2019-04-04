@@ -1,5 +1,4 @@
-"""This module should be imported before ``skimage`` to
-avoid the ``matplotlib`` backend problem."""
+"""This module should be imported before ``skimage`` to avoid the ``matplotlib`` backend problem."""
 
 from os import makedirs, environ
 from os.path import dirname, exists, abspath, join
@@ -44,56 +43,42 @@ def pyplot_wrapper(*args,
                    grid=True,
                    outpath=None,
                    **kwargs):
-    """
-    Convinience wrapper for matplotlib.pyplot functions that saves plots directly to the disk
-        without displaying
+    """Convinience wrapper for :mod:`matplotlib.pyplot` functions.
+
+    It saves plots directly to the disk without displaying.
 
     Args:
-        *args, **kwargs: Positional and/or keyword parameters that the wrapped function takes
-            See documentation for matplotlib.pyplot
-        ci: Confidence interval for x_i[j] is y_i[j] +/- ci[i][j]; effective only when `func` is 'plot'
-            List of floats for one line; list of lists of floats for multiple lines
-            Optional; defaults to None
-        func: Which pyplot function to invoke
-            'plot', 'hist', or 'bar'
-            Optional; defaults to 'plot'
-        labels: Labels for plot objects, to appear in the legend
-            List of strings or None (no label for this object)
-            Optional; defaults to None (no legend)
-        legend_loc: Legend location; effective only when `labels` is not None
-            'best' | 'upper right' | 'lower left' | 'right' | 'center left' | 'lower center' |
-                'upper center' | 'center' | etc.
-            Optional; defaults to 'best'
-        figsize: Width and height of the figure in inches
-            Tuple of two positive floats
-            Optional; defaults to (14, 14)
-        figtitle: Figure title
-            String
-            Optional; defaults to None (no title)
-        xlabel, ylabel: Label of x- or y-axis
-            String
-            Optional; defaults to None (no label)
-        xticks, yticks: Tick values of x- or y-axis
-            Array_like
-            Optional; defaults to None (auto)
-        xticks_locations, yticks_locations: Locations of the ticks
-            Array_like of floats
-            Optional; defaults to None (starting from 0, one next to another)
-        *_fontsize: Font size
-            Positive integer
-            Optional
-        *_rotation: Tick rotation in degrees
-            Float
-            Optional; defaults to 0
-        xlim, ylim: Start and end values for x- and y-axes
-            List of two float(s) or None(s) (auto)
-            Optional; defaults to None (auto)
-        grid: Whether to draw grid
-            Boolean
-            Optional; defaults to True
-        outpath: Path to which the visualization is saved
-            String
-            Optional; defaults to '$TMP_DIR/plot.png'
+        *args: Positional parameters that the wrapped function takes. See :mod:`matplotlib.pyplot`.
+        **kwargs: Keyword parameters.
+        ci (list(float) or list(list(float)), optional): Confidence interval for ``x_i[j]`` is ``y_i[j] +/- ci[i][j]``.
+            Effective only when ``func`` is ``'plot'``. List of floats for one line, and list of lists of floats
+            for multiple lines.
+        func (str, optional): Which ``pyplot`` function to invoke: ``'plot'``, ``'hist'``, or ``'bar'``.
+        labels (list, optional): Labels for plot objects, to appear in the legend.
+            ``None`` means no label for this object.
+        legend_loc (str, optional): Legend location: ``'best'``, ``'upper right'``, ``'lower left'``, ``'right'``,
+            ``'center left'``, ``'lower center'``, ``'upper center'``, ``'center'``, etc.
+            Effective only when ``labels`` is not ``None``.
+        figsize (tuple, optional): Width and height of the figure in inches.
+        figtitle (str, optional): Figure title.
+        xlabel (str, optional): Label of x-axis.
+        ylabel
+        xticks (array_like, optional): Tick values of x-axis. ``None`` means auto.
+        yticks
+        xticks_locations (array_like, optional): Locations of the ticks. ``None`` means starting from 0 and
+            one next to another.
+        yticks_locations
+        *_fontsize (int, optional): Font size.
+        *_rotation (float, optional): Tick rotation in degrees.
+        xlim (list, optional): Start and end values for x-axis. ``None`` means auto.
+        ylim
+        grid (bool, optional): Whether to draw grid.
+        outpath (str, optional): Path to which the visualization is saved to.
+            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'pyplot_wrapper.png')``.
+
+    Raises:
+        NotImplementedError: If ``func`` is not implemented.
+        TypeError: If ``ci`` is of a wrong type.
     """
     if ci is not None:
         assert func == 'plot', "CI makes sense only for `plot`"
@@ -195,28 +180,26 @@ def pyplot_wrapper(*args,
 
 
 def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
-    """
-    Scatter plot on top of an image
+    r"""Plots scatter on top of an image.
 
     Args:
-        im: Image to scatter on
-            h-by-w (grayscale) or h-by-w-by-3 (RGB) numpy array of type np.uint8 or np.uint16
-        pts: Coordinates of the scatter point(s)
-            +-----------> dim1
-            |
-            |
-            |
-            v dim0
-            Array_like of length 2 or shape (n, 2)
-        size: Size(s) of scatter points
-            Positive float or array_like thereof of length n
-            Optional; defaults to 2
-        bgr: BGR color(s) of scatter points
-            3-tuple of integers ranging from 0 to 255 or array_like thereof of shape (n, 3)
-            Optional; defaults to (0, 0, 255), i.e., all red
-        outpath: Path to which the visualization is saved
-            String
-            Optional; defaults to '$TMP_DIR/scatter_on_image.png'
+        im (numpy.ndarray): Image to scatter on. H-by-W (grayscale) or H-by-W-by-3 (RGB) arrays
+            of type *numpy.uint8* or *numpy.uint16*.
+        pts (array_like): Coordinates of the scatter point(s), of length 2 for just one point or
+            shape N-by-2 for multiple points. Convention::
+
+                +-----------> dim1
+                |
+                |
+                |
+                v dim0
+
+        size (float or array_like(float), optional): Size(s) of scatter points. If *array_like*,
+            must be of length N.
+        bgr (tuple or array_like(tuple), optional): BGR color(s) of scatter points. Each element
+            :math:`\in [0, 255]`. If *array_like*, must be of shape N-by-3.
+        outpath (str, optional): Path to which the visualization is saved to.
+            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'scatter_on_image.png')``.
     """
     import cv2
 
@@ -267,19 +250,18 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
 
 
 def matrix_as_image(arr, outpath=None, gamma=None):
-    """
-    Visualize an array into an image by putting minimum (across all channels) at 0
-        and maximum at dtype_max
+    """Visualizes an array into an image.
+
+    By putting minimum (across all channels) at 0 and maximum at ``dtype_max``.
 
     Args:
-        arr: Array to be transformed into an image
-            2D or 3D numpy array with one or three channels in the third dimension (RGB)
-        outpath: Where to visualize the result
-            String
-            Optional; defaults to '$TMP_DIR/matrix_as_image.png'
-        gamma: For gamma correction
-            Positive float
-            Optional; defaults to None (no correction)
+        arr (numpy.ndarray): Array to be transformed into an image. Can be H-by-W or H-by-W-by-3.
+        outpath (str, optional): Where to visualize the result to. ``None`` means
+            ``os.path.join(os.environ.get('TMP_DIR', '~'), 'matrix_as_image.png')``.
+        gamma (float, optional): For gamma correction.
+
+    Raises:
+        ValueError: If ``arr`` is neither 2D or 3D.
     """
     import cv2
     from xiuminglib import image_processing as xi
@@ -340,16 +322,14 @@ def matrix_as_image(arr, outpath=None, gamma=None):
 
 
 def make_colormap(low, high):
-    """
-    Generates your own colormap for heatmap
+    """Generates your own colormap for heatmap.
 
     Args:
-        low, high: Colors for the lowest/highest value
-            String, such as 'red', or 3-tuple, such as (1, 0, 0)
+        low (str or tuple): Color for the lowest value, such as ``'red'`` or ``(1, 0, 0)``.
+        high
 
     Returns:
-        cmap: Generated colormap
-            matplotlib.colors.LinearSegmentedColormap
+        matplotlib.colors.LinearSegmentedColormap: Generated colormap.
     """
     c = mcolors.ColorConverter().to_rgb
     if isinstance(low, str):
@@ -371,29 +351,24 @@ def make_colormap(low, high):
 
 def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
                       outpath=None, contents_only=False, figtitle=None):
-    """
-    Visualizes a matrix as heatmap
-        Functional with matplotlib 2.0.2, but buggy with 3.0.0
+    """Visualizes a matrix as heatmap.
+
+    Warning:
+        Functional with Matplotlib 2.0.2, but buggy with 3.0.0.
 
     Args:
-        mat: Matrix to visualize as heatmp
-            2D numpy array that may contain NaN's, which will be plotted white
-        cmap: Colormap to use
-            String or any colormap type
-            Optional; defaults to 'viridis'
-        center_around_zero: Whether to center colorbar around 0 (so that zero is no color, i.e., white)
-            Useful when matrix consists of both positive and negative values, and 0 means "nothing"
-            Boolean
-            Optional; defaults to False (default colormap and auto range)
-        outpath: Path to which the visualization is saved
-            String
-            Optional; defaults to '$TMP_DIR/matrix_as_heatmap.png'
-        contents_only: Whether to plot only the contents (i.e., no borders, axes, etc.)
-            Boolean
-            Optional; defaults to False
-        figtitle: Figure title
-            String
-            Optional; defaults to None (no title)
+        mat (numpy.ndarray): Matrix to visualize as heatmp. May contain NaN's, which will be plotted white.
+        cmap (str, optional): Colormap to use.
+        center_around_zero (bool, optional): Whether to center colorbar around 0
+            (so that zero is no color, i.e., white). Useful when matrix consists of both positive and negative
+            values, and 0 means "nothing". ``None`` means default colormap and auto range.
+        outpath (str, optional): Path to which the visualization is saved to.
+            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'matrix_as_heatmap.png')``.
+        contents_only (bool, optional): Whether to plot only the contents (i.e., no borders, axes, etc.).
+        figtitle (str, optional): Figure title. ``None`` means no title.
+
+    Raises:
+        ValueError: If ``mat`` has wrong dimensions.
     """
     if outpath is None:
         outpath = join(environ.get('TMP_DIR', '~'), 'matrix_as_heatmap.png')
@@ -454,31 +429,31 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
 
 def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
-    """
-    Visualizes which points on texture map the vertices map to
+    """Visualizes which points on texture map the vertices map to.
 
     Args:
-        u, v: UV coordinates of the vertices
-            1D numpy array
-                (0, 1)
-                    ^ v
-                    |
-                    |
-                    |
-                    |
-                    +-----------> (1, 0)
-                (0, 0)        u
-        texmap: Loaded texture map or its path
-            h-by-w (grayscale) or h-by-w-by-3 (color) numpy array or string
-        ft: Texture faces
-            List of lists of integers starting from 1, e.g., '[[1, 2, 3], [], [2, 3, 4, 5], ...]'
-            Optional; defaults to None. If provided, use it to connect UV points
-        outpath: Path to which the visualization is saved
-            String
-            Optional; defaults to '$TMP_DIR/uv_on_texmap.png'
-        figtitle: Figure title
-            String
-            Optional; defaults to None (no title)
+        u (numpy.array): The :math:`u` component of UV coordinates of the vertices. Convention::
+
+            (0, 1)
+                ^ v
+                |
+                |
+                |
+                |
+                +-----------> (1, 0)
+            (0, 0)        u
+
+        v
+        texmap (numpy.ndarray or str): Loaded texture map or its path. If *numpy.ndarray*, can
+            be H-by-W (grayscale) or H-by-W-by-3 (color).
+        ft (list(list(int)), optional): Texture faces used to connect UV points. Values start
+            from 1, e.g., ``'[[1, 2, 3], [], [2, 3, 4, 5], ...]'``.
+        outpath (str, optional): Path to which the visualization is saved to.
+            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'uv_on_texmap.png')``.
+        figtitle (str, optional): Figure title.
+
+    Raises:
+        TypeError: ``texmap`` is of a wrong type.
     """
     import cv2
 
@@ -584,53 +559,40 @@ def axes3d_wrapper(
         equal_axes=False,
         outpath=None,
         **kwargs):
-    """
-    Convinience wrapper for mpl_toolkits.mplot3d.Axes3D functions that saves plots directly to the disk
-        without displaying
+    """Convinience wrapper for :class:`mpl_toolkits.mplot3d.Axes3D` functions.
+
+    It saves plots directly to the disk without displaying.
 
     Args:
-        *args, **kwargs: Positional and/or keyword parameters that the wrapped function takes
-            See documentation for mpl_toolkits.mplot3d.Axes3D
-        func: Which pyplot function to invoke
-            'scatter'
-            Optional; defaults to 'scatter'
-        labels: Labels for plot objects, to appear in the legend
-            List of strings or None (no label for this object)
-            Optional; defaults to None (no legend)
-        legend_loc: Legend location; effective only when labels is not None
-            'best', 'upper right', 'lower left', 'right', 'center left',
-                'lower center', 'upper center', 'center, etc.
-            Optional; defaults to 'best'
-        figsize: Width and height of the figure in inches
-            Tuple of two positive floats
-            Optional; defaults to (14, 14)
-        figtitle: Figure title
-            String
-            Optional; defaults to None (no title)
-        xlabel, ylabel, zlabel: Labels of x-, y- or z-axis
-            String
-            Optional; defaults to None (no label)
-        xticks, yticks, zticks: Tick values of x-, y- or z-axis
-            Array_like
-            Optional; defaults to None (auto)
-        *_fontsize: Font size
-            Positive integer
-            Optional
-        *_rotation: Tick rotation in degrees
-            Float
-            Optional; defaults to 0
-        grid: Whether to draw grid
-            Boolean
-            Optional; defaults to True
-        views: List of elevation-azimuth angle pairs (in degree)
-            List of 2-tuples of floats
-            Optional; defaults to None
-        equal_axes: Whether to have the same scale for all axes
-            Boolean
-            Optional; defaults to False
-        outpath: Path to which the visualization is saved
-            String ending with '.png' or '.pkl' (for offline interactive viewing)
-            Optional; defaults to '$TMP_DIR/plot.png'
+        *args: Positional parameters that the wrapped function takes. See
+            :class:`mpl_toolkits.mplot3d.Axes3D`.
+        **kwargs: Keyword parameters.
+        func (str, optional): Which pyplot function to invoke: ``'scatter'``.
+        labels (list(str), optional): Labels for plot objects, to appear in the legend. Use ``None`` for
+            no label for a certain object. ``None`` means no legend at all.
+        legend_loc (str, optional): Legend location: ``'best'``, ``'upper right'``, ``'lower left'``,
+            ``'right'``, ``'center left'``, ``'lower center'``, ``'upper center'``, ``'center'``, etc.
+            Rffective only when ``labels`` is not ``None``.
+        figsize (tuple, optional): Width and height of the figure in inches.
+        figtitle (str, optional): Figure title.
+        xlabel (str, optional): Label of x-axis.
+        ylabel
+        zlabel
+        xticks (array_like, optional): Tick values of x-axis. ``None`` means auto.
+        yticks
+        zticks
+        *_fontsize (int, optional): Font size.
+        *_rotation (float, optional): Tick rotation in degrees.
+        grid (bool, optional): Whether to draw grid.
+        views (tuple, optional): List of elevation-azimuth angle pairs (in degrees).
+        equal_axes (bool, optional): Whether to have the same scale for all axes.
+        outpath (str, optional): Path to which the visualization is saved to. Should end with
+            ``'.png'`` or ``'.pkl'`` (for offline interactive viewing).
+            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'axes3d_wrapper.png')``.
+
+    Raises:
+        NotImplementedError: If ``func`` is not yet implemented.
+        ValueError: If ``outpath`` has a wrong extension.
     """
     logger_name = thisfile + '->axes3d_wrapper()'
 
@@ -737,20 +699,13 @@ def axes3d_wrapper(
 
 
 def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
-    """
-    Visualize point cloud as isosurface of its TDF
+    """Visualizes point cloud as isosurface of its TDF.
 
     Args:
-        pts: Cartesian coordinates in object space
-            n-by-3 array_like of floats
-        out_obj: The output path of the surface .obj
-            String
-        res: Resolution of the TDF
-            Integer
-            Optional; defaults to 128
-        center: Whether to center these points around object space origin
-            Boolean
-            Optional; defaults to False
+        pts (array_like): Cartesian coordinates in object space, of shape N-by-3.
+        out_obj (str): The output path of the surface .obj.
+        res (int, optional): Resolution of the TDF.
+        center (bool, optional): Whether to center these points around object space origin.
     """
     from skimage.measure import marching_cubes_lewiner
     from trimesh import Trimesh
