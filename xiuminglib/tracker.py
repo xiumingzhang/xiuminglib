@@ -1,90 +1,85 @@
 from os.path import join
 import numpy as np
 import cv2
-from xiuminglib import visualization as xv
 
 
 class LucasKanadeTracker():
-    def __init__(self, frames, pts, backtrack_thres=1, lk_params=None):
-        """
-        Args:
-            frames: Frame images in order
-                List of h-by-w or h-by-w-by-3 numpy arrays
-                Color images will be converted to grayscale
-            pts: Points to track in the first frame
-                Array_like of shape (n, 2)
-                    +------------>
-                    |       pts[:, 1]
-                    |
-                    |
-                    v pts[:, 0]
-            backtrack_thres: Largest pixel deviation in x or y direction of
-                a successful backtrack
-                Float
-                Optional; defaults to 1
-            lk_params: Keyword parameters for calcOpticalFlowPyrLK()
-                Dictionary of parameter name-value pairs
-                Optional
+    """Lucas Kanade Tracker.
 
-        Result attrs:
-            tracks: Positions of tracks from the i-th to (i+1)-th frame
-                List of n-by-2 numpy arrays
-                    +------------>
-                    |       tracks[:, 1]
-                    |
-                    |
-                    v tracks[:, 0]
-            can_backtrack: Whether each track can be back-tracked to the previous frame
-                List of Boolean numpy arrays of length n
-            is_lost: Whether each track is lost in this frame
-                List of Boolean numpy arrays of length n
-        """
+    Args:
+        frames (list(numpy.array)): Frame images in order. Arrays are either H-by-W or H-by-W-by-3,
+            and will be converted to grayscale.
+        pts (array_like): Points to track in the first frame. Of shape N-by-2. Convention::
+
+                +------------>
+                |       pts[:, 1]
+                |
+                |
+                v pts[:, 0]
+
+        backtrack_thres (float, optional): Largest pixel deviation in x or y direction of
+            a successful backtrack.
+        lk_params (dict, optional): Keyword parameters for :func:`cv2.calcOpticalFlowPyrLK`.
+
+    Attributes:
+        frames (list(numpy.array)): Grayscale.
+        pts (numpy.array)
+        lk_params (dict)
+        backtrack_thres (float)
+        tracks (list(numpy.array)): Positions of tracks from the :math:`i`-th to :math:`(i+1)`-th frame.
+            Arrays are of shape N-by-2. Convention::
+
+                +------------>
+                |       tracks[:, 1]
+                |
+                |
+                v tracks[:, 0]
+
+        can_backtrack (list(numpy.array)): Whether each track can be back-tracked to the previous frame.
+            Arrays should be Boolean.
+        is_lost (list(numpy.array)): Whether each track is lost in this frame. Arrays should be Boolean.
+    """
+    def __init__(self, frames, pts, backtrack_thres=1, lk_params=None):
         frames_gs = []
         for img in frames:
             if img.ndim == 3:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             frames_gs.append(img)
         self.frames = frames_gs
-
         self.pts = np.array(pts)
-
         self.lk_params = {
             'winSize': (15, 15),
             'maxLevel': 12,
-            'criteria': (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)}
+            'criteria': (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)
+        }
         if lk_params is not None:
             # Overwrite with whatever is user-provided
             for key, val in lk_params.items():
                 self.lk_params[key] = val
-
         self.backtrack_thres = backtrack_thres
         self.tracks = []
         self.can_backtrack = []
         self.is_lost = []
 
     def run(self, constrain=None):
-        """
+        """Runs tracking.
+
         Args:
-            constrain: Function applied to tracks before being fed to the next round
-                function that takes in an n-by-2 numpy array as well as the current workspace
-                (as a dictionary) and returns another n-by-2 numpy array
-                Optional; defaults to None
+            constrain (function, optional): Function applied to tracks before being fed to the next round.
+                It should take in an N-by-2 arrays as well as the current workspace (as a dictionary)
+                and return another array.
         """
         for fi in range(0, len(self.frames) - 1):
             f0, f1 = self.frames[fi], self.frames[fi + 1]
-
             if fi == 0:
                 p0 = self._my2klt(self.pts)
-
             # Track with forward flow
             p1, not_lost, err = cv2.calcOpticalFlowPyrLK(f0, f1, p0, None, **self.lk_params)
             is_lost = (1 - not_lost.ravel()).astype(bool)
             err = err.ravel()
-
             # Check quality by back-tracking
             p0r, _, _ = cv2.calcOpticalFlowPyrLK(f1, f0, p1, None, **self.lk_params)
             can_backtrack = abs(p0 - p0r).reshape(-1, 2).max(-1) < self.backtrack_thres
-
             # Continue tracking these points or impose some constraints
             if constrain is None:
                 p0 = p1
@@ -92,12 +87,18 @@ class LucasKanadeTracker():
                 pts = self._klt2my(p1)
                 pts = constrain(pts, locals())
                 p0 = self._my2klt(pts)
-
             self.tracks.append(self._klt2my(p0))
             self.can_backtrack.append(can_backtrack)
             self.is_lost.append(is_lost)
 
     def vis(self, out_dir, marker_bgr=(0, 0, 255)):
+        """Visualizes results.
+
+        Args:
+            out_dir (str): Output directory.
+            marker_bgr (tuple, optional): Marker BGR color.
+        """
+        from xiuminglib import visualization as xv
         for fi in range(0, len(self.frames) - 1):
             im = self.frames[fi + 1]
             pts = self.tracks[fi]
@@ -106,14 +107,19 @@ class LucasKanadeTracker():
 
     @staticmethod
     def _my2klt(pts):
-        """
-        Reshaping
+        """Reshapes
+
+        ::
+
             +------------>
             |       pts[:, 1]
             |
             |
             v pts[:, 0]
-        to
+
+        into
+
+        ::
             +------------>
             |       pts[:, 0, 0]
             |
@@ -126,7 +132,5 @@ class LucasKanadeTracker():
 
     @staticmethod
     def _klt2my(pts):
-        """
-        Inverse of _my2klt()
-        """
+        """Inverse of :func:`_my2klt`"""
         return pts.reshape(-1, 2)[:, ::-1]
