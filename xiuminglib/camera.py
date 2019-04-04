@@ -11,10 +11,10 @@ class PerspCamera(object):
         lookat (array_like, optional): Where the camera points to in object space,
             so default :math:`(0, 0, 0)` is the object center.
         up (array_like, optional): Vector in object space that, when projected,
-            points upward in image. 
+            points upward in image.
 
     Attributes:
-        f_mm (float): See ``f``. 
+        f_mm (float): See ``f``.
         im_h (float): See ``im_res``.
         im_w (float): See ``im_res``.
         loc (numpy.ndarray)
@@ -22,11 +22,11 @@ class PerspCamera(object):
         up (numpy.ndarray)
 
     Note:
-        - Sensor width of 35mm format is actually 36mm.
-        - Assuming unit pixel aspect ratio (i.e., :math:`f_x = f_y`) and
-          no skewing between sensor plane and optical axis.
-        - Active sensor size may be smaller than ``sensor_size``, depending on ``im_res``.
-        - aov is a hardware property, having nothing to do with im_res
+        - Sensor width of the 35mm format is actually 36mm.
+        - This class assumes unit pixel aspect ratio (i.e., :math:`f_x = f_y`) and
+          no skewing between the sensor plane and optical axis.
+        - The active sensor size may be smaller than ``sensor_size``, depending on ``im_res``.
+        - ``aov`` is a hardware property, having nothing to do with ``im_res``.
     """
     def __init__(self, f=50., im_res=(256, 256), loc=(0, 0, 0), lookat=(0, 0, 0), up=(0, 1, 0)):
         self.f_mm = f
@@ -37,18 +37,17 @@ class PerspCamera(object):
 
     @property
     def sensor_w(self):
+        """float: Fixed at 36mm"""
         return 36 # mm
 
     @property
     def sensor_h(self):
+        """float: Fixed at 24mm"""
         return 24 # mm
 
     @property
     def aov(self):
-        """
-        Vertical and horizontal angles of view in degrees
-        Tuple of two floats
-        """
+        """tuple: Vertical and horizontal angles of view in degrees."""
         alpha_v = 2 * np.arctan(self.sensor_h / (2 * self.f_mm))
         alpha_h = 2 * np.arctan(self.sensor_w / (2 * self.f_mm))
         return (alpha_v / np.pi * 180, alpha_h / np.pi * 180)
@@ -59,18 +58,12 @@ class PerspCamera(object):
 
     @property
     def f_pix(self):
-        """
-        Focal length in pixels
-        Float
-        """
+        """float: Focal length in pixels."""
         return self.f_mm / self._mm_per_pix
 
     @property
     def int_mat(self):
-        """
-        Intrinsics matrix
-        (3, 3)-numpy array of floats
-        """
+        """numpy.ndarray: 3-by-3 intrinsics matrix."""
         return np.array([
             [self.f_pix, 0, self.im_w / 2],
             [0, self.f_pix, self.im_h / 2],
@@ -79,10 +72,8 @@ class PerspCamera(object):
 
     @property
     def ext_mat(self):
-        """
-        Extrinsics matrix, i.e., rotation and translation that transform
-            a point from object space to camera space
-        (3, 4)-numpy array of floats
+        """numpy.ndarray: 3-by-4 extrinsics matrix, i.e., rotation and
+        translation that transform a point from object space to camera space.
         """
         # Two coordinate systems involved:
         #   1. Object space: "obj"
@@ -90,7 +81,6 @@ class PerspCamera(object):
         #        - x is horizontal, pointing right (to align with pixel coordinates)
         #        - y is vertical, pointing down
         #        - right-handed: positive z is the look-at direction
-
         # cv axes expressed in obj space
         cvz_obj = self.lookat - self.loc
         cvx_obj = np.cross(cvz_obj, self.up)
@@ -99,13 +89,11 @@ class PerspCamera(object):
         cvz_obj = cvz_obj / np.linalg.norm(cvz_obj)
         cvx_obj = cvx_obj / np.linalg.norm(cvx_obj)
         cvy_obj = cvy_obj / np.linalg.norm(cvy_obj)
-
         # Compute rotation from obj to cv: R
         # R(1, 0, 0)^T = cvx_obj gives first column of R
         # R(0, 1, 0)^T = cvy_obj gives second column of R
         # R(0, 0, 1)^T = cvz_obj gives third column of R
         rot_obj2cv = np.vstack((cvx_obj, cvy_obj, cvz_obj)).T
-
         # Extrinsics
         return rot_obj2cv.dot(
             np.array([
@@ -117,24 +105,22 @@ class PerspCamera(object):
 
     @property
     def proj_mat(self):
-        """
-        Projection matrix from intrinsics and extrinsics
-        (3, 4)-numpy array of floats
+        """numpy.ndarray: 3-by-4 projection matrix, derived from
+        intrinsics and extrinsics.
         """
         return self.int_mat.dot(self.ext_mat)
 
     def set_from_mitsuba(self, xml_path):
-        """
-        Set camera with a Mitsuba XML file
+        """Sets camera according to a Mitsuba XML file.
 
         Args:
-            xml_path: XML file path
-                String
+            xml_path (str): Path to the XML file.
+
+        Raises:
+            NotImplementedError: If focal length is not specified in mm.
         """
         from xml.etree.ElementTree import parse
-
         tree = parse(xml_path)
-
         # Focal length
         f_tag = tree.find('./sensor/string[@name="focalLength"]')
         if f_tag is None:
@@ -145,31 +131,26 @@ class PerspCamera(object):
                 self.f_mm = float(f_str[:-2])
             else:
                 raise NotImplementedError(f_str)
-
         # Extrinsics
         cam_transform = tree.find('./sensor/transform/lookAt').attrib
         self.loc = np.fromstring(cam_transform['origin'], sep=',')
         self.lookat = np.fromstring(cam_transform['target'], sep=',')
         self.up = np.fromstring(cam_transform['up'], sep=',')
-
         # Resolution
         self.im_h = int(tree.find('./sensor/film/integer[@name="height"]').attrib['value'])
         self.im_w = int(tree.find('./sensor/film/integer[@name="width"]').attrib['value'])
 
     def proj(self, pts, space='object'):
-        """
-        Project 3D points
+        """Projects 3D points to 2D.
 
         Args:
-            pts: 3D points
-                Float array_like of shape (n, 3), (3, n), or (3,)
-            space: In which space these points are specified
-                'object' or 'camera'
-                Optional; defaults to 'object'
+            pts (array_like): 3D point(s) of shape N-by-3 or 3-by-N, or of length 3.
+            space (str, optional): In which space these points are specified:
+                ``'object'`` or ``'camera'``.
 
         Returns:
-            vhs: Vertical and horizontal coordinates of the projections
-                Float array_like of shape (n, 2) or (2,)
+            array_like: Vertical and horizontal coordinates of the projections, following::
+
                 +-----------> dim1
                 |
                 |
@@ -182,28 +163,23 @@ class PerspCamera(object):
         elif pts.shape[1] == 3:
             pts = pts.T
         assert space in ('object', 'camera'), "Unrecognized space"
-
         # 3 x N
         n_pts = pts.shape[1]
         pts_homo = np.vstack((pts, np.ones((1, n_pts))))
         # 4 x N
-
         if space == 'object':
             proj_mat = self.proj_mat
         else:
             ext_mat = np.hstack((np.eye(3), np.zeros((3, 1))))
             proj_mat = self.int_mat.dot(ext_mat)
-
         # Project
         hvs_homo = proj_mat.dot(pts_homo)
         # 3 x N: dim0 is horizontal, and dim1 is vertical
-
         hs_homo = hvs_homo[0, :]
         vs_homo = hvs_homo[1, :]
         ws = hvs_homo[2, :]
         hs = np.divide(hs_homo, ws)
         vs = np.divide(vs_homo, ws)
-
         vhs = np.vstack((vs, hs)).T
         if vhs.shape[0] == 1:
             # Single point
@@ -211,56 +187,43 @@ class PerspCamera(object):
         return vhs
 
     def backproj(self, depth, fg_mask=None, depth_type='plane', space='object'):
-        """
-        Backproject depth map to 3D points
+        """Backprojects depth map to 3D points.
 
         Args:
-            depth: Depth map
-                2D numpy array of floats
-            fg_mask: Backproject only pixels falling inside this foreground mask
-                2D numpy array of logicals
-                Optional; defaults to all Trues
-            depth_type: Plane or ray depth
-                String
-                Optional; defaults to 'plane'
-            space: In which space the backprojected points are specified
-                'object' or 'camera'
-                Optional; defaults to 'object'
+            depth (numpy.ndarray): Depth map.
+            fg_mask (numpy.ndarray, optional): Backproject only pixels falling inside this
+                foreground mask. Its values should be logical.
+            depth_type (str, optional): Plane or ray depth.
+            space (str, optional): In which space the backprojected points are specified:
+                ``'object'`` or ``'camera'``.
 
         Returns:
-            pts: 3D points
-                N-by-3 numpy array of floats
+            numpy.ndarray: 3D points.
         """
         if fg_mask is None:
             fg_mask = np.ones(depth.shape, dtype=bool)
         assert depth_type in ('ray', 'plane'), "Unrecognized depth type"
         assert space in ('object', 'camera'), "Unrecognized space"
-
         v_is, h_is = np.where(fg_mask)
         hs = h_is + 0.5
         vs = v_is + 0.5
         h_c = (depth.shape[1] - 1) / 2
         v_c = (depth.shape[0] - 1) / 2
         zs = depth[fg_mask]
-
         if depth_type == 'ray':
             d2 = np.power(vs - v_c, 2) + np.power(hs - h_c, 2)
             # Similar triangles
             zs_plane = np.multiply(zs, self.f_pix / np.sqrt(self.f_pix ** 2 + d2))
             zs = zs_plane
-
         # Backproject to camera space
         xs = np.multiply(zs, hs - h_c) / self.f_pix
         ys = np.multiply(zs, vs - v_c) / self.f_pix
         pts = np.vstack((xs, ys, zs))
-
         if space == 'camera':
             return pts.T
-
         # Need to further transform to object space
         rot_mat = self.ext_mat[:, :3] # happens first in projection
         trans_vec = self.ext_mat[:, 3].reshape(-1, 1) # happens second in projection
         n_pts = pts.shape[1]
         pts_obj = np.linalg.inv(rot_mat).dot(pts - np.tile(trans_vec, (1, n_pts)))
-
         return pts_obj.T
