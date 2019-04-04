@@ -10,21 +10,14 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def print_attrs(obj, excerpts=None, excerpt_win_size=60, max_recursion_depth=None):
-    """
-    Print all attributes, recursively, of an object
+    """Prints all attributes, recursively, of an object.
 
     Args:
-        obj: Object in which we search for the attribute
-            Any object
-        excerpts: Print only excerpts containing certain attributes
-            A single string or a list thereof
-            Optional; defaults to None (print all)
-        excerpt_win_size: How many characters get printed around a match
-            Positive integer
-            Optional; defaults to 60
-        max_recursion_depth: Maximum recursion depth
-            Positive integer
-            Optional; defaults to None (no limit)
+        obj (object): Object in which we search for the attribute.
+        excerpts (str or list(str), optional): Print only excerpts containing
+            certain attributes. ``None`` means to print all.
+        excerpt_win_size (int, optional): How many characters get printed around a match.
+        max_recursion_depth (int, optional): Maximum recursion depth. ``None`` means no limit.
     """
     import jsonpickle
     import yaml
@@ -75,23 +68,16 @@ def print_attrs(obj, excerpts=None, excerpt_win_size=60, max_recursion_depth=Non
 
 
 def sortglob(directory, filename, exts, ext_ignore_case=False):
-    """
-    Glob and then sort according to the pattern ending in multiple extensions
+    """Globs and then sorts according to a pattern ending in multiple extensions.
 
     Args:
-        directory: Directory to glob
-            String; e.g., '/path/to/'
-        filename: Filename pattern excluding extensions
-            String; e.g., 'batch000_*'
-        exts: Extensions of interest
-            Set of strings; e.g., ('.png', '.PNG')
-        ext_ignore_case: Whether to ignore case for extensions
-            Boolean
-            Optional; defaults to False
+        directory (str): Directory to glob, e.g., ``'/path/to/'``.
+        filename (str): Filename pattern excluding extensions, e.g., ``'batch000_*'``.
+        exts (set(str)): Extensions of interest, e.g., ``('.png', '.PNG')``.
+        ext_ignore_case (bool, optional): Whether to ignore case for extensions.
 
     Returns:
-        files_sorted: Sorted list of files globbed
-            List of strings
+        list(str): Sorted list of files globbed.
     """
     ext_list = []
     for ext in exts:
@@ -109,18 +95,14 @@ def sortglob(directory, filename, exts, ext_ignore_case=False):
 
 
 def ask_to_proceed(msg, level='warning'):
-    """
-    Pause there to ask the user whether to proceed
+    """Pauses there to ask the user whether to proceed.
 
     Args:
-        msg: Message to display to the user
-            String
-        level: Message level, essentially deciding the message color
-            'info' | 'warning' | 'error'
-            Optional; defaults to 'warning'
+        msg (str): Message to display to the user.
+        level (str, optional): Message level, essentially deciding the message color:
+            ``'info'``, ``'warning'``, or ``'error'``.
     """
     logger_name = thisfile + '->ask_to_proceed()'
-
     logger_print = getattr(logger, level)
     logger.name = logger_name
     logger_print(msg)
@@ -138,23 +120,24 @@ def ask_to_proceed(msg, level='warning'):
 
 
 def load_or_save(data_f, fallback=None):
-    """
-    Load the data file if it exists. Otherwise, if fallback provided,
-        call fallback and save its return
+    """Loads the data file if it exists. Otherwise, if fallback is provided,
+    call fallback and save its return to disk.
 
     Args:
-        data_f: Path to the data file, whose extension will be used for deciding
-            how to load the data
-            String
-        fallback: Fallback function if data file doesn't exist, whose return will
-            be saved to <data_f> for future use
-            function that doesn't take arguments. Can easily construct one with
-                `fallback=lambda: your_fancy_func(var0, var1)`
-            Optional; defaults to None
+        data_f (str): Path to the data file, whose extension will be used for deciding
+            how to load the data.
+        fallback (function, optional): Fallback function used if data file doesn't exist.
+            Its return will be saved to ``data_f`` for future loadings. It should not
+            take arguments, but if yours requires taking arguments, just wrap yours with::
+
+                fallback=lambda: your_fancy_func(var0, var1)
+
+    Raises:
+        NotImplementedError: If file extension is neither .npy nor .npz.
 
     Returns:
-        data: Data loaded if existent; otherwise, fallback's return or
-            None if fallback is not provided
+        Data loaded if ``data_f`` exists; otherwise, ``fallback``'s return
+        (``None`` if no fallback).
     """
     logger_name = thisfile + '->load_or_save()'
 
