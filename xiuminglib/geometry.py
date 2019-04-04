@@ -6,18 +6,17 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def cartesian2spherical(pts_cartesian, convention='lat-lng'):
-    """
-    Converts 3D Cartesian coordinates to spherical coordinates,
-        following the convention below
+    r"""Converts 3D Cartesian coordinates to spherical coordinates.
 
     Args:
-        pts_cartesian: Cartesian x, y and z
-            Array_like of shape (3,) or (n, 3)
-        convention: Convention for spherical coordinates
-            'lat-lng' or 'theta-phi'
-            Optional; defaults to 'lat-lng'
+        pts_cartesian (array_like): Cartesian x, y and z. Of shape N-by-3
+            or length 3 if just one point.
+        convention (str, optional): Convention for spherical coordinates:
+            ``'lat-lng'`` or ``'theta-phi'``.
 
-            'lat-lng'
+            ::
+
+                   lat-lng
                                             ^ z (lat = 90)
                                             |
                                             |
@@ -26,7 +25,9 @@ def cartesian2spherical(pts_cartesian, convention='lat-lng'):
                                         ,'  |
                    (lat = 0, lng = 0) x     | (lat = -90)
 
-            'theta-phi'
+            ::
+
+                theta-phi
                                             ^ z (theta = 0)
                                             |
                                             |
@@ -35,9 +36,12 @@ def cartesian2spherical(pts_cartesian, convention='lat-lng'):
                                         ,'  |
                 (theta = 90, phi = 0) x     | (theta = 180)
 
+    Raises:
+        ValueError: If input is of a wrong shape.
+        NotImplementedError: If convention is neither ``'lat-lng'`` nor ``'theta-phi'``.
+
     Returns:
-        pts_spherical: Spherical coordinates (r, angle1, angle2) in radians
-            Numpy array of same shape as input
+        numpy.ndarray: Spherical coordinates :math:`(r, \theta_1, \theta_2)` in radians.
     """
     pts_cartesian = np.array(pts_cartesian)
 
@@ -80,9 +84,8 @@ def cartesian2spherical(pts_cartesian, convention='lat-lng'):
 
 
 def _convert_spherical_conventions(pts_r_angle1_angle2, what2what):
-    """
-    Internal function converting between different conventions
-        for spherical coordinates. See cartesian2spherical() for conventions
+    """Internal function converting between different conventions
+    for spherical coordinates. See :func:`cartesian2spherical` for conventions.
     """
     if what2what == 'lat-lng_to_theta-phi':
         pts_r_theta_phi = np.zeros(pts_r_angle1_angle2.shape)
@@ -115,13 +118,10 @@ def _convert_spherical_conventions(pts_r_angle1_angle2, what2what):
 
 
 def spherical2cartesian(pts_spherical, convention='lat-lng'):
-    """
-    Inverse of cartesian2spherical()
+    """Inverse of :func:`cartesian2spherical`.
 
-    See cartesian2spherical() for spherical convention, args and returns
+    See :func:`cartesian2spherical`.
     """
-    logger.name = thisfile + '->spherical2cartesian()'
-
     pts_spherical = np.array(pts_spherical)
 
     # Validate inputs
@@ -164,25 +164,25 @@ def spherical2cartesian(pts_spherical, convention='lat-lng'):
 
 
 def moeller_trumbore(ray_orig, ray_dir, tri_v0, tri_v1, tri_v2):
-    """
-    Decides if a ray intersects with a triangle using Moeller-Trumbore algorithm
-        O + tD = (1 - u - v) * V0 + u * V1 + v * V2
+    r"""Decides if a ray intersects with a triangle using Moeller-Trumbore algorithm.
+
+    :math:`O + D = (1-u-v)V_0 + uV_1 + vV_2`.
 
     Args:
-        ray_orig: Ray origin O
-            Array_like of three floats
-        ray_dir: Ray direction D (not necessarily normalized)
-            Array_like of three floats
-        tri_v0, tri_v1, tri_v2: Vertices of the triangle V0, V1, V2
-            Array_likes of three floats
+        ray_orig (array_like): 3D coordinates of the ray origin :math:`O`.
+        ray_dir (array_like): Ray direction :math:`D` (not necessarily normalized).
+        tri_v0 (array_like): Triangle vertex :math:`V_0`.
+        tri_v1 (array_like): Triangle vertex :math:`V_1`.
+        tri_v2 (array_like): Triangle vertex :math:`V_2`.
 
     Returns:
-        u, v: Barycentric coordinates. Intersection is in triangle (including on an edge
-                or at a vertex) if u >= 0, v >= 0, and u + v <= 1
-            Float
-        t: Distance coefficient from O to intersection along D. Intersection is
-                between O and O + tD if 0 < t < 1
-            Float
+        tuple:
+            - **u** (*float*): The :math:`u` component of the Barycentric coordinates
+              of the intersection. Intersection is in-triangle (including on an edge
+              or at a vertex), if :math:`u\geq 0`, :math:`v\geq 0`, and :math:`u+v\leq 1`.
+            - **v** (*float*): The :math:`v` component.
+            - **t** (*float*): Distance coefficient from :math:`O` to the intersection along
+              :math:`D`. Intersection is between :math:`O` and :math:`O+D`, if :math:`0 < t < 1`.
     """
     # Validate inputs
     ray_orig = np.array(ray_orig)
@@ -204,23 +204,18 @@ def moeller_trumbore(ray_orig, ray_dir, tri_v0, tri_v1, tri_v2):
 
 
 def ptcld2tdf(pts, res=128, center=False):
-    """
-    Convert point cloud to truncated distance function (TDF)
-        with maximum distance capped at 1 / res
+    """Converts point cloud to truncated distance function (TDF).
+
+    Maximum distance is capped at 1 / ``res``.
 
     Args:
-        pts: Cartesian coordinates in object space
-            n-by-3 array_like of floats
-        res: Resolution of the TDF
-            Integer
-            Optional; defaults to 128
-        center: Whether to center these points around object space origin
-            Boolean
-            Optional; defaults to False
+        pts (array_like): Cartesian coordinates in object space. Of shape N-by-3.
+        res (int, optional): Resolution of the TDF.
+        center (bool, optional): Whether to center these points around the object
+            space origin.
 
     Returns:
-        tdf: Output TDF
-            res-by-res-by-res numpy array of floats
+        numpy.ndarray: Output TDF.
     """
     pts = np.array(pts)
 
@@ -251,19 +246,15 @@ def ptcld2tdf(pts, res=128, center=False):
 
 
 def angle_between(v1, v2, in_radians=True):
-    """
-    Computes the angle between two vectors
+    """Computes the angle between two vectors.
 
     Args:
-        v1, v2: Vectors of the same dimensionality
-            Array_like of floats
-        in_radians: Whether results are reported in radians
-            Boolean
-            Optional; defaults to True
+        v1 (array_like): Vector 1.
+        v2 (array_like): Vector 2.
+        in_radians (bool, optional): Whether results are reported in radians.
 
     Returns:
-        deg: Degree between the vectors, in radians or degrees
-            Float
+        float: Degree between the vectors, in radians or degrees.
     """
     # Validate inputs
     v1 = np.array(v1)
