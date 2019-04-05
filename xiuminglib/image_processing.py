@@ -79,14 +79,16 @@ def query_float_locations(im, query_pts, method='bilinear'):
     """Queries interpolated values of float lactions on image.
 
     Uses
-        -- Bilinear interpolation: Can break big matrices into patches and work locally, or
-        -- Bivariate spline interpolation: Fitting a global spline, so memory-intensive
-           and shows global effects.
-    Pixel values are considered as values at pixel centers. E.g., if ``im[0, 1]`` is :math:``0.68``,
-    then :math:`f(0.5, 1.5)` is deemed to evaluate to :math:`0.68` exactly.
+
+        - bilinear interpolation: can break big matrices into patches and work locally, or
+        - bivariate spline interpolation: fitting a global spline, so memory-intensive
+          and shows global effects.
+
+    Pixel values are considered as values at pixel centers: if ``im[0, 1]`` is :math:`0.68`,
+    then :math:`f(0.5, 1.5)=0.68`.
 
     Args:
-        im (numpy.ndarray): H-by-W or H-by-W-by-C Rectangular grid of data.
+        im (numpy.ndarray): H-by-W or H-by-W-by-C rectangular grid of data.
             Each of C channels is interpolated independently.
         query_pts (array_like): Query locations of shape N-by-2 or length 2::
 
