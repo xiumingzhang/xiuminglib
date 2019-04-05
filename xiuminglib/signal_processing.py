@@ -183,7 +183,7 @@ def matrix_for_discrete_fourier_transform(n):
 
 
 def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
-    r"""Generates transform matrix for discrete real spherical harmonic (SH) expansion.
+    """Generates transform matrix for discrete real spherical harmonic (SH) expansion.
 
     See :func:`main` for example usages.
 
@@ -195,7 +195,9 @@ def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-a
             With the same step size, ``n_azimuth`` will be twice as big, since azimuth (in colatitude-azimuth convention;
             :math:`[0, 2\pi]`) or latitude (in latitude-longitude convention; :math:`[-\pi, \pi]`) spans :math:`2\pi`.
         coord_convention (str, optional): Coordinate system convention to use: ``'colatitude-azimuth'``
-            or ``'latitude-longitude'``. Colatitude-azimuth vs. latitude-longitude convention::
+            or ``'latitude-longitude'``. Colatitude-azimuth vs. latitude-longitude convention:
+
+            .. code-block:: none
 
                 3D
                                                    ^ z (colat = 0; lat = pi/2)
