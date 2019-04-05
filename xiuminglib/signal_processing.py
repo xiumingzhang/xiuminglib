@@ -162,15 +162,17 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
 def matrix_for_discrete_fourier_transform(n):
     """Generates transform matrix :math:`W` for discrete Fourier transform (DFT).
 
-    To transform an image :math:`I`, apply it twice: :math:`WIW`.
+    For a 1D signal :math:`x`, the Fourier coefficients are simply given by :math:`Wx`.
+    To transform a 2D signal (e.g., an image) :math:`I`, sequentially apply a transform
+    matrix along each dimension to get the coefficients: :math:`W_hIW_w`.
     See :func:`main` for example usages.
 
     Args:
         n (int): Signal length. This will be either image height or width if you are doing 2D DFT
-            to an image, i.e., ``wmat_h.dot(im).dot(wmat_w)``.
+            to an image: ``wmat_h.dot(im).dot(wmat_w)``.
 
     Returns:
-        numpy.ndarray: Transform matrix whose row :math:`i`, when dotting with signal (column) vector,
+        numpy.ndarray: Transform matrix whose row :math:`i`, when dotted with signal (column) vector,
         gives the coefficient for the :math:`i`-th Fourier component, where :math:`i < N`.
         Of shape N-by-N.
     """
