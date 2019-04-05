@@ -392,4 +392,10 @@ def main(func_name):
 
 
 if __name__ == '__main__':
-    main('matrix_for_real_spherical_harmonics')
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('func', type=str, help="function to test")
+    args = parser.parse_args()
+
+    main(args.func)
