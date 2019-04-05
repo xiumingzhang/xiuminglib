@@ -4,44 +4,6 @@ from scipy.sparse.linalg import eigsh
 from scipy.special import sph_harm
 
 
-def get(arr, top=True, n=1, n_std=None):
-    """Gets top (or bottom) N value(s) from an M-D array.
-
-    Args:
-        arr (array_like): Array, which will be flattened if high-D.
-        top (bool, optional): Whether to find the top or bottom N.
-        n (int, optional): Number of values to return.
-        n_std (float, optional): Definition of outliers to exclude, assuming Gaussian.
-            ``None`` means assuming no outlier.
-
-    Returns:
-        tuple:
-            - **ind** (*tuple*) -- Indices that give the extrema, M-tuple of arrays of N integers.
-            - **val** (*numpy.ndarray*) -- Extremum values, i.e., ``arr[ind]``.
-    """
-    arr = np.array(arr, dtype=float)
-
-    if top:
-        arr_to_sort = -arr.flatten()
-    else:
-        arr_to_sort = arr.flatten()
-
-    if n_std is not None:
-        meanv = np.mean(arr_to_sort)
-        stdv = np.std(arr_to_sort)
-        arr_to_sort[np.logical_or(
-            arr_to_sort < meanv - n_std * stdv,
-            arr_to_sort > meanv + n_std * stdv,
-        )] = np.nan # considered greater than numbers
-
-    ind = [x for x in np.argsort(arr_to_sort)
-           if not np.isnan(arr_to_sort[x])][:n] # 1D indices
-    ind = np.unravel_index(ind, arr.shape) # Back to high-D
-    val = arr[ind]
-
-    return ind, val
-
-
 def smooth_1d(arr, win_size, kernel_type='half'):
     """Smooths 1D signal.
 
@@ -329,7 +291,7 @@ def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-a
 
 def main(func_name):
     """Unit tests that can also serve as example usage."""
-    import pdb
+    from pdb import set_trace
 
     if func_name == 'pca':
         pts = np.random.rand(5, 8) # 8 points in 5D
@@ -357,7 +319,7 @@ def main(func_name):
         coeffs_np = np.fft.fft2(im) / (np.sqrt(h) * np.sqrt(w))
 
         print("%s: max. magnitude difference: %e" % (func_name, np.abs(coeffs - coeffs_np).max()))
-        pdb.set_trace()
+        set_trace()
 
     elif func_name == 'matrix_for_real_spherical_harmonics':
         from visualization import matrix_as_heatmap
@@ -385,16 +347,16 @@ def main(func_name):
             sph_func_1d_recon = ymat.T.dot(coeffs)
             sph_func_recon = sph_func_1d_recon.reshape(sph_func.shape)
             matrix_as_heatmap(sph_func_recon, outpath='../../test-output/recon_l%03d.png' % l)
-        pdb.set_trace()
+        set_trace()
 
     else:
         raise NotImplementedError("Unit tests for %s" % func_name)
 
 
 if __name__ == '__main__':
-    import argparse
+    from argparse import ArgumentParser
 
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument('func', type=str, help="function to test")
     args = parser.parse_args()
 
