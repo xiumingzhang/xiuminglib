@@ -12,9 +12,9 @@ def cartesian2spherical(pts_cartesian, convention='lat-lng'):
         pts_cartesian (array_like): Cartesian x, y and z. Of shape N-by-3
             or length 3 if just one point.
         convention (str, optional): Convention for spherical coordinates:
-            ``'lat-lng'`` or ``'theta-phi'``.
+            ``'lat-lng'`` or ``'theta-phi'``:
 
-            ::
+            .. code-block:: none
 
                    lat-lng
                                             ^ z (lat = 90)
@@ -25,7 +25,7 @@ def cartesian2spherical(pts_cartesian, convention='lat-lng'):
                                         ,'  |
                    (lat = 0, lng = 0) x     | (lat = -90)
 
-            ::
+            .. code-block:: none
 
                 theta-phi
                                             ^ z (theta = 0)

@@ -186,7 +186,9 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
         im (numpy.ndarray): Image to scatter on. H-by-W (grayscale) or H-by-W-by-3 (RGB) arrays
             of type *numpy.uint8* or *numpy.uint16*.
         pts (array_like): Coordinates of the scatter point(s), of length 2 for just one point or
-            shape N-by-2 for multiple points. Convention::
+            shape N-by-2 for multiple points. Convention:
+
+            .. code-block:: none
 
                 +-----------> dim1
                 |
@@ -432,16 +434,18 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
     """Visualizes which points on texture map the vertices map to.
 
     Args:
-        u (numpy.array): The :math:`u` component of UV coordinates of the vertices. Convention::
+        u (numpy.array): The :math:`u` component of UV coordinates of the vertices.
 
-            (0, 1)
-                ^ v
-                |
-                |
-                |
-                |
-                +-----------> (1, 0)
-            (0, 0)        u
+            .. code-block:: none
+
+                (0, 1)
+                    ^ v
+                    |
+                    |
+                    |
+                    |
+                    +-----------> (1, 0)
+                (0, 0)        u
 
         v
         texmap (numpy.ndarray or str): Loaded texture map or its path. If *numpy.ndarray*, can

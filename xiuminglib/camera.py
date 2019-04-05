@@ -149,7 +149,9 @@ class PerspCamera(object):
                 ``'object'`` or ``'camera'``.
 
         Returns:
-            array_like: Vertical and horizontal coordinates of the projections, following::
+            array_like: Vertical and horizontal coordinates of the projections, following:
+
+            .. code-block:: none
 
                 +-----------> dim1
                 |

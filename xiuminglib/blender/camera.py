@@ -494,7 +494,9 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
 
     Args:
         uvs (array_like): UV coordinates of length 2 or shape N-by-2,
-            in the following convention::
+            in the following convention:
+
+            .. code-block:: none
 
                 (0, 0)
                 +------------> (w, 0)
@@ -672,7 +674,9 @@ def get_2d_bounding_box(obj, cam):
 
     Returns:
         numpy.ndarray: 2D coordinates of the bounding box corners.
-        Of shape 4-by-2. Corners are ordered counterclockwise, following::
+        Of shape 4-by-2. Corners are ordered counterclockwise, following:
+
+        .. code-block:: none
 
             (0, 0)
             +------------> (w, 0)

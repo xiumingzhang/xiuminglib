@@ -9,7 +9,9 @@ class LucasKanadeTracker():
     Args:
         frames (list(numpy.array)): Frame images in order. Arrays are either H-by-W or H-by-W-by-3,
             and will be converted to grayscale.
-        pts (array_like): Points to track in the first frame. Of shape N-by-2. Convention::
+        pts (array_like): Points to track in the first frame. Of shape N-by-2.
+
+            .. code-block:: none
 
                 +------------>
                 |       pts[:, 1]
@@ -27,7 +29,9 @@ class LucasKanadeTracker():
         lk_params (dict)
         backtrack_thres (float)
         tracks (list(numpy.array)): Positions of tracks from the :math:`i`-th to :math:`(i+1)`-th frame.
-            Arrays are of shape N-by-2. Convention::
+            Arrays are of shape N-by-2.
+
+            .. code-block:: none
 
                 +------------>
                 |       tracks[:, 1]
@@ -109,7 +113,7 @@ class LucasKanadeTracker():
     def _my2klt(pts):
         """Reshapes
 
-        ::
+        .. code-block:: none
 
             +------------>
             |       pts[:, 1]
@@ -119,7 +123,8 @@ class LucasKanadeTracker():
 
         into
 
-        ::
+        .. code-block:: none
+
             +------------>
             |       pts[:, 0, 0]
             |

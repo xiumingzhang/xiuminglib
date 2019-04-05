@@ -183,7 +183,7 @@ def matrix_for_discrete_fourier_transform(n):
 
 
 def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
-    """Generates transform matrix for discrete real spherical harmonic (SH) expansion.
+    r"""Generates transform matrix for discrete real spherical harmonic (SH) expansion.
 
     See :func:`main` for example usages.
 

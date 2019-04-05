@@ -90,13 +90,15 @@ def query_float_locations(im, query_pts, method='bilinear'):
     Args:
         im (numpy.ndarray): H-by-W or H-by-W-by-C rectangular grid of data.
             Each of C channels is interpolated independently.
-        query_pts (array_like): Query locations of shape N-by-2 or length 2::
+        query_pts (array_like): Query locations of shape N-by-2 or length 2.
 
-            +---------> dim1
-            |
-            |
-            |
-            v dim0
+            .. code-block:: none
+
+                +---------> dim1
+                |
+                |
+                |
+                v dim0
 
         method (str, optional): Interpolation method: ``'spline'`` or ``'bilinear'``.
 
@@ -258,7 +260,9 @@ def find_local_extrema(im, want_maxima, kernel_size=3):
 def compute_gradients(im):
     """Computes magnitudes and orientations of image gradients.
 
-    With Scharr operators::
+    With Scharr operators:
+
+    .. code-block:: none
 
         [ 3 0 -3 ]           [ 3  10  3]
         [10 0 -10]    and    [ 0   0  0]
@@ -274,7 +278,9 @@ def compute_gradients(im):
     Returns:
         tuple:
             - **grad_mag** (*numpy.ndarray*) -- Magnitude image of the gradients.
-            - **grad_orient** (*numpy.ndarray*) -- Orientation image of the gradients (in radians)::
+            - **grad_orient** (*numpy.ndarray*) -- Orientation image of the gradients (in radians).
+
+              .. code-block:: none
 
                        y ^ pi/2
                          |
