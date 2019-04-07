@@ -65,6 +65,14 @@ xiuminglib\.image\_processing module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib\.linear\_algebra module
+----------------------------------
+
+.. automodule:: xiuminglib.linear_algebra
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib\.signal\_processing module
 -------------------------------------
 
