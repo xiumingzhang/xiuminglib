@@ -1,5 +1,4 @@
-from os import makedirs
-from os.path import abspath, dirname, exists, join
+from os.path import abspath, dirname, join
 from shutil import move
 from time import time
 try:
@@ -7,6 +6,8 @@ try:
 except ModuleNotFoundError:
     # For building the doc
     pass
+
+from xiuminglib import general as xg
 
 from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
@@ -256,8 +257,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
     logger_name = thisfile + '->render()'
 
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir)
+    xg.makedirs(outdir)
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 

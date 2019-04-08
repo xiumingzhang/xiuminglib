@@ -1,6 +1,7 @@
 import sys
-from os import makedirs
+import os
 from os.path import abspath, join, exists, dirname
+from shutil import rmtree
 import re
 from glob import glob
 import numpy as np
@@ -119,6 +120,26 @@ def ask_to_proceed(msg, level='warning'):
         sys.exit()
 
 
+def makedirs(directory, rm_if_exists=False):
+    """Wraps :func:`os.makedirs` to support removing the directory if it already exists.
+
+    Args:
+        directory (str)
+        rm_if_exists (bool, optional): Whether to remove the directory (and its contents)
+            if it already exists.
+    """
+    logger_name = thisfile + '->makedirs()'
+
+    if exists(directory):
+        if rm_if_exists:
+            logger.name = logger_name
+            logger.info("Removed and then made: %s", directory)
+            rmtree(directory)
+            os.makedirs(directory, exist_ok=True)
+    else:
+        os.makedirs(directory, exist_ok=True)
+
+
 def load_or_save(data_f, fallback=None):
     """Loads the data file if it exists. Otherwise, if fallback is provided,
     call fallback and save its return to disk.
@@ -164,8 +185,7 @@ def load_or_save(data_f, fallback=None):
         else:
             data = fallback()
             out_dir = dirname(data_f)
-            if not exists(out_dir):
-                makedirs(out_dir)
+            makedirs(out_dir)
             save_func(data_f, data)
             msg += "but called fallback and saved its return: "
     msg += data_f

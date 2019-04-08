@@ -1,10 +1,12 @@
-from os import makedirs, remove
+from os import remove
 from os.path import abspath, dirname, exists
 try:
     import bpy
 except ModuleNotFoundError:
     # For building the doc
     pass
+
+from xiuminglib import general as xg
 
 from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
@@ -20,9 +22,8 @@ def save_blend(outpath, delete_overwritten=False):
     logger_name = thisfile + '->save_blend()'
 
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir)
-    elif exists(outpath) and delete_overwritten:
+    xg.makedirs(outdir)
+    if exists(outpath) and delete_overwritten:
         remove(outpath)
 
     try:

@@ -121,38 +121,71 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
     return pcvars, pcs, projs, data_mean
 
 
-def matrix_for_discrete_fourier_transform(n):
-    """Generates transform matrix :math:`W` for discrete Fourier transform (DFT).
+def gen_dft_bases_1d(n, upto=None):
+    """Generates 1D discrete Fourier transform (DFT) bases.
 
-    :math:`W` is symmetric.
-
-    For a 1D signal :math:`x`, the Fourier coefficients are simply given by :math:`Wx`.
-    To transform a 2D signal (e.g., an image) :math:`I`, sequentially apply a transform
-    matrix along each dimension to get the coefficients: :math:`W_hIW_w^T=W_hIW_w`.
-
-    See :func:`main` for example usages.
+    Bases are rows of :math:`Y`, a symmetric matrix. The Fourier coefficients are simply
+    given by :math:`Yx`. See :func:`main` for example usages.
 
     Args:
-        n (int): Signal length. This will be either image height or width if you are doing 2D DFT
-            to an image: ``wmat_h.dot(im).dot(wmat_w.T)``.
+        n (int): Signal length.
+        upto (int, optional): Up to how many bases. ``None`` means all.
 
     Returns:
-        numpy.ndarray: Transform matrix whose row :math:`i`, when dotted with signal (column) vector,
-        gives the coefficient for the :math:`i`-th Fourier component, where :math:`i < N`.
-        Of shape N-by-N.
+        numpy.ndarray: Matrix whose row :math:`i`, when dotted with signal (column) vector,
+        gives the coefficient for the :math:`i`-th Fourier component.
+        Of shape ``(min(n, upto), n)``.
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
-
     omega = np.exp(-2 * np.pi * 1j / n)
-    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize so that unitary
-
+    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize
+    # so that unitary (i.e., energy-preserving)
+    if upto is not None:
+        wmat = wmat[:upto, :]
     return wmat
 
 
-def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
-    r"""Generates transform matrix for discrete real spherical harmonic (SH) expansion.
+def gen_dft_bases_2d(h, w, upto_h=None, upto_w=None):
+    r"""Generates 2D discrete Fourier transform (DFT) bases.
 
-    See :func:`main` for example usages, including both the analysis and synthesis procedures.
+    Bases are rows of :math:`Y`. Input image :math:`X` should be flattened with
+    :meth:`numpy.ndarray.ravel` into a vector :math:`x`. Then, the coefficients are
+    just :math:`Yx`.
+
+    See :func:`main` for example usages and how this is related to :func:`gen_dft_bases_1d`.
+
+    Args:
+        h (int): Image height.
+        w
+        upto_h (int, optional): Up to how many bases in the height dimension. ``None`` means all.
+        upto_w
+
+    Returns:
+        numpy.ndarray: Matrix whose row :math:`i`, when dotted with the flattened input,
+        gives the coefficient for the :math:`(i_h, i_w)`-th Fourier component, where
+        :math:`i=i_hw+i_w` if ``upto_w`` is ``None``, or :math:`i=i_hw_\text{upto}+i_w` otherwise.
+        Of shape ``(min(h, upto_h) * min(w, upto_w), h * w)``.
+    """
+    if upto_h is None:
+        upto_h = h
+    if upto_w is None:
+        upto_w = w
+    wmat_h = gen_dft_bases_1d(h)
+    wmat_w = gen_dft_bases_1d(w)
+    # TODO: speed it up for performance after ensuring correctness
+    wmat = np.zeros((upto_h * upto_w, h * w), dtype=complex)
+    for i in range(upto_h):
+        for j in range(upto_w):
+            w_h = wmat_h[i, :].reshape((-1, 1)) # H-by-1
+            w_w = wmat_w[j, :].reshape((1, -1)) # 1-by-W
+            wmat[i * upto_w + j, :] = w_h.dot(w_w).ravel()
+    return wmat
+
+
+def gen_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
+    r"""Generates real spherical harmonics (SHs).
+
+    See :func:`main` for example usages, including how to do both analysis and synthesis the SHs.
 
     Not accurate when ``n_lat`` is too small. E.g., orthonormality no longer holds when discretization is too coarse
     (small ``n_lat``), as numerical integration fails to approximate the continuous integration.
@@ -199,11 +232,11 @@ def matrix_for_real_spherical_harmonics(l, n_lat, coord_convention='colatitude-a
               :func:`scipy.special.sph_harm`. When dotted with flattened image (column) vector weighted
               by ``areas_on_unit_sphere``, the :math:`i`-th row gives the coefficient for the :math:`i`-th
               harmonics, where :math:`i=l(l+1)+m`. The input signal (in the form of 2D image indexed by two angles)
-              should be flattened with ``.ravel()``, in row-major order: the row index varies the slowest,
-              and the column index the quickest. Of shape ``((l + 1) ** 2, 2 * n_lat ** 2)``.
+              should be flattened with :meth:`numpy.ndarray.ravel`, in row-major order: the row index varies
+              the slowest, and the column index the quickest. Of shape ``((l + 1) ** 2, 2 * n_lat ** 2)``.
             - **areas_on_unit_sphere** (*numpy.ndarray*) -- Area of the unit sphere covered by each sample point.
               This is proportional to sine of colatitude and has nothing to do with azimuth/longitude.
-              Used as weights for discrete summation to approximate continuous integration.
+              Used as weights for discrete summation to approximate continuous integration. Necessary in SH analysis.
               Flattened also in row-major order. Of length ``n_lat * (2 * n_lat)``.
     """
     # Generate the l and m values for each matrix location
@@ -308,27 +341,55 @@ def main(func_name):
         print("Recon:")
         print(pts_recon)
 
-    elif func_name == 'matrix_for_discrete_fourier_transform':
-        im = np.random.randint(0, 255, (8, 10))
-        h, w = im.shape
+    elif func_name == 'gen_dft_bases_1d':
+        signal = np.random.randint(0, 255, 10)
+        n = len(signal)
         # Transform by my matrix
-        dft_mat_col = matrix_for_discrete_fourier_transform(h)
-        dft_mat_row = matrix_for_discrete_fourier_transform(w)
-        coeffs = dft_mat_col.dot(im).dot(dft_mat_row.T)
+        dft_mat = gen_dft_bases_1d(n)
+        coeffs = dft_mat.dot(signal)
         # Transform by numpy
-        coeffs_np = np.fft.fft2(im) / (np.sqrt(h) * np.sqrt(w))
-        print("%s: max. magnitude difference: %e" % (func_name, np.abs(coeffs - coeffs_np).max()))
+        coeffs_np = np.fft.fft(signal) / np.sqrt(n)
+        print("Max. magnitude difference: %e" % np.abs(coeffs - coeffs_np).max())
 
-    elif func_name == 'matrix_for_real_spherical_harmonics':
-        from visualization import matrix_as_heatmap
+    elif func_name == 'gen_dft_bases_2d':
         from os import environ
         from os.path import join
+        import cv2
+        from visualization import matrix_as_heatmap_complex
+        im = np.random.randint(0, 255, (64, 128))
+        h, w = im.shape
+        # Transform by my matrix
+        im_1d = im.ravel()
+        dft_mat = gen_dft_bases_2d(h, w)
+        coeffs = dft_mat.dot(im_1d)
+        coeffs = coeffs.reshape((h, w))
+        # Transform by numpy
+        coeffs_np = np.fft.fft2(im) / (np.sqrt(h) * np.sqrt(w))
+        tmp_dir = environ['TMP_DIR']
+        matrix_as_heatmap_complex(coeffs, outpath=join(tmp_dir, 'coeffs_mine.png'))
+        matrix_as_heatmap_complex(coeffs_np, outpath=join(tmp_dir, 'coeffs_np.png'))
+        print("Max. magnitude difference: %e" % np.abs(coeffs - coeffs_np).max())
+        # Reconstruct
+        recon_mine = dft_mat.dot(coeffs.ravel()).reshape((h, w))
+        recon_np = dft_mat.dot(coeffs_np.ravel()).reshape((h, w))
+        assert np.allclose(np.imag(recon_mine), 0)
+        assert np.allclose(np.imag(recon_np), 0)
+        recon_mine = np.real(recon_mine)
+        recon_np = np.real(recon_np)
+        cv2.imwrite(join(tmp_dir, 'orig.png'), im)
+        cv2.imwrite(join(tmp_dir, 'recon_mine.png'), recon_mine)
+        cv2.imwrite(join(tmp_dir, 'recon_np.png'), recon_np)
+
+    elif func_name == 'gen_real_spherical_harmonics':
+        from os import environ
+        from os.path import join
+        from visualization import matrix_as_heatmap
         ls = [1, 2, 3, 4]
         n_steps_theta = 64
         for l in ls:
             print("l = %d" % l)
             # Generata harmonics
-            ymat, weights = matrix_for_real_spherical_harmonics(
+            ymat, weights = gen_real_spherical_harmonics(
                 l, n_steps_theta, _check_orthonormality=False
             )
             # Black background with white signal

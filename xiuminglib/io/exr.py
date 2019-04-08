@@ -1,7 +1,8 @@
-from os import makedirs
-from os.path import abspath, dirname, exists, join, basename
+from os.path import abspath, dirname, join, basename
 import numpy as np
 import cv2
+
+from xiuminglib import general as xg
 
 from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
@@ -132,8 +133,7 @@ class EXR():
         """
         from xiuminglib import visualization as xv
         logger_name = thisfile + '->extract_intrinsic_images_from_lighting_passes()'
-        if not exists(outdir):
-            makedirs(outdir)
+        xg.makedirs(outdir)
         data = self.data
 
         def collapse_passes(components):

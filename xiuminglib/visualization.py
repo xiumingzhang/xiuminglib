@@ -1,7 +1,7 @@
 """This module should be imported before ``skimage`` to avoid the ``matplotlib`` backend problem."""
 
-from os import makedirs, environ
-from os.path import dirname, exists, abspath, join
+from os import environ
+from os.path import dirname, abspath, join
 from pickle import dump
 import numpy as np
 
@@ -12,6 +12,8 @@ from matplotlib.collections import LineCollection
 import matplotlib.colors as mcolors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
+
+from xiuminglib import general as xg
 
 from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
@@ -170,8 +172,7 @@ def pyplot_wrapper(*args,
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir, exist_ok=True)
+    xg.makedirs(outdir)
 
     # Save plot
     plt.savefig(outpath, bbox_inches='tight')
@@ -244,8 +245,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir, exist_ok=True)
+    xg.makedirs(outdir)
 
     # Write to disk
     cv2.imwrite(outpath, im)
@@ -312,8 +312,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         im = xi.gamma_correct(im, gamma)
 
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir)
+    xg.makedirs(outdir)
 
     if im.shape[-1] == 4:
         # RGBA
@@ -349,6 +348,32 @@ def make_colormap(low, high):
             cdict['blue'].append([x, b1, b2])
     cmap = mcolors.LinearSegmentedColormap('CustomMap', cdict)
     return cmap
+
+
+def matrix_as_heatmap_complex(*args, **kwargs):
+    """Wraps :func:`matrix_as_heatmap` for complex number support.
+
+    Just pass in the parameters that :func:`matrix_as_heatmap` takes. ``'_mag'`` and ``'_sinangle'``
+    will be appended to ``outpath`` to produce the magnitude and angle heatmaps, respectively.
+    """
+    outpath = kwargs.get('outpath', None)
+    if outpath is None:
+        outpath = join(environ.get('TMP_DIR', '~'), 'matrix_as_heatmap_complex.png')
+    for suffix in ('mag', 'sinangle'):
+        l = outpath.split('.')
+        l[-2] += '_' + suffix
+        kwargs['outpath'] = '.'.join(l)
+        args_l = []
+        for i, x in enumerate(args):
+            if i == 0: # mat
+                if suffix == 'mag':
+                    args_l.append(np.absolute(x))
+                else:
+                    args_l.append(np.sin(np.angle(x)))
+            else:
+                args_l.append(x)
+        args = tuple(args_l)
+        matrix_as_heatmap(*args, **kwargs)
 
 
 def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
@@ -418,8 +443,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir, exist_ok=True)
+    xg.makedirs(outdir)
 
     # Save plot
     if contents_only:
@@ -525,8 +549,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir, exist_ok=True)
+    xg.makedirs(outdir)
 
     # Save plot
     plt.savefig(outpath, bbox_inches='tight')
@@ -655,8 +678,7 @@ def axes3d_wrapper(
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    if not exists(outdir):
-        makedirs(outdir, exist_ok=True)
+    xg.makedirs(outdir)
 
     if equal_axes:
         # plt.axis('equal') # not working, hence the hack of creating a cubic bounding box
@@ -714,10 +736,10 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
     from skimage.measure import marching_cubes_lewiner
     from trimesh import Trimesh
     from trimesh.io.export import export_mesh
-    from xiuminglib import geometry as xg
+    from xiuminglib import geometry as xgeo
 
     # Point cloud to TDF
-    tdf = xg.ptcld2tdf(pts, res=res, center=center)
+    tdf = xgeo.ptcld2tdf(pts, res=res, center=center)
 
     # Isosurface of TDF
     vs, fs, ns, _ = marching_cubes_lewiner(
