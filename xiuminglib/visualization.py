@@ -353,13 +353,13 @@ def make_colormap(low, high):
 def matrix_as_heatmap_complex(*args, **kwargs):
     """Wraps :func:`matrix_as_heatmap` for complex number support.
 
-    Just pass in the parameters that :func:`matrix_as_heatmap` takes. ``'_mag'`` and ``'_sinangle'``
-    will be appended to ``outpath`` to produce the magnitude and angle heatmaps, respectively.
+    Just pass in the parameters that :func:`matrix_as_heatmap` takes. ``'_mag'`` and ``'_phase'``
+    will be appended to ``outpath`` to produce the magnitude and phase heatmaps, respectively.
     """
     outpath = kwargs.get('outpath', None)
     if outpath is None:
         outpath = join(environ.get('TMP_DIR', '~'), 'matrix_as_heatmap_complex.png')
-    for suffix in ('mag', 'sinangle'):
+    for suffix in ('mag', 'phase'):
         l = outpath.split('.')
         l[-2] += '_' + suffix
         kwargs['outpath'] = '.'.join(l)
@@ -369,7 +369,7 @@ def matrix_as_heatmap_complex(*args, **kwargs):
                 if suffix == 'mag':
                     args_l.append(np.absolute(x))
                 else:
-                    args_l.append(np.sin(np.angle(x)))
+                    args_l.append(np.angle(x))
             else:
                 args_l.append(x)
         args = tuple(args_l)

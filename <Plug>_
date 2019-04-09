@@ -159,8 +159,7 @@ def dft_2d_freq(h, w):
     Returns:
         tuple:
         - **freq_h** (*numpy.ndarray*): Sample frequencies, in cycles per pixel, along the height
-          dimension. E.g., if ``freq_h[i, j] == 0.5``, then the ``(i, j)``-th component repeats
-          every 2 pixels along the height dimension.
+          dimension. E.g., if ``freq_h[i, j] == 0.5``, then the ``(i, j)``-th component repeats every 2 pixels.
         - **freq_w**
     """
     freq_h = np.fft.fftfreq(h)
@@ -170,54 +169,13 @@ def dft_2d_freq(h, w):
 
 
 def dft_2d_bases(h, w, upto_h=None, upto_w=None):
-    r"""Generates bases for 2D discrete Fourier transform (DFT).
+    r"""Generates 2D discrete Fourier transform (DFT) bases.
 
-    Bases are rows of :math:`Y_h` and :math:`Y_w`. Input image :math:`x` should be transformed by both
-    matrices (i.e., along both dimensions). Specifically, the analysis process is :math:`X=Y_hxY_w`,
-    and the synthesis process is :math:`x=Y_h^*XY_w^*`. See :func:`main` for example usages.
+    Bases are rows of :math:`Y`. Input image :math:`X` should be flattened with
+    :meth:`numpy.ndarray.ravel` into a vector :math:`x`. Then, the coefficients are
+    just :math:`Yx`.
 
-    Args:
-        h (int): Image height.
-        w
-        upto_h (int, optional): Up to how many bases in the height dimension. ``None`` means all.
-        upto_w
-
-    Returns:
-        tuple:
-            - **dft_mat_h** (*numpy.ndarray*): DFT matrix :math:`Y_h` transforming rows
-              of the 2D signal. Of shape ``(min(h, upto_h), h)``.
-            - **dft_mat_w** (*numpy.ndarray*): :math:`Y_w` transforming columns. Of shape
-              ``(w, min(w, upto_w))``.
-    """
-    dft_mat_h = dft_1d_bases(h, upto=upto_h)
-    dft_mat_w = dft_1d_bases(w, upto=upto_w) # shape: (upto_w, w)
-    dft_mat_w = dft_mat_w.T # because it's symmetric
-    return dft_mat_h, dft_mat_w
-
-
-def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
-    """Generates discrete Fourier transform (DFT) basis images, with which real DFT can be done.
-
-    Unlike :func:`dft_2d_bases`, this function generates a single matrix, whose rows are flattened
-    DFT basis images (defined as strictly real 2D spatial signals that, when DFT'ed, lead to 1s at
-    just one sample frequency [but usually mapped to multiple entries in the coefficient matrix]).
-
-    Using the DFT property that a real signal leads to "mirrored" DFT coefficients,
-    this function first constructs such mirrored coefficients and then does synthesis with them
-    to produce a basis image.
-
-    See Also:
-        ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]`` contains the
-        negative-frequency terms, in order of decreasingly negative frequency. For an even number
-        of input points, ``A[n/2]`` represents both positive and negative Nyquist frequency, and
-        is also purely real for real input. For an odd number of input points, ``A[(n-1)/2]``
-        contains the largest positive frequency, while ``A[(n+1)/2]`` contains the largest negative
-        frequency. Source: :mod:`numpy.fft`.
-
-    The matrix of the generated bases :math:`Y` can also be used to perform "real DFT,"
-    as it has been made unitary by careful normalization. Denote the :func:`numpy.ndarray.ravel`'ed
-    image by :math:`x`. Analysis: :math:`X=Yx`. Synthesis: :math:`x=Y^+X=Y^TX`. See :func:`main`
-    for example usage.
+    See :func:`main` for example usages and how this is related to :func:`dft_1d_bases`.
 
     Args:
         h (int): Image height.
@@ -226,38 +184,61 @@ def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
         upto_w
 
     Returns:
-        numpy.ndarray: Matrix with flattened basis images as rows. Row ``k``, when
-        :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the ``(i, j)``-th frequency
-        component, where ``k = i * min(w, upto_w) + j``. Of shape
-        ``(min(h, upto_h) * min(w, upto_w), h * w)``.
+        numpy.ndarray: Matrix whose row :math:`i`, when dotted with the flattened input,
+        gives the coefficient for the :math:`(i_h, i_w)`-th Fourier component, where
+        :math:`i=i_hw+i_w` if ``upto_w`` is ``None``, or :math:`i=i_hw_\text{upto}+i_w` otherwise.
+        Of shape ``(min(h, upto_h) * min(w, upto_w), h * w)``.
     """
-    freq_h, freq_w = dft_2d_freq(h, w)
-    freq_h_abs = abs(freq_h)
-    freq_w_abs = abs(freq_w)
-    dft_mat_h, dft_mat_w = dft_2d_bases(h, w, upto_h=upto_h, upto_w=upto_w)
-    upto_h = dft_mat_h.shape[0]
-    upto_w = dft_mat_w.shape[1]
-    dft_real_mat = np.zeros((upto_h * upto_w, h * w))
+    if upto_h is None:
+        upto_h = h
+    if upto_w is None:
+        upto_w = w
+    wmat_h = dft_1d_bases(h)
+    wmat_w = dft_1d_bases(w)
+    # TODO: speed it up for performance after ensuring correctness
+    wmat = np.zeros((upto_h * upto_w, h * w), dtype=complex)
     for i in range(upto_h):
         for j in range(upto_w):
-            # Set correct entries to 1s
-            f_h = freq_h_abs[i, j]
-            f_w = freq_w_abs[i, j]
-            is_relevant = (np.abs(freq_h_abs) == f_h) & (np.abs(freq_w_abs) == f_w)
+            w_h = wmat_h[i, :].reshape((-1, 1)) # H-by-1
+            w_w = wmat_w[j, :].reshape((1, -1)) # 1-by-W
+            wmat[i * upto_w + j, :] = w_h.dot(w_w).ravel()
+    return wmat
+
+
+def dft_2d_bases_real(*args, **kwargs):
+    """Wraps :func:`dft_2d_bases` to produce DFT basis images.
+
+    DFT basis images are strictly real 2D spatial signals that, when DFT'ed, lead to unit DFT
+    coefficients. Using the DFT property that a real signal leads to "mirrored" DFT coefficients,
+    this function first constructs such mirrored coefficients and then do synthesis with them.
+
+    The generated real bases can also be used in lieu of the complex ones to perform "real DFT".
+    See :func:`main` for example usages.
+    """
+    h, w = args
+    upto_h = kwargs.get('upto_h', None)
+    upto_w = kwargs.get('upto_w', None)
+    if upto_h is None:
+        upto_h = h
+    if upto_w is None:
+        upto_w = w
+    freq_h, freq_w = dft_2d_freq(h, w)
+    dft_mat_h = dft_1d_bases(h)
+    dft_mat_w = dft_1d_bases(w)
+    # TODO: speed it up for performance after ensuring correctness
+    for i in range(upto_h):
+        for j in range(upto_w):
+            f_h = freq_h[i, j]
+            f_w = freq_w[i, j]
+            is_relevant = (np.abs(freq_h) == f_h) & (np.abs(freq_w) == f_w)
             coeffs = np.zeros((h, w))
-            if is_relevant.any():
-                coeffs[is_relevant] = 1 / np.sum(is_relevant)
-            else: # DC
-                pass # doesn't matter anyways
-            # Synthesis
-            img = dft_mat_h.conj().dot(coeffs).dot(dft_mat_w.conj())
-            # Essentially real
-            assert np.allclose(np.imag(img), 0)
-            img = np.real(img)
-            # Flatten and put it into matrix
-            k = i * upto_w + j
-            dft_real_mat[k, :] = img.ravel()
-    return dft_real_mat
+            coeffs[is_relevant] = 1
+            img_1d = dft_mat_h.conj().dot(coeffs).dot(dft_mat_w.conj())
+            assert np.allclose(np.imag(img_1d), 0)
+            img_1d = np.real(img_1d)
+            from xiuminglib import visualization as xv
+            xv.matrix_as_image(img_1d)
+            from IPython import embed; embed()
 
 
 def sh_bases_real(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
@@ -441,50 +422,42 @@ def main(func_name):
         from os import environ
         from os.path import join
         import cv2
+        from visualization import matrix_as_heatmap_complex
         im = np.zeros((64, 128))
         for j in np.linspace(0, im.shape[1], 8, endpoint=False):
             im[:, int(j)] = 255
         for i in np.linspace(0, im.shape[0], 8, endpoint=False):
             im[int(i), :] = 255
         h, w = im.shape
-        tmp_dir = environ['TMP_DIR']
-        if not func_name.endswith('_real'):
-            from visualization import matrix_as_heatmap_complex
-            # Transform by my matrix
-            dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
-            coeffs = dft_mat_h.dot(im).dot(dft_mat_w)
+        # Transform by my matrix
+        im_1d = im.ravel()
+        dft_mat = globals()[func_name](h, w)
+        coeffs = dft_mat.dot(im_1d)
+        coeffs = coeffs.reshape((h, w))
+        if func_name.endswith('_real'):
+            embed()
+        else:
+            # Transform by my 1D DFT matrix
+            dft_mat_h = dft_1d_bases(h)
+            dft_mat_w = dft_1d_bases(w)
+            coeffs_ = dft_mat_h.dot(im).dot(dft_mat_w)
             # Transform by numpy
             coeffs_np = np.fft.fft2(im, norm='ortho')
+            tmp_dir = environ['TMP_DIR']
             matrix_as_heatmap_complex(coeffs, outpath=join(tmp_dir, 'coeffs_mine.png'))
             matrix_as_heatmap_complex(coeffs_np, outpath=join(tmp_dir, 'coeffs_np.png'))
-            print("(Ours 2D vs. NumPy)\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_np).max())
+            print("(Ours 2D vs. Ours 2x-1D)\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_).max())
+            print("(Ours 2D vs. NumPy)\t\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_np).max())
             # Reconstruct
-            recon = dft_mat_h.conj().dot(coeffs).dot(dft_mat_w.conj())
-            assert np.allclose(np.imag(recon), 0)
-            recon = np.real(recon)
+            recon_mine = dft_mat.dot(coeffs.ravel()).reshape((h, w))
+            recon_np = dft_mat.dot(coeffs_np.ravel()).reshape((h, w))
+            assert np.allclose(np.imag(recon_mine), 0)
+            assert np.allclose(np.imag(recon_np), 0)
+            recon_mine = np.real(recon_mine)
+            recon_np = np.real(recon_np)
             cv2.imwrite(join(tmp_dir, 'orig.png'), im)
-            cv2.imwrite(join(tmp_dir, 'recon.png'), recon)
-        else:
-            from general import makedirs
-            from visualization import matrix_as_image
-            dft_real_mat = dft_2d_bases_real(h, w)
-            # Visualize bases
-            out_dir = join(tmp_dir, 'real-dft')
-            makedirs(out_dir, rm_if_exists=True)
-            for k in range(dft_real_mat.shape[0]):
-                i = k // w
-                j = k - i * w
-                out_f = join(out_dir, 'i%03d_j%03d.png' % (i, j))
-                img = dft_real_mat[k, :].reshape((h, w))
-                matrix_as_image(img, outpath=out_f)
-            # Real DFT
-            im_1d = im.ravel()
-            coeffs = dft_real_mat.dot(im_1d)
-            recon_1d = dft_real_mat.T.dot(coeffs)
-            recon = recon_1d.reshape(im.shape)
-            print("(Ours vs. GT)\tMax. mag. diff.:\t%e" % np.abs(im - recon).max())
-            cv2.imwrite(join(tmp_dir, 'orig.png'), im)
-            cv2.imwrite(join(tmp_dir, 'recon.png'), recon)
+            cv2.imwrite(join(tmp_dir, 'recon_mine.png'), recon_mine)
+            cv2.imwrite(join(tmp_dir, 'recon_np.png'), recon_np)
 
     elif func_name == 'sh_bases_real':
         from os import environ
@@ -527,9 +500,12 @@ def main(func_name):
     else:
         raise NotImplementedError("Unit tests for %s" % func_name)
 
+    embed()
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
+    from IPython import embed
 
     parser = ArgumentParser()
     parser.add_argument('func', type=str, help="function to test")
