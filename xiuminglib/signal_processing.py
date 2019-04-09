@@ -216,8 +216,8 @@ def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
 
     The matrix of the generated bases :math:`Y` can also be used to perform "real DFT,"
     as it has been made unitary by careful normalization. Denote the :func:`numpy.ndarray.ravel`'ed
-    image by :math:`x`. Analysis: :math:`X=Yx`. Synthesis: :math:`x=Y^+X=Y^TX`. See :func:`main`
-    for example usage.
+    image by :math:`x`. Analysis: :math:`X=Yx`. Synthesis: :math:`x=Y^+X=Y^TX`. The results are the same
+    as if we used the two matrices returned by :func:`dft_2d_bases`. See :func:`main` for examples.
 
     Args:
         h (int): Image height.
@@ -246,7 +246,7 @@ def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
             is_relevant = (np.abs(freq_h_abs) == f_h) & (np.abs(freq_w_abs) == f_w)
             coeffs = np.zeros((h, w))
             if is_relevant.any():
-                coeffs[is_relevant] = 1 / np.sum(is_relevant)
+                coeffs[is_relevant] = 1 / np.sum(is_relevant) # to make unitary
             else: # DC
                 pass # doesn't matter anyways
             # Synthesis
@@ -448,10 +448,10 @@ def main(func_name):
             im[int(i), :] = 255
         h, w = im.shape
         tmp_dir = environ['TMP_DIR']
+        dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
         if not func_name.endswith('_real'):
             from visualization import matrix_as_heatmap_complex
             # Transform by my matrix
-            dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
             coeffs = dft_mat_h.dot(im).dot(dft_mat_w)
             # Transform by numpy
             coeffs_np = np.fft.fft2(im, norm='ortho')
@@ -482,9 +482,13 @@ def main(func_name):
             coeffs = dft_real_mat.dot(im_1d)
             recon_1d = dft_real_mat.T.dot(coeffs)
             recon = recon_1d.reshape(im.shape)
-            print("(Ours vs. GT)\tMax. mag. diff.:\t%e" % np.abs(im - recon).max())
+            print("(Ours Real vs. GT)\t\tRecon.\tMax. mag. diff.:\t%e" % np.abs(im - recon).max())
             cv2.imwrite(join(tmp_dir, 'orig.png'), im)
             cv2.imwrite(join(tmp_dir, 'recon.png'), recon)
+            coeffs_ = dft_mat_h.dot(im).dot(dft_mat_w)
+            coeffs_ = coeffs_.ravel()
+            print("(Ours Real vs. Ours Twice)\tCoeff.\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_).max())
+            from IPython import embed; embed()
 
     elif func_name == 'sh_bases_real':
         from os import environ
