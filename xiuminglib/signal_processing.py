@@ -124,8 +124,9 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
 def dft_1d_bases(n, upto=None):
     """Generates 1D discrete Fourier transform (DFT) bases.
 
-    Bases are rows of :math:`Y`, a unitary and symmetric matrix: :math:`Y^{*T}=Y^*=Y^{-1}`.
-    The forward process (analysis) is :math:`X=Yx`, and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^*X`.
+    Bases are rows of :math:`Y`, unitary: :math:`Y^*Y=YY^*=I`, where :math:`Y^*` is the
+    conjugate transpose, and symmetric. The forward process (analysis) is :math:`X=Yx`,
+    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^*X`.
 
     See :func:`main` for example usages.
 
@@ -172,9 +173,11 @@ def dft_2d_freq(h, w):
 def dft_2d_bases(h, w, upto_h=None, upto_w=None):
     r"""Generates bases for 2D discrete Fourier transform (DFT).
 
-    Bases are rows of :math:`Y_h` and :math:`Y_w`. Input image :math:`x` should be transformed by both
-    matrices (i.e., along both dimensions). Specifically, the analysis process is :math:`X=Y_hxY_w`,
-    and the synthesis process is :math:`x=Y_h^*XY_w^*`. See :func:`main` for example usages.
+    Bases are rows of :math:`Y_h` and :math:`Y_w`. See :func:`dft_1d_bases` for matrix properties.
+
+    Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
+    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is :math:`x=Y_h^*XY_w^*`.
+    See :func:`main` for example usages.
 
     Args:
         h (int): Image height.
@@ -215,8 +218,8 @@ def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
         frequency. Source: :mod:`numpy.fft`.
 
     The matrix of the generated bases :math:`Y` can also be used to perform "real DFT,"
-    as it has been made unitary by careful normalization. Denote the :func:`numpy.ndarray.ravel`'ed
-    image by :math:`x`. Analysis: :math:`X=Yx`. Synthesis: :math:`x=Y^+X=Y^TX`. The results are the same
+    as it has been made orthonormal by careful normalization. Denote the :func:`numpy.ndarray.ravel`'ed
+    image by :math:`x`. Analysis: :math:`X=Yx`. Synthesis: :math:`x=Y^{-1}X=Y^TX`. The results are the same
     as if we used the two matrices returned by :func:`dft_2d_bases`. See :func:`main` for examples.
 
     Args:
@@ -231,12 +234,14 @@ def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
         component, where ``k = i * min(w, upto_w) + j``. Of shape
         ``(min(h, upto_h) * min(w, upto_w), h * w)``.
     """
+    if upto_h is None:
+        upto_h = h
+    if upto_w is None:
+        upto_w = w
     freq_h, freq_w = dft_2d_freq(h, w)
     freq_h_abs = abs(freq_h)
     freq_w_abs = abs(freq_w)
-    dft_mat_h, dft_mat_w = dft_2d_bases(h, w, upto_h=upto_h, upto_w=upto_w)
-    upto_h = dft_mat_h.shape[0]
-    upto_w = dft_mat_w.shape[1]
+    dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
     dft_real_mat = np.zeros((upto_h * upto_w, h * w))
     for i in range(upto_h):
         for j in range(upto_w):
@@ -246,7 +251,7 @@ def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
             is_relevant = (np.abs(freq_h_abs) == f_h) & (np.abs(freq_w_abs) == f_w)
             coeffs = np.zeros((h, w))
             if is_relevant.any():
-                coeffs[is_relevant] = 1 / np.sum(is_relevant) # to make unitary
+                coeffs[is_relevant] = 1 / np.sum(is_relevant) # to make orthonormal
             else: # DC
                 pass # doesn't matter anyways
             # Synthesis
