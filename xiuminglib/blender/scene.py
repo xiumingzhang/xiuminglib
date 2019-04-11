@@ -36,3 +36,12 @@ def save_blend(outpath, delete_overwritten=False):
 
     logger.name = logger_name
     logger.info("Saved to %s", outpath)
+
+
+def open_blend(inpath):
+    """Opens a .blend file.
+
+    Args:
+        inpath (str): E.g., ``'~/foo.blend'``.
+    """
+    bpy.ops.wm.open_mainfile(filepath=inpath)
