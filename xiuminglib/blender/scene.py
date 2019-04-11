@@ -27,7 +27,8 @@ def save_blend(outpath, delete_overwritten=False):
         remove(outpath)
 
     try:
-        bpy.ops.file.autopack_toggle()
+        # bpy.ops.file.autopack_toggle()
+        bpy.ops.file.pack_all()
     except RuntimeError:
         logger.name = logger_name
         logger.error("Failed to pack some files")

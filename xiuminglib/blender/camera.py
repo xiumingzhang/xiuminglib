@@ -370,7 +370,7 @@ def get_camera_matrix(cam, keep_disparity=False):
 
     logger.name = logger_name
     logger.info("Done computing camera matrix for '%s'", cam.name)
-    logger.warning("    ... using w = %d; h = %d", w * scale, h * scale)
+    logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
     return cam_mat, int_mat, ext_mat
 
@@ -480,7 +480,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
 
     logger.name = logger_name
     logger.info("Got z-buffer of camera '%s'", cam.name)
-    logger.warning("    ... using w = %d; h = %d", w * scale, h * scale)
+    logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
     return zbuffer
 
@@ -585,7 +585,7 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
 
     logger.name = logger_name
     logger.info("Backprojection done with camera '%s'", cam.name)
-    logger.warning("    ... using w = %d; h = %d", w * scale, h * scale)
+    logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
     if uvs.shape[0] == 1:
         return xyzs[0], intersect_objnames[0]
@@ -658,7 +658,7 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, perc_z_eps=1e-6, hide
 
     logger.name = logger_name
     logger.info("Visibility test done with camera '%s'", cam.name)
-    logger.warning("    ... using w = %d; h = %d", w * scale, h * scale)
+    logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
     return visible_vert_ind
 
@@ -713,6 +713,6 @@ def get_2d_bounding_box(obj, cam):
 
     logger.name = logger_name
     logger.info("Got 2D bounding box of '%s' in camera '%s'", obj.name, cam.name)
-    logger.warning("    ... using w = %d; h = %d", w * scale, h * scale)
+    logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
     return corners

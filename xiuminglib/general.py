@@ -58,7 +58,7 @@ def print_attrs(obj, excerpts=None, excerpt_win_size=60, max_recursion_depth=Non
                     m_start = mi - excerpt_win_size // 2
                     m_end = mi + excerpt_win_size // 2
                     print(
-                        "Match %d (index: %d): ...%s\033[0;31m%s\033[00m%s..." % (
+                        "Match %09d (index: %09d): ...%s\033[0;31m%s\033[00m%s..." % (
                             mii,
                             mi,
                             serialized[m_start:mi],

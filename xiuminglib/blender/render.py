@@ -128,7 +128,7 @@ def easyset(w=None, h=None,
 
     # Ambient occlusion
     if ao is not None:
-        bpy.context.scene.world.light_settings.use_ambient_occlusion = ao
+        scene.world.light_settings.use_ambient_occlusion = ao
 
     # Color mode of rendering
     if color_mode is not None:
