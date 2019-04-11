@@ -10,7 +10,7 @@ Welcome to xiuminglib's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-``xiuminglib`` includes daily classes and functions that are useful for my computer vision/graphics research.
+xiuminglib includes daily classes and functions that are useful for my computer vision/graphics research.
 Noteworthily, it contains many useful functions for 3D modeling and rendering with Blender.
 
 The source code is available in `the repo <https://github.com/xiumingzhang/xiuminglib>`_. For issues or

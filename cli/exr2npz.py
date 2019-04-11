@@ -1,11 +1,10 @@
-"""
-A Commandline Tool to Convert an EXR Image to a .npz Dictionary
+"""A commandline tool to convert an EXR image to a .npz dictionary.
 
-Requires Python 2 for now, so writes to disk for compatibility with Python 3
+Requires Python 2 for now, so writes to disk for compatibility with Python 3.
 
-Xiuming Zhang, MIT CSAIL
+Xiuming Zhang, MIT CSAIL.
 
-Feburary 2018
+Feburary 2018.
 """
 
 from argparse import ArgumentParser
