@@ -5,5 +5,4 @@ __all__ = [
     'scene',
     'render',
 ]
-
 from . import * # noqa: F403 # pylint: disable=wildcard-import

@@ -385,7 +385,7 @@ def color_vertices(obj, vert_ind, colors):
 def setup_diffuse_nodetree(obj, texture, roughness=0):
     r"""Sets up a diffuse texture node tree for the bundled texture.
 
-    Bundled texture can be an external texture map (carelessly mapped), or a pure color.
+    Bundled texture can be an external texture map (carelessly mapped) or a pure color.
     Mathematically, the BRDF model used is either Lambertian (no roughness) or Oren-Nayar (with roughness).
 
     Args:
