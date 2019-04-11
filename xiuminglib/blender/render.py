@@ -278,7 +278,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
 
     logger.name = logger_name
     logger.info("%s rendered through '%s'", obj_names, cam_name)
-    logger.warning("    ...; node trees and renderability of these objects have changed")
+    logger.warning("Node trees and renderability of these objects have changed")
 
 
 def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
@@ -328,9 +328,9 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
 
     logger.name = logger_name
     logger.info("Depth map of %s rendered through '%s' to", obj_names, cam_name)
-    logger.info("    1. z w/o anti-aliasing: %s", outpath_z)
-    logger.info("    2. alpha w/ anti-aliasing: %s", outpath_a)
-    logger.warning("    ..., and the scene node tree has changed")
+    logger.info("\t1. z w/o anti-aliasing: %s", outpath_z)
+    logger.info("\t2. alpha w/ anti-aliasing: %s", outpath_a)
+    logger.warning("The scene node tree has changed")
 
 
 def render_mask(outpath, cam=None, obj_names=None, soft=False):
@@ -369,7 +369,7 @@ def render_mask(outpath, cam=None, obj_names=None, soft=False):
 
     logger.name = logger_name
     logger.info("Mask image of %s rendered through '%s'", obj_names, cam_name)
-    logger.warning("    ...; node trees and renderability of these objects have changed")
+    logger.warning("Node trees and renderability of these objects have changed")
 
 
 def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
@@ -437,7 +437,7 @@ def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
 
     logger.name = logger_name
     logger.info("Normal map of %s rendered through '%s' to %s", obj_names, cam_name, outpath)
-    logger.warning("    ..., and the scene node tree has changed")
+    logger.warning("The scene node tree has changed")
 
 
 def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
@@ -490,4 +490,4 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
 
     logger.name = logger_name
     logger.info("Select lighting passes of %s rendered through '%s' to %s", obj_names, cam_name, outpath)
-    logger.warning("    ..., and the scene node tree has changed")
+    logger.warning("The scene node tree has changed")
