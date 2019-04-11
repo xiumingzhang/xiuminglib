@@ -14,10 +14,6 @@ import numpy as np
 import OpenEXR
 import Imath
 
-import config
-logger, thisfile = config.create_logger(abspath(__file__))
-logger.name = thisfile
-
 
 # Parse variables
 parser = ArgumentParser(description="Load OpenEXR image as dictionary of numpy arrays")
@@ -46,5 +42,3 @@ for c in f.header()['channels']:
     imgs[c] = arr.reshape(win_size)
 
 np.savez(outpath, **imgs)
-
-logger.info("Generated %s", outpath)
