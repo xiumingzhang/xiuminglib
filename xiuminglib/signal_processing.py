@@ -493,7 +493,6 @@ def main(func_name):
             coeffs_ = dft_mat_h.dot(im).dot(dft_mat_w)
             coeffs_ = coeffs_.ravel()
             print("(Ours Real vs. Ours Twice)\tCoeff.\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_).max())
-            from IPython import embed; embed()
 
     elif func_name == 'sh_bases_real':
         from os import environ
