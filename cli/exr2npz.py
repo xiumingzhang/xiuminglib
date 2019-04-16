@@ -25,6 +25,7 @@ outpath = abspath(args.outpath)
 
 if not outpath.endswith('.npz'):
     outpath += '.npz'
+
 # Make directory
 outdir = dirname(outpath)
 if not exists(outdir):
