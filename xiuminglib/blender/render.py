@@ -239,7 +239,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
     """Renders current scene with cameras in scene.
 
     Args:
-        outpath (str): Path to save render to.
+        outpath (str): Path to save the render to. Should end with either .exr or .png.
         cam (bpy_types.Object, optional): Camera through which scene is rendered. If ``None``,
             use the only camera in scene.
         obj_names (str or list(str), optional): Name(s) of object(s) of interest. If ``None``,
@@ -294,13 +294,15 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
         obj_names (str or list(str), optional): Name(s) of object(s) of interest.
             ``None`` means all objects.
         ray_depth (bool, optional): Whether to render ray or plane depth.
+
+    Todo:
+        Ray depth.
     """
     logger_name = thisfile + '->render_depth()'
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     if ray_depth:
-        # TODO
         raise NotImplementedError("Ray depth")
 
     # Use Blender Render for anti-aliased results -- faster than Cycles,
@@ -339,7 +341,7 @@ def render_mask(outpath, cam=None, obj_names=None, soft=False):
     Foreground is bright.
 
     Args:
-        outpath (str): Path to save render to.
+        outpath (str): Path to save the render to. Should end with .png.
         cam (bpy_types.Object, optional): Camera through which scene is rendered.
             If ``None``, there must be just one camera in scene.
         obj_names (str or list(str), optional): Name(s) of object(s) of interest.
@@ -447,7 +449,7 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
     :func:`xiuminglib.io.exr.EXR.extract_intrinsic_images_from_lighting_passes`.
 
     Args:
-        outpath (str): Where to save the lighting passes to.
+        outpath (str): Where to save the lighting passes to. Should end with .exr.
         cam (bpy_types.Object, optional): Camera through which scene is rendered.
             If ``None``, there must be only one camera in scene.
         obj_names (str or list(str), optional): Name(s) of object(s) of interest.
