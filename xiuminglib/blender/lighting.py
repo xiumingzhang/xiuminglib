@@ -142,3 +142,37 @@ def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
     logger.info("Omnidirectional point light added")
 
     return point
+
+
+def add_light_env(env=(1, 1, 1, 1), strength=1):
+    r"""Adds environment lighting.
+
+    Args:
+        env (tuple(float) or str, optional): Environment map. If tuple, it's RGB or RGBA, each
+            element of which :math:`\in [0,1]`. Otherwise, it's the path to an image.
+        strength (float, optional): Light intensity.
+
+    Todo:
+        Handles using an image as the environment map.
+    """
+    logger_name = thisfile + '->add_light_env()'
+
+    if isinstance(env, str):
+        raise NotImplementedError("Image as environment")
+    else:
+        if len(env) == 3:
+            env += (1,)
+        assert len(env) == 4, "If tuple, env must be of length 3 or 4"
+
+    world = bpy.context.scene.world
+    world.use_nodes = True
+    node_tree = world.node_tree
+    nodes = node_tree.nodes
+
+    node = nodes.new('ShaderNodeBackground')
+    node_tree.links.new(node.outputs['Background'], nodes['World Output'].inputs['Surface'])
+    node.inputs['Color'].default_value = env
+    node.inputs['Strength'].default_value = strength
+
+    logger.name = logger_name
+    logger.info("Environmental light added")
