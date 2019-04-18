@@ -1,6 +1,5 @@
 from os.path import dirname, join
 from .config import get_all
-
 lib_dir = dirname(__file__)
 __all__ = get_all(lib_dir)
 from . import * # noqa: F401,F403 # pylint: disable=wildcard-import
