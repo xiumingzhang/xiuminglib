@@ -247,7 +247,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
         text (dict, optional): What text to be overlaid on image and how, following the format::
 
             {
-                'contents': 'Hello World!',
+                'contents': "Hello World!",
                 'bottom_left_corner': (50, 50),
                 'font_scale': 1,
                 'bgr': (255, 0, 0),
@@ -335,8 +335,8 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
     logger.warning("The scene node tree has changed")
 
 
-def render_mask(outpath, cam=None, obj_names=None, soft=False):
-    """Renders binary or soft mask of objects from the specified camera.
+def render_mask(outpath, cam=None, obj_names=None, samples=1000):
+    r"""Renders binary or soft mask of objects from the specified camera.
 
     Foreground is bright.
 
@@ -346,20 +346,17 @@ def render_mask(outpath, cam=None, obj_names=None, soft=False):
             If ``None``, there must be just one camera in scene.
         obj_names (str or list(str), optional): Name(s) of object(s) of interest.
             ``None`` means all objects.
-        soft (bool, optional): Whether to render the mask soft or hard.
+        samples (int, optional): Samples per pixel. :math:`1` gives a hard mask,
+            and :math:`\gt 1` gives a soft (anti-aliased) mask.
     """
     logger_name = thisfile + '->render_mask()'
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
-    if soft:
-        scene.render.engine = 'BLENDER_RENDER'
-        scene.render.alpha_mode = 'TRANSPARENT'
-    else:
-        scene.render.engine = 'CYCLES'
-        scene.cycles.film_transparent = True
-        # Anti-aliased edges are built up by averaging multiple samples
-        scene.cycles.samples = 1
+    scene.render.engine = 'CYCLES'
+    scene.cycles.film_transparent = True
+    # Anti-aliased edges are built up by averaging multiple samples
+    scene.cycles.samples = samples
 
     # Set nodes for (binary) alpha pass rendering
     node_tree = scene.node_tree
