@@ -9,6 +9,7 @@ __all__ = [
     'geometry',
     'image_processing',
     'io',
+    'linear_algebra',
     'signal_processing',
     'tracker',
     'visualization',

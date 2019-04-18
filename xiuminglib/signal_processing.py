@@ -159,10 +159,10 @@ def dft_2d_freq(h, w):
 
     Returns:
         tuple:
-        - **freq_h** (*numpy.ndarray*) -- Sample frequencies, in cycles per pixel, along the height
-          dimension. E.g., if ``freq_h[i, j] == 0.5``, then the ``(i, j)``-th component repeats
-          every 2 pixels along the height dimension.
-        - **freq_w**
+            - **freq_h** (*numpy.ndarray*) -- Sample frequencies, in cycles per pixel, along the height
+              dimension. E.g., if ``freq_h[i, j] == 0.5``, then the ``(i, j)``-th component repeats
+              every 2 pixels along the height dimension.
+            - **freq_w**
     """
     freq_h = np.fft.fftfreq(h)
     freq_w = np.fft.fftfreq(w)
@@ -187,9 +187,9 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
 
     Returns:
         tuple:
-            - **dft_mat_h** (*numpy.ndarray*): DFT matrix :math:`Y_h` transforming rows
+            - **dft_mat_h** (*numpy.ndarray*) -- DFT matrix :math:`Y_h` transforming rows
               of the 2D signal. Of shape ``(min(h, upto_h), h)``.
-            - **dft_mat_w** (*numpy.ndarray*): :math:`Y_w` transforming columns. Of shape
+            - **dft_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming columns. Of shape
               ``(w, min(w, upto_w))``.
     """
     dft_mat_h = dft_1d_bases(h, upto=upto_h)
