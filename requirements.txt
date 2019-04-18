@@ -7,4 +7,4 @@ opencv-python
 # If you need Blender, then
 # bpy
 
-sphinx=2.0.1
+sphinx==2.0.1
