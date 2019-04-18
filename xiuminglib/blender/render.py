@@ -255,7 +255,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
             }
 
     Writes:
-        A: 32-bit .exr or 16-bit .png image.
+        - A 32-bit .exr or 16-bit .png image.
     """
     logger_name = thisfile + '->render()'
 
@@ -297,6 +297,10 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
         obj_names (str or list(str), optional): Name(s) of object(s) of interest.
             ``None`` means all objects.
         ray_depth (bool, optional): Whether to render ray or plane depth.
+
+    Writes:
+        - A 32-bit .exr depth map w/o anti-aliasing, located at ``outprefix + '_z.exr'``.
+        - A 32-bit .exr alpha map w/ anti-aliasing, located at ``outprefix + '_a.exr'``.
 
     Todo:
         Ray depth.
@@ -341,8 +345,6 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
 def render_mask(outpath, cam=None, obj_names=None, samples=1000):
     r"""Renders binary or soft mask of objects from the specified camera.
 
-    Foreground is bright.
-
     Args:
         outpath (str): Path to save the render to. Should end with .png.
         cam (bpy_types.Object, optional): Camera through which scene is rendered.
@@ -351,6 +353,9 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
             ``None`` means all objects.
         samples (int, optional): Samples per pixel. :math:`1` gives a hard mask,
             and :math:`\gt 1` gives a soft (anti-aliased) mask.
+
+    Writes:
+        - A 16-bit .png mask, where bright indicates foreground.
     """
     logger_name = thisfile + '->render_mask()'
 
@@ -387,6 +392,9 @@ def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
         obj_names (str or list(str), optional): Name(s) of object(s) of interest.
             Use ``'ref-ball'`` for the reference normal ball. ``None`` means all objects.
         camera_space (bool, optional): Whether to render normal in the camera or world space.
+
+    Writes:
+        - A 32-bit .exr normal map.
     """
     from .object import add_sphere
     from .camera import point_camera_to, get_2d_bounding_box
@@ -455,6 +463,9 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
         obj_names (str or list(str), optional): Name(s) of object(s) of interest.
             ``None`` means all objects.
         n_samples (int, optional): Number of path tracing samples per pixel.
+
+    Writes:
+        - A 32-bit .exr multi-layer image containing the lighting passes.
     """
     logger_name = thisfile + '->render_lighting_passes()'
 
