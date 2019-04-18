@@ -6,3 +6,5 @@ opencv-python
 
 # If you need Blender, then
 # bpy
+
+sphinx>=1.8.2

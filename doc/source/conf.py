@@ -168,7 +168,8 @@ texinfo_documents = [
 ]
 
 
-# Example configuration for intersphinx: refer to the Python standard library.
+# -- My own --------------------------------------------------------------
+
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
@@ -178,4 +179,4 @@ intersphinx_mapping = {
     'blender': ('https://docs.blender.org/api/current/', None),
 } # FIXME: some don't work
 
-#napoleon_custom_sections = ('Writes', 'Args')
+napoleon_custom_sections = ['Writes']

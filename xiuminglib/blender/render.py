@@ -253,8 +253,9 @@ def render(outpath, cam=None, obj_names=None, text=None):
                 'bgr': (255, 0, 0),
                 'thickness': 2,
             }
+
     Writes:
-        haha ()
+        A: 32-bit .exr or 16-bit .png image.
     """
     logger_name = thisfile + '->render()'
 
