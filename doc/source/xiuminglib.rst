@@ -17,80 +17,80 @@ Subpackages
 Submodules
 ----------
 
-xiuminglib\.camera module
--------------------------
+xiuminglib.camera module
+------------------------
 
 .. automodule:: xiuminglib.camera
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.config module
--------------------------
+xiuminglib.config module
+------------------------
 
 .. automodule:: xiuminglib.config
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.decorators module
------------------------------
+xiuminglib.decorators module
+----------------------------
 
 .. automodule:: xiuminglib.decorators
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.general module
---------------------------
+xiuminglib.general module
+-------------------------
 
 .. automodule:: xiuminglib.general
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.geometry module
----------------------------
+xiuminglib.geometry module
+--------------------------
 
 .. automodule:: xiuminglib.geometry
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.image\_processing module
-------------------------------------
+xiuminglib.image\_processing module
+-----------------------------------
 
 .. automodule:: xiuminglib.image_processing
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.linear\_algebra module
-----------------------------------
+xiuminglib.linear\_algebra module
+---------------------------------
 
 .. automodule:: xiuminglib.linear_algebra
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.signal\_processing module
--------------------------------------
+xiuminglib.signal\_processing module
+------------------------------------
 
 .. automodule:: xiuminglib.signal_processing
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.tracker module
---------------------------
+xiuminglib.tracker module
+-------------------------
 
 .. automodule:: xiuminglib.tracker
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.visualization module
---------------------------------
+xiuminglib.visualization module
+-------------------------------
 
 .. automodule:: xiuminglib.visualization
     :members:

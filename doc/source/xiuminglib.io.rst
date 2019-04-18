@@ -1,5 +1,5 @@
-xiuminglib\.io package
-======================
+xiuminglib.io package
+=====================
 
 .. automodule:: xiuminglib.io
     :members:
@@ -9,16 +9,16 @@ xiuminglib\.io package
 Submodules
 ----------
 
-xiuminglib\.io\.exr module
---------------------------
+xiuminglib.io.exr module
+------------------------
 
 .. automodule:: xiuminglib.io.exr
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib\.io\.objmtl module
------------------------------
+xiuminglib.io.objmtl module
+---------------------------
 
 .. automodule:: xiuminglib.io.objmtl
     :members:

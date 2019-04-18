@@ -159,7 +159,7 @@ def dft_2d_freq(h, w):
 
     Returns:
         tuple:
-        - **freq_h** (*numpy.ndarray*): Sample frequencies, in cycles per pixel, along the height
+        - **freq_h** (*numpy.ndarray*) -- Sample frequencies, in cycles per pixel, along the height
           dimension. E.g., if ``freq_h[i, j] == 0.5``, then the ``(i, j)``-th component repeats
           every 2 pixels along the height dimension.
         - **freq_w**

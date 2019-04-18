@@ -177,11 +177,11 @@ def moeller_trumbore(ray_orig, ray_dir, tri_v0, tri_v1, tri_v2):
 
     Returns:
         tuple:
-            - **u** (*float*): The :math:`u` component of the Barycentric coordinates
+            - **u** (*float*) -- The :math:`u` component of the Barycentric coordinates
               of the intersection. Intersection is in-triangle (including on an edge
               or at a vertex), if :math:`u\geq 0`, :math:`v\geq 0`, and :math:`u+v\leq 1`.
-            - **v** (*float*): The :math:`v` component.
-            - **t** (*float*): Distance coefficient from :math:`O` to the intersection along
+            - **v** (*float*) -- The :math:`v` component.
+            - **t** (*float*) -- Distance coefficient from :math:`O` to the intersection along
               :math:`D`. Intersection is between :math:`O` and :math:`O+D`, if :math:`0 < t < 1`.
     """
     # Validate inputs

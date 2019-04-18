@@ -253,6 +253,8 @@ def render(outpath, cam=None, obj_names=None, text=None):
                 'bgr': (255, 0, 0),
                 'thickness': 2,
             }
+    Writes:
+        haha ()
     """
     logger_name = thisfile + '->render()'
 
