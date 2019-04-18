@@ -1,10 +1,26 @@
 """Library setup including setting logging colors, etc."""
 
+from os.path import join, basename, isdir
+from glob import glob
 import logging
 from platform import system
 
 logging_warn = logging.WARN
 # so that won't need to import a package just for its constants
+
+
+def get_all(lib_dir):
+    # Figure out subpackages and modules
+    modules = []
+    for f in sorted(glob(join(lib_dir, '*'))):
+        base = basename(f)
+        if not base.endswith('.pyc') and base != '__init__.py' and base != '__pycache__':
+            if base.endswith('.py'):
+                base = base[:-3]
+            else:
+                assert isdir(f), "Neither a module (.py) nor a subpackage (folder): %s" % f
+            modules.append(base)
+    return modules
 
 
 def create_logger(file_abspath, level=logging.INFO):

@@ -355,7 +355,7 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
             and :math:`\gt 1` gives a soft (anti-aliased) mask.
 
     Writes:
-        - A 16-bit .png mask, where bright indicates foreground.
+        - A 16-bit three-channel .png mask, where bright indicates foreground.
     """
     logger_name = thisfile + '->render_mask()'
 
