@@ -12,5 +12,5 @@ data_dir = join(lib_dir, '..', 'data')
 constants = {
     # Paths to data
     'path_checker': join(data_dir, 'texture/checker.png'),
-    'path_cameraman': join(data_dir, 'data/cameraman_grayscale.gif'),
+    'path_cameraman': join(data_dir, 'images/cameraman_grayscale.png'),
 }
