@@ -1,6 +1,5 @@
 """This module should be imported before ``skimage`` to avoid the ``matplotlib`` backend problem."""
 
-from os import environ
 from os.path import dirname, abspath, join
 from pickle import dump
 import numpy as np
@@ -13,10 +12,9 @@ import matplotlib.colors as mcolors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
 
-from xiuminglib import general as xg
+import xiuminglib as xlib
 
-from xiuminglib import config
-logger, thisfile = config.create_logger(abspath(__file__))
+logger, thisfile = xlib.config.create_logger(abspath(__file__))
 
 
 def pyplot_wrapper(*args,
@@ -76,7 +74,7 @@ def pyplot_wrapper(*args,
         ylim
         grid (bool, optional): Whether to draw grid.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'pyplot_wrapper.png')``.
+            ``None`` means ``os.path.join(xlib.constants['dir_tmp'], 'pyplot_wrapper.png')``.
 
     Raises:
         NotImplementedError: If ``func`` is not implemented.
@@ -86,7 +84,7 @@ def pyplot_wrapper(*args,
         assert func == 'plot', "CI makes sense only for `plot`"
 
     if outpath is None:
-        outpath = join(environ.get('TMP_DIR', '~'), 'plot.png')
+        outpath = join(xlib.constants['dir_tmp'], 'plot.png')
 
     plt.figure(figsize=figsize)
     ax = plt.gca()
@@ -172,7 +170,7 @@ def pyplot_wrapper(*args,
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xlib.general.makedirs(outdir)
 
     # Save plot
     plt.savefig(outpath, bbox_inches='tight')
@@ -202,14 +200,14 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
         bgr (tuple or array_like(tuple), optional): BGR color(s) of scatter points. Each element
             :math:`\in [0, 255]`. If *array_like*, must be of shape N-by-3.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'scatter_on_image.png')``.
+            ``None`` means ``os.path.join(xlib.constants['dir_tmp'], 'scatter_on_image.png')``.
     """
     import cv2
 
     logger_name = thisfile + '->scatter_on_image()'
 
     if outpath is None:
-        outpath = join(environ.get('TMP_DIR', '~'), 'scatter_on_image.png')
+        outpath = join(xlib.constants['dir_tmp'], 'scatter_on_image.png')
 
     thickness = -1 # for filled circles
 
@@ -245,7 +243,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xlib.general.makedirs(outdir)
 
     # Write to disk
     cv2.imwrite(outpath, im)
@@ -259,19 +257,18 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     Args:
         arr (numpy.ndarray): Array to be transformed into an image. Can be H-by-W or H-by-W-by-3.
         outpath (str, optional): Where to visualize the result to. ``None`` means
-            ``os.path.join(os.environ.get('TMP_DIR', '~'), 'matrix_as_image.png')``.
+            ``os.path.join(xlib.constants['dir_tmp'], 'matrix_as_image.png')``.
         gamma (float, optional): For gamma correction.
 
     Raises:
         ValueError: If ``arr`` is neither 2D or 3D.
     """
     import cv2
-    from xiuminglib import image_processing as xi
 
     logger_name = thisfile + '->matrix_as_image()'
 
     if outpath is None:
-        outpath = join(environ.get('TMP_DIR', '~'), 'matrix_as_image.png')
+        outpath = join(xlib.constants['dir_tmp'], 'matrix_as_image.png')
 
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max
@@ -309,10 +306,10 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         im = np.dstack((im, im_a))
 
     if gamma is not None:
-        im = xi.gamma_correct(im, gamma)
+        im = xlib.image_processing.gamma_correct(im, gamma)
 
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xlib.general.makedirs(outdir)
 
     if im.shape[-1] == 4:
         # RGBA
@@ -355,10 +352,14 @@ def matrix_as_heatmap_complex(*args, **kwargs):
 
     Just pass in the parameters that :func:`matrix_as_heatmap` takes. ``'_mag'`` and ``'_phase'``
     will be appended to ``outpath`` to produce the magnitude and phase heatmaps, respectively.
+
+    Writes:
+        - Magnitude heatmap w/ a filename with mag suffix.
+        - Phase heatmap w/ a filename with phase suffix.
     """
     outpath = kwargs.get('outpath', None)
     if outpath is None:
-        outpath = join(environ.get('TMP_DIR', '~'), 'matrix_as_heatmap_complex.png')
+        outpath = join(xlib.constants['dir_tmp'], 'matrix_as_heatmap_complex.png')
     for suffix in ('mag', 'phase'):
         l = outpath.split('.')
         l[-2] += '_' + suffix
@@ -390,7 +391,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
             (so that zero is no color, i.e., white). Useful when matrix consists of both positive and negative
             values, and 0 means "nothing". ``None`` means default colormap and auto range.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'matrix_as_heatmap.png')``.
+            ``None`` means ``os.path.join(xlib.constants['dir_tmp'], 'matrix_as_heatmap.png')``.
         contents_only (bool, optional): Whether to plot only the contents (i.e., no borders, axes, etc.).
         figtitle (str, optional): Figure title. ``None`` means no title.
 
@@ -398,7 +399,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
         ValueError: If ``mat`` has wrong dimensions.
     """
     if outpath is None:
-        outpath = join(environ.get('TMP_DIR', '~'), 'matrix_as_heatmap.png')
+        outpath = join(xlib.constants['dir_tmp'], 'matrix_as_heatmap.png')
 
     if mat.ndim != 2:
         raise ValueError("'mat' must have exactly 2 dimensions, but has %d" % mat.ndim)
@@ -443,7 +444,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xlib.general.makedirs(outdir)
 
     # Save plot
     if contents_only:
@@ -477,7 +478,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
         ft (list(list(int)), optional): Texture faces used to connect UV points. Values start
             from 1, e.g., ``'[[1, 2, 3], [], [2, 3, 4, 5], ...]'``.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'uv_on_texmap.png')``.
+            ``None`` means ``os.path.join(xlib.constants['dir_tmp'], 'uv_on_texmap.png')``.
         figtitle (str, optional): Figure title.
 
     Raises:
@@ -486,7 +487,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
     import cv2
 
     if outpath is None:
-        outpath = join(environ.get('TMP_DIR', '~'), 'uv_on_texmap.png')
+        outpath = join(xlib.constants['dir_tmp'], 'uv_on_texmap.png')
 
     figsize = 50
     dc = 'r' # color
@@ -549,7 +550,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xlib.general.makedirs(outdir)
 
     # Save plot
     plt.savefig(outpath, bbox_inches='tight')
@@ -615,7 +616,7 @@ def axes3d_wrapper(
         equal_axes (bool, optional): Whether to have the same scale for all axes.
         outpath (str, optional): Path to which the visualization is saved to. Should end with
             ``'.png'`` or ``'.pkl'`` (for offline interactive viewing).
-            ``None`` means ``os.path.join(os.environ.get('TMP_DIR', '~'), 'axes3d_wrapper.png')``.
+            ``None`` means ``os.path.join(xlib.constants['dir_tmp'], 'axes3d_wrapper.png')``.
 
     Raises:
         NotImplementedError: If ``func`` is not yet implemented.
@@ -624,7 +625,7 @@ def axes3d_wrapper(
     logger_name = thisfile + '->axes3d_wrapper()'
 
     if outpath is not None:
-        outpath = join(environ.get('TMP_DIR', '~'), 'plot.png')
+        outpath = join(xlib.constants['dir_tmp'], 'plot.png')
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')
@@ -678,7 +679,7 @@ def axes3d_wrapper(
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xlib.general.makedirs(outdir)
 
     if equal_axes:
         # plt.axis('equal') # not working, hence the hack of creating a cubic bounding box
@@ -736,10 +737,9 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
     from skimage.measure import marching_cubes_lewiner
     from trimesh import Trimesh
     from trimesh.io.export import export_mesh
-    from xiuminglib import geometry as xgeo
 
     # Point cloud to TDF
-    tdf = xgeo.ptcld2tdf(pts, res=res, center=center)
+    tdf = xlib.geometry.ptcld2tdf(pts, res=res, center=center)
 
     # Isosurface of TDF
     vs, fs, ns, _ = marching_cubes_lewiner(

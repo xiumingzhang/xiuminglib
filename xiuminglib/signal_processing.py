@@ -443,16 +443,16 @@ def main(func_name):
         print(freq_w)
 
     elif func_name.startswith('dft_2d_bases'):
-        from os import environ
         from os.path import join
         import cv2
+        import xiuminglib as xlib
         im = np.zeros((64, 128))
         for j in np.linspace(0, im.shape[1], 8, endpoint=False):
             im[:, int(j)] = 255
         for i in np.linspace(0, im.shape[0], 8, endpoint=False):
             im[int(i), :] = 255
         h, w = im.shape
-        tmp_dir = environ['TMP_DIR']
+        tmp_dir = xlib.constants['dir_tmp']
         dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
         if not func_name.endswith('_real'):
             from visualization import matrix_as_heatmap_complex
@@ -494,10 +494,22 @@ def main(func_name):
             coeffs_ = coeffs_.ravel()
             print("(Ours Real vs. Ours Twice)\tCoeff.\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_).max())
 
+    elif func_name == 'cameraman_dft':
+        from os.path import join
+        import cv2
+        import xiuminglib as xlib
+        im = cv2.imread(xlib.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
+        im = cv2.resize(im, (64, 64))
+        # My DFT
+        dft_real_mat = dft_2d_bases_real(*im.shape)
+        coeffs = dft_real_mat.dot(im.ravel())
+        recon = dft_real_mat.T.dot(coeffs).reshape(im.shape)
+        cv2.imwrite(join(xlib.constants['dir_tmp'], 'a.png'), recon.astype(im.dtype))
+
     elif func_name == 'sh_bases_real':
-        from os import environ
         from os.path import join
         from visualization import matrix_as_heatmap
+        import xiuminglib as xlib
         ls = [1, 2, 3, 4]
         n_steps_theta = 64
         for l in ls:
@@ -518,7 +530,7 @@ def main(func_name):
             sph_func = sph_func_1d.reshape((n_steps_theta, 2 * n_steps_theta))
             sph_func_ravel = sph_func.ravel()
             assert (sph_func_1d == sph_func_ravel).all()
-            tmp_dir = environ['TMP_DIR']
+            tmp_dir = xlib.constants['dir_tmp']
             matrix_as_heatmap(sph_func, outpath=join(tmp_dir, 'sph_orig.png'))
             # Analysis
             coeffs = ymat.dot(np.multiply(weights, sph_func_ravel))
