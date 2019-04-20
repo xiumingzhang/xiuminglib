@@ -126,9 +126,7 @@ def dft_1d_bases(n, upto=None):
 
     Bases are rows of :math:`Y`, unitary: :math:`Y^*Y=YY^*=I`, where :math:`Y^*` is the
     conjugate transpose, and symmetric. The forward process (analysis) is :math:`X=Yx`,
-    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^*X`.
-
-    See :func:`main` for example usages.
+    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^*X`. See :func:`main` for example usages.
 
     Args:
         n (int): Signal length.
@@ -150,8 +148,6 @@ def dft_1d_bases(n, upto=None):
 
 def dft_2d_freq(h, w):
     """Gets 2D discrete Fourier transform (DFT) sample frequencies.
-
-    See :func:`dft_2d_bases_real` for how this is useful for generating basis images.
 
     Args:
         h (int): Image height.
@@ -180,6 +176,14 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
     See :func:`main` for example usages and how this produces the same results as :func:`numpy.fft.fft2`, with
     ``norm='ortho'``.
 
+    See Also:
+        ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]`` contains the
+        negative-frequency terms, in order of decreasingly negative frequency. For an even number
+        of input points, ``A[n/2]`` represents both positive and negative Nyquist frequency, and
+        is also purely real for real input. For an odd number of input points, ``A[(n-1)/2]``
+        contains the largest positive frequency, while ``A[(n+1)/2]`` contains the largest negative
+        frequency. Source: :mod:`numpy.fft`.
+
     Args:
         h (int): Image height.
         w
@@ -195,33 +199,22 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
     """
     dft_mat_h = dft_1d_bases(h, upto=upto_h)
     dft_mat_w = dft_1d_bases(w, upto=upto_w) # shape: (upto_w, w)
-    dft_mat_w = dft_mat_w.T # because it's symmetric
+    dft_mat_w = dft_mat_w.T # should have no effect, because it's symmetric
     return dft_mat_h, dft_mat_w
 
 
-def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
-    """Generates discrete Fourier transform (DFT) basis images, with which real DFT can be done.
+def dft_2d_bases_vec(h, w, upto_h=None, upto_w=None):
+    r"""Generates bases stored in a single matrix, along whose height 2D frequencies are vectorized.
 
-    Unlike :func:`dft_2d_bases`, this function generates a single matrix, whose rows are flattened
-    DFT basis images (defined as strictly real 2D spatial signals that, when DFT'ed, lead to 1s at
-    just one sample frequency [but usually mapped to multiple entries in the coefficient matrix]).
+    Using the "vectorization + Kronecker product" trick:
+    :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)\operatorname{vec}(x)`.
+    So unlike :func:`dft_2d_bases`, this function generates a single matrix
+    :math:`Y=\left(Y_w^T\otimes Y_h\right)`, whose row ``k`` is the flattened ``(i, j)``-th basis,
+    where ``k = min(w, upto_w) * i + j``.
 
-    Using the DFT property that a real signal leads to "mirrored" DFT coefficients,
-    this function first constructs such mirrored coefficients and then does synthesis with them
-    to produce a basis image.
-
-    See Also:
-        ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]`` contains the
-        negative-frequency terms, in order of decreasingly negative frequency. For an even number
-        of input points, ``A[n/2]`` represents both positive and negative Nyquist frequency, and
-        is also purely real for real input. For an odd number of input points, ``A[(n-1)/2]``
-        contains the largest positive frequency, while ``A[(n+1)/2]`` contains the largest negative
-        frequency. Source: :mod:`numpy.fft`.
-
-    The matrix of the generated bases :math:`Y` can also be used to perform "real DFT,"
-    as it has been made orthonormal by careful normalization. Denote the :func:`numpy.ndarray.ravel`'ed
-    image by :math:`x`. Analysis: :math:`X=Yx`. Synthesis: :math:`x=Y^{-1}X=Y^TX`. The results are the same
-    as if we used the two matrices returned by :func:`dft_2d_bases`. See :func:`main` for examples.
+    Input image :math:`x` can be transformed with a single matrix multiplication.
+    Specifically, the analysis process is :math:`X=Y\operatorname{vec}(x)`, and the synthesis
+    process is :math:`x=\operatorname{unvec}(Y^*X)`. See :func:`main` for examples.
 
     Args:
         h (int): Image height.
@@ -230,40 +223,17 @@ def dft_2d_bases_real(h, w, upto_h=None, upto_w=None):
         upto_w
 
     Returns:
-        numpy.ndarray: Matrix with flattened basis images as rows. Row ``k``, when
+        numpy.ndarray: Complex matrix with flattened bases as rows. Row ``k``, when
         :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the ``(i, j)``-th frequency
-        component, where ``k = i * min(w, upto_w) + j``. Of shape
+        component, where ``k = min(w, upto_w) * i + j``. Of shape
         ``(min(h, upto_h) * min(w, upto_w), h * w)``.
     """
     if upto_h is None:
         upto_h = h
     if upto_w is None:
         upto_w = w
-    freq_h, freq_w = dft_2d_freq(h, w)
-    freq_h_abs = abs(freq_h)
-    freq_w_abs = abs(freq_w)
-    dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
-    dft_real_mat = np.zeros((upto_h * upto_w, h * w))
-    for i in range(upto_h):
-        for j in range(upto_w):
-            # Set correct entries to 1s
-            f_h = freq_h_abs[i, j]
-            f_w = freq_w_abs[i, j]
-            is_relevant = (np.abs(freq_h_abs) == f_h) & (np.abs(freq_w_abs) == f_w)
-            coeffs = np.zeros((h, w))
-            if is_relevant.any():
-                coeffs[is_relevant] = 1 / np.sum(is_relevant) # to make orthonormal
-            else: # DC
-                pass # doesn't matter anyways
-            # Synthesis
-            img = dft_mat_h.conj().dot(coeffs).dot(dft_mat_w.conj())
-            # Essentially real
-            assert np.allclose(np.imag(img), 0)
-            img = np.real(img)
-            # Flatten and put it into matrix
-            k = i * upto_w + j
-            dft_real_mat[k, :] = img.ravel()
-    return dft_real_mat
+    dft_mat_h, dft_mat_w = dft_2d_bases(h, w, upto_h=upto_h, upto_w=upto_w)
+    return np.kron(dft_mat_w.T, dft_mat_h)
 
 
 def sh_bases_real(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
@@ -443,57 +413,7 @@ def main(func_name):
         print("Along width:")
         print(freq_w)
 
-    elif func_name.startswith('dft_2d_bases'):
-        from os.path import join
-        import cv2
-        import xiuminglib as xlib
-        im = np.zeros((64, 128))
-        for j in np.linspace(0, im.shape[1], 8, endpoint=False):
-            im[:, int(j)] = 255
-        for i in np.linspace(0, im.shape[0], 8, endpoint=False):
-            im[int(i), :] = 255
-        h, w = im.shape
-        tmp_dir = xlib.constants['dir_tmp']
-        dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
-        if not func_name.endswith('_real'):
-            # Transform by my matrix
-            coeffs = dft_mat_h.dot(im).dot(dft_mat_w)
-            # Transform by numpy
-            coeffs_np = np.fft.fft2(im, norm='ortho')
-            xlib.visualization.matrix_as_heatmap_complex(coeffs, outpath=join(tmp_dir, 'coeffs_mine.png'))
-            xlib.visualization.matrix_as_heatmap_complex(coeffs_np, outpath=join(tmp_dir, 'coeffs_np.png'))
-            print("(Ours 2D vs. NumPy)\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_np).max())
-            # Reconstruct
-            recon = dft_mat_h.conj().dot(coeffs).dot(dft_mat_w.conj())
-            assert np.allclose(np.imag(recon), 0)
-            recon = np.real(recon)
-            cv2.imwrite(join(tmp_dir, 'orig.png'), im)
-            cv2.imwrite(join(tmp_dir, 'recon.png'), recon)
-        else:
-            dft_real_mat = dft_2d_bases_real(h, w)
-            # Visualize bases
-            out_dir = join(tmp_dir, 'real-dft')
-            xlib.general.makedirs(out_dir, rm_if_exists=True)
-            for k in range(dft_real_mat.shape[0]):
-                i = k // w
-                j = k - i * w
-                out_f = join(out_dir, 'i%03d_j%03d.png' % (i, j))
-                img = dft_real_mat[k, :].reshape((h, w))
-                xlib.visualization.matrix_as_image(img, outpath=out_f)
-            # Real DFT
-            im_1d = im.ravel()
-            coeffs = dft_real_mat.dot(im_1d)
-            recon_1d = dft_real_mat.T.dot(coeffs)
-            recon = recon_1d.reshape(im.shape)
-            print("(Ours Real vs. GT)\t\tRecon.\tMax. mag. diff.:\t%e" % np.abs(im - recon).max())
-            cv2.imwrite(join(tmp_dir, 'orig.png'), im)
-            cv2.imwrite(join(tmp_dir, 'recon.png'), recon)
-            coeffs_ = dft_mat_h.dot(im).dot(dft_mat_w)
-            coeffs_ = coeffs_.ravel()
-            print("(Ours Real vs. Ours Twice)\tCoeff.\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_).max())
-        from IPython import embed; embed()
-
-    elif func_name == 'cameraman_dft':
+    elif func_name == 'dft_cameraman':
         from os.path import join
         import cv2
         import xiuminglib as xlib
@@ -506,31 +426,34 @@ def main(func_name):
         dft_h_mat, dft_w_mat = dft_2d_bases(*im.shape)
         coeffs_2step = dft_h_mat.dot(im).dot(dft_w_mat)
         recon_2step = dft_h_mat.conj().dot(coeffs_2step).dot(dft_w_mat.conj())
-        if np.allclose(np.imag(recon_2step), 0):
-            recon_2step = np.real(recon_2step)
+        assert np.allclose(np.imag(recon_2step), 0)
+        recon_2step = np.real(recon_2step)
         cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step.astype(im.dtype))
         # NumPy DFT
         coeffs_np = np.fft.fft2(im, norm='ortho')
         recon_np = np.fft.ifft2(coeffs_np, norm='ortho')
-        if np.allclose(np.imag(recon_np), 0):
-            recon_np = np.real(recon_np)
+        assert np.allclose(np.imag(recon_np), 0)
+        recon_np = np.real(recon_np)
         cv2.imwrite(join(outdir, 'recon_np.png'), recon_np.astype(im.dtype))
-        # My real DFT
-        dft_real_mat = dft_2d_bases_real(*im.shape)
-        coeffs_real = dft_real_mat.dot(im.ravel())
-        recon_real = dft_real_mat.T.dot(coeffs_real).reshape(im.shape)
-        cv2.imwrite(join(outdir, 'recon_real.png'), recon_real.astype(im.dtype))
+        # My one-step DFT
+        dft_mat = dft_2d_bases_vec(*im.shape)
+        coeffs_1step = dft_mat.dot(im.ravel())
+        recon_1step = dft_mat.conj().dot(coeffs_1step).reshape(im.shape)
+        assert np.allclose(np.imag(recon_1step), 0)
+        recon_1step = np.real(recon_1step)
+        cv2.imwrite(join(outdir, 'recon_1step.png'), recon_1step.astype(im.dtype))
         # Compare coefficients
-        xlib.visualization.matrix_as_heatmap(
-            coeffs_real.reshape(im.shape) - coeffs_np, outpath=join(outdir, 'real-np.png'))
-        xlib.visualization.matrix_as_heatmap(
-            coeffs_2step - coeffs_real.reshape(im.shape), outpath=join(outdir, '2step-real.png'))
+        xlib.visualization.matrix_as_heatmap_complex(
+            coeffs_1step.reshape(im.shape) - coeffs_np, outpath=join(outdir, '1step-np.png'))
+        xlib.visualization.matrix_as_heatmap_complex(
+            coeffs_2step - coeffs_1step.reshape(im.shape), outpath=join(outdir, '2step-1step.png'))
         xlib.visualization.matrix_as_heatmap_complex(
             coeffs_2step - coeffs_np, outpath=join(outdir, '2step-np.png'))
         # Quant.
-        print("(NumPy vs. Ours Twice)\tRecon.\tMax. mag. diff.:\t%e" %
+        print("(NumPy vs. Ours Two-Step)\tRecon.\tMax. mag. diff.:\t%e" %
               np.abs(recon_2step - recon_np).max())
-        from IPython import embed; embed()
+        print("(NumPy vs. Ours One-Step)\tRecon.\tMax. mag. diff.:\t%e" %
+              np.abs(recon_1step - recon_np).max())
 
     elif func_name == 'sh_bases_real':
         from os.path import join
