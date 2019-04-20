@@ -403,6 +403,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
     if mat.ndim != 2:
         raise ValueError("'mat' must have exactly 2 dimensions, but has %d" % mat.ndim)
+    mat = mat.astype(float)
 
     # Figure
     if contents_only:

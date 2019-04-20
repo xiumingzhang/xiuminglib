@@ -177,7 +177,8 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
 
     Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
     Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is :math:`x=Y_h^*XY_w^*`.
-    See :func:`main` for example usages.
+    See :func:`main` for example usages and how this produces the same results as :func:`numpy.fft.fft2`, with
+    ``norm='ortho'``.
 
     Args:
         h (int): Image height.
@@ -455,13 +456,12 @@ def main(func_name):
         tmp_dir = xlib.constants['dir_tmp']
         dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
         if not func_name.endswith('_real'):
-            from visualization import matrix_as_heatmap_complex
             # Transform by my matrix
             coeffs = dft_mat_h.dot(im).dot(dft_mat_w)
             # Transform by numpy
             coeffs_np = np.fft.fft2(im, norm='ortho')
-            matrix_as_heatmap_complex(coeffs, outpath=join(tmp_dir, 'coeffs_mine.png'))
-            matrix_as_heatmap_complex(coeffs_np, outpath=join(tmp_dir, 'coeffs_np.png'))
+            xlib.visualization.matrix_as_heatmap_complex(coeffs, outpath=join(tmp_dir, 'coeffs_mine.png'))
+            xlib.visualization.matrix_as_heatmap_complex(coeffs_np, outpath=join(tmp_dir, 'coeffs_np.png'))
             print("(Ours 2D vs. NumPy)\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_np).max())
             # Reconstruct
             recon = dft_mat_h.conj().dot(coeffs).dot(dft_mat_w.conj())
@@ -470,18 +470,16 @@ def main(func_name):
             cv2.imwrite(join(tmp_dir, 'orig.png'), im)
             cv2.imwrite(join(tmp_dir, 'recon.png'), recon)
         else:
-            from general import makedirs
-            from visualization import matrix_as_image
             dft_real_mat = dft_2d_bases_real(h, w)
             # Visualize bases
             out_dir = join(tmp_dir, 'real-dft')
-            makedirs(out_dir, rm_if_exists=True)
+            xlib.general.makedirs(out_dir, rm_if_exists=True)
             for k in range(dft_real_mat.shape[0]):
                 i = k // w
                 j = k - i * w
                 out_f = join(out_dir, 'i%03d_j%03d.png' % (i, j))
                 img = dft_real_mat[k, :].reshape((h, w))
-                matrix_as_image(img, outpath=out_f)
+                xlib.visualization.matrix_as_image(img, outpath=out_f)
             # Real DFT
             im_1d = im.ravel()
             coeffs = dft_real_mat.dot(im_1d)
@@ -493,22 +491,49 @@ def main(func_name):
             coeffs_ = dft_mat_h.dot(im).dot(dft_mat_w)
             coeffs_ = coeffs_.ravel()
             print("(Ours Real vs. Ours Twice)\tCoeff.\tMax. mag. diff.:\t%e" % np.abs(coeffs - coeffs_).max())
+        from IPython import embed; embed()
 
     elif func_name == 'cameraman_dft':
         from os.path import join
         import cv2
         import xiuminglib as xlib
+        outdir = join(xlib.constants['dir_tmp'], func_name)
+        xlib.general.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(xlib.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
-        # My DFT
+        cv2.imwrite(join(outdir, 'orig.png'), im)
+        # My two-step DFT
+        dft_h_mat, dft_w_mat = dft_2d_bases(*im.shape)
+        coeffs_2step = dft_h_mat.dot(im).dot(dft_w_mat)
+        recon_2step = dft_h_mat.conj().dot(coeffs_2step).dot(dft_w_mat.conj())
+        if np.allclose(np.imag(recon_2step), 0):
+            recon_2step = np.real(recon_2step)
+        cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step.astype(im.dtype))
+        # NumPy DFT
+        coeffs_np = np.fft.fft2(im, norm='ortho')
+        recon_np = np.fft.ifft2(coeffs_np, norm='ortho')
+        if np.allclose(np.imag(recon_np), 0):
+            recon_np = np.real(recon_np)
+        cv2.imwrite(join(outdir, 'recon_np.png'), recon_np.astype(im.dtype))
+        # My real DFT
         dft_real_mat = dft_2d_bases_real(*im.shape)
-        coeffs = dft_real_mat.dot(im.ravel())
-        recon = dft_real_mat.T.dot(coeffs).reshape(im.shape)
-        cv2.imwrite(join(xlib.constants['dir_tmp'], 'a.png'), recon.astype(im.dtype))
+        coeffs_real = dft_real_mat.dot(im.ravel())
+        recon_real = dft_real_mat.T.dot(coeffs_real).reshape(im.shape)
+        cv2.imwrite(join(outdir, 'recon_real.png'), recon_real.astype(im.dtype))
+        # Compare coefficients
+        xlib.visualization.matrix_as_heatmap(
+            coeffs_real.reshape(im.shape) - coeffs_np, outpath=join(outdir, 'real-np.png'))
+        xlib.visualization.matrix_as_heatmap(
+            coeffs_2step - coeffs_real.reshape(im.shape), outpath=join(outdir, '2step-real.png'))
+        xlib.visualization.matrix_as_heatmap_complex(
+            coeffs_2step - coeffs_np, outpath=join(outdir, '2step-np.png'))
+        # Quant.
+        print("(NumPy vs. Ours Twice)\tRecon.\tMax. mag. diff.:\t%e" %
+              np.abs(recon_2step - recon_np).max())
+        from IPython import embed; embed()
 
     elif func_name == 'sh_bases_real':
         from os.path import join
-        from visualization import matrix_as_heatmap
         import xiuminglib as xlib
         ls = [1, 2, 3, 4]
         n_steps_theta = 64
@@ -531,7 +556,7 @@ def main(func_name):
             sph_func_ravel = sph_func.ravel()
             assert (sph_func_1d == sph_func_ravel).all()
             tmp_dir = xlib.constants['dir_tmp']
-            matrix_as_heatmap(sph_func, outpath=join(tmp_dir, 'sph_orig.png'))
+            xlib.visualization.matrix_as_heatmap(sph_func, outpath=join(tmp_dir, 'sph_orig.png'))
             # Analysis
             coeffs = ymat.dot(np.multiply(weights, sph_func_ravel))
             print("\tGT")
@@ -542,7 +567,7 @@ def main(func_name):
             sph_func_1d_recon = ymat.T.dot(coeffs)
             sph_func_recon = sph_func_1d_recon.reshape(sph_func.shape)
             print("Max. magnitude difference: %e" % np.abs(sph_func_1d - sph_func_1d_recon).max())
-            matrix_as_heatmap(sph_func_recon, outpath=join(tmp_dir, 'sph_recon_l%03d.png' % l))
+            xlib.visualization.matrix_as_heatmap(sph_func_recon, outpath=join(tmp_dir, 'sph_recon_l%03d.png' % l))
 
     else:
         raise NotImplementedError("Unit tests for %s" % func_name)
