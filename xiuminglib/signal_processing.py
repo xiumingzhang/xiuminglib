@@ -209,7 +209,7 @@ def dft_2d_bases_vec(h, w, upto_h=None, upto_w=None):
     Using the "vectorization + Kronecker product" trick:
     :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)\operatorname{vec}(x)`.
     So unlike :func:`dft_2d_bases`, this function generates a single matrix
-    :math:`Y=\left(Y_w^T\otimes Y_h\right)`, whose row ``k`` is the flattened ``(i, j)``-th basis,
+    :math:`Y=Y_w^T\otimes Y_h`, whose row ``k`` is the flattened ``(i, j)``-th basis,
     where ``k = min(w, upto_w) * i + j``.
 
     Input image :math:`x` can be transformed with a single matrix multiplication.
