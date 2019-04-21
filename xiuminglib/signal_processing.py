@@ -121,12 +121,37 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
     return pcvars, pcs, projs, data_mean
 
 
+def dct_1d_bases(n, upto=None):
+    """Generates 1D discrete Fourier transform (DFT) bases.
+
+    Bases are rows of :math:`Y`, unitary: :math:`Y^HY=YY^H=I`, where :math:`Y^H` is the
+    conjugate transpose, and symmetric. The forward process (analysis) is :math:`X=Yx`,
+    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^HX`. See :func:`main` for example usages.
+
+    Args:
+        n (int): Signal length.
+        upto (int, optional): Up to how many bases. ``None`` means all.
+
+    Returns:
+        numpy.ndarray: Matrix whose row :math:`i`, when dotted with signal (column) vector,
+        gives the coefficient for the :math:`i`-th Fourier component.
+        Of shape ``(min(n, upto), n)``.
+    """
+    col_ind, row_ind = np.meshgrid(range(n), range(n))
+    omega = np.exp(-2 * np.pi * 1j / n)
+    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize
+    # so that unitary (i.e., energy-preserving)
+    if upto is not None:
+        wmat = wmat[:upto, :]
+    return wmat
+
+
 def dft_1d_bases(n, upto=None):
     """Generates 1D discrete Fourier transform (DFT) bases.
 
-    Bases are rows of :math:`Y`, unitary: :math:`Y^*Y=YY^*=I`, where :math:`Y^*` is the
+    Bases are rows of :math:`Y`, unitary: :math:`Y^HY=YY^H=I`, where :math:`Y^H` is the
     conjugate transpose, and symmetric. The forward process (analysis) is :math:`X=Yx`,
-    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^*X`. See :func:`main` for example usages.
+    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^HX`. See :func:`main` for example usages.
 
     Args:
         n (int): Signal length.
@@ -172,7 +197,7 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
     Bases are rows of :math:`Y_h` and :math:`Y_w`. See :func:`dft_1d_bases` for matrix properties.
 
     Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
-    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is :math:`x=Y_h^*XY_w^*`.
+    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is :math:`x=Y_h^HXY_w^H`.
     See :func:`main` for example usages and how this produces the same results as :func:`numpy.fft.fft2`, with
     ``norm='ortho'``.
 
@@ -214,7 +239,7 @@ def dft_2d_bases_vec(h, w, upto_h=None, upto_w=None):
 
     Input image :math:`x` can be transformed with a single matrix multiplication.
     Specifically, the analysis process is :math:`X=Y\operatorname{vec}(x)`, and the synthesis
-    process is :math:`x=\operatorname{unvec}(Y^*X)`. See :func:`main` for examples.
+    process is :math:`x=\operatorname{unvec}(Y^HX)`. See :func:`main` for examples.
 
     Args:
         h (int): Image height.
@@ -425,7 +450,7 @@ def main(func_name):
         # My two-step DFT
         dft_h_mat, dft_w_mat = dft_2d_bases(*im.shape)
         coeffs_2step = dft_h_mat.dot(im).dot(dft_w_mat)
-        recon_2step = dft_h_mat.conj().dot(coeffs_2step).dot(dft_w_mat.conj())
+        recon_2step = dft_h_mat.conj().T.dot(coeffs_2step).dot(dft_w_mat.conj().T)
         assert np.allclose(np.imag(recon_2step), 0)
         recon_2step = np.real(recon_2step)
         cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step.astype(im.dtype))
@@ -438,10 +463,18 @@ def main(func_name):
         # My one-step DFT
         dft_mat = dft_2d_bases_vec(*im.shape)
         coeffs_1step = dft_mat.dot(im.ravel())
-        recon_1step = dft_mat.conj().dot(coeffs_1step).reshape(im.shape)
+        recon_1step = dft_mat.conj().T.dot(coeffs_1step).reshape(im.shape)
         assert np.allclose(np.imag(recon_1step), 0)
         recon_1step = np.real(recon_1step)
         cv2.imwrite(join(outdir, 'recon_1step.png'), recon_1step.astype(im.dtype))
+        # My one-step DFT, with fewer bases
+        dft_mat_comp = dft_2d_bases_vec(*im.shape, upto_h=10, upto_w=10)
+        coeffs_1step_comp = dft_mat_comp.dot(im.ravel())
+        recon_1step_comp = dft_mat_comp.conj().T.dot(coeffs_1step_comp).reshape(im.shape)
+        from IPython import embed; embed()
+        assert np.allclose(np.imag(recon_1step_comp), 0)
+        recon_1step_comp = np.real(recon_1step_comp)
+        cv2.imwrite(join(outdir, 'recon_1step_comp.png'), recon_1step_comp.astype(im.dtype))
         # Compare coefficients
         xlib.visualization.matrix_as_heatmap_complex(
             coeffs_1step.reshape(im.shape) - coeffs_np, outpath=join(outdir, '1step-np.png'))
