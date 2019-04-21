@@ -247,13 +247,16 @@ def dft_2d_bases_vec(h, w, upto_h=None, upto_w=None):
         upto_h (int, optional): Up to how many bases in the height dimension. ``None`` means all.
         upto_w
 
+    Warning:
+        ``upto_?`` features failed the unit tests.
+
     Returns:
         numpy.ndarray: Complex matrix with flattened bases as rows. Row ``k``, when
         :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the ``(i, j)``-th frequency
         component, where ``k = min(w, upto_w) * i + j``. Of shape
         ``(min(h, upto_h) * min(w, upto_w), h * w)``.
     """
-    if upto_h is None:
+    if upto_h is None: # FIXME
         upto_h = h
     if upto_w is None:
         upto_w = w
@@ -471,7 +474,6 @@ def main(func_name):
         dft_mat_comp = dft_2d_bases_vec(*im.shape, upto_h=10, upto_w=10)
         coeffs_1step_comp = dft_mat_comp.dot(im.ravel())
         recon_1step_comp = dft_mat_comp.conj().T.dot(coeffs_1step_comp).reshape(im.shape)
-        from IPython import embed; embed()
         assert np.allclose(np.imag(recon_1step_comp), 0)
         recon_1step_comp = np.real(recon_1step_comp)
         cv2.imwrite(join(outdir, 'recon_1step_comp.png'), recon_1step_comp.astype(im.dtype))
