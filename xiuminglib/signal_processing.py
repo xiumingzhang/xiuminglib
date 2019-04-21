@@ -121,7 +121,7 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
     return pcvars, pcs, projs, data_mean
 
 
-def dct_1d_bases(n, upto=None):
+def dct_1d_bases(n):
     """Generates 1D discrete Fourier transform (DFT) bases.
 
     Bases are rows of :math:`Y`, unitary: :math:`Y^HY=YY^H=I`, where :math:`Y^H` is the
@@ -130,44 +130,38 @@ def dct_1d_bases(n, upto=None):
 
     Args:
         n (int): Signal length.
-        upto (int, optional): Up to how many bases. ``None`` means all.
 
     Returns:
         numpy.ndarray: Matrix whose row :math:`i`, when dotted with signal (column) vector,
         gives the coefficient for the :math:`i`-th Fourier component.
-        Of shape ``(min(n, upto), n)``.
+        Of shape ``(n, n)``.
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
     omega = np.exp(-2 * np.pi * 1j / n)
     wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize
     # so that unitary (i.e., energy-preserving)
-    if upto is not None:
-        wmat = wmat[:upto, :]
     return wmat
 
 
-def dft_1d_bases(n, upto=None):
+def dft_1d_bases(n):
     """Generates 1D discrete Fourier transform (DFT) bases.
 
-    Bases are rows of :math:`Y`, unitary: :math:`Y^HY=YY^H=I`, where :math:`Y^H` is the
-    conjugate transpose, and symmetric. The forward process (analysis) is :math:`X=Yx`,
+    Bases are rows of :math:`Y`, which is unitary (:math:`Y^HY=YY^H=I`, where :math:`Y^H`
+    is the conjugate transpose) and symmetric. The forward process (analysis) is :math:`X=Yx`,
     and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^HX`. See :func:`main` for example usages.
 
     Args:
         n (int): Signal length.
-        upto (int, optional): Up to how many bases. ``None`` means all.
 
     Returns:
-        numpy.ndarray: Matrix whose row :math:`i`, when dotted with signal (column) vector,
+        numpy.ndarray: Matrix whose :math:`i`-th row, when dotted with signal (column) vector,
         gives the coefficient for the :math:`i`-th Fourier component.
-        Of shape ``(min(n, upto), n)``.
+        Of shape ``(n, n)``.
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
     omega = np.exp(-2 * np.pi * 1j / n)
     wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize
     # so that unitary (i.e., energy-preserving)
-    if upto is not None:
-        wmat = wmat[:upto, :]
     return wmat
 
 
@@ -191,15 +185,15 @@ def dft_2d_freq(h, w):
     return freq_h, freq_w
 
 
-def dft_2d_bases(h, w, upto_h=None, upto_w=None):
+def dft_2d_bases(h, w):
     r"""Generates bases for 2D discrete Fourier transform (DFT).
 
     Bases are rows of :math:`Y_h` and :math:`Y_w`. See :func:`dft_1d_bases` for matrix properties.
 
     Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
     Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is :math:`x=Y_h^HXY_w^H`.
-    See :func:`main` for example usages and how this produces the same results as :func:`numpy.fft.fft2`, with
-    ``norm='ortho'``.
+    See :func:`main` for example usages and how this produces the same results as :func:`numpy.fft.fft2` (with
+    ``norm='ortho'``).
 
     See Also:
         ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]`` contains the
@@ -212,33 +206,28 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
     Args:
         h (int): Image height.
         w
-        upto_h (int, optional): Up to how many bases in the height dimension. ``None`` means all.
-        upto_w
-
-    Warning:
-        ``upto_?`` features failed the unit tests.
 
     Returns:
         tuple:
             - **dft_mat_h** (*numpy.ndarray*) -- DFT matrix :math:`Y_h` transforming rows
-              of the 2D signal. Of shape ``(min(h, upto_h), h)``.
+              of the 2D signal. Of shape ``(h, h)``.
             - **dft_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming columns. Of shape
-              ``(w, min(w, upto_w))``.
+              ``(w, w)``.
     """
-    dft_mat_h = dft_1d_bases(h, upto=upto_h) # FIXME: upto_? features
-    dft_mat_w = dft_1d_bases(w, upto=upto_w) # shape: (upto_w, w)
-    dft_mat_w = dft_mat_w.T
+    dft_mat_h = dft_1d_bases(h)
+    dft_mat_w = dft_1d_bases(w)
+    dft_mat_w = dft_mat_w.T # shouldn't matter, as it's symmetric
     return dft_mat_h, dft_mat_w
 
 
-def dft_2d_bases_vec(h, w, upto_h=None, upto_w=None):
-    r"""Generates bases stored in a single matrix, along whose height 2D frequencies are vectorized.
+def dft_2d_bases_vec(h, w):
+    r"""Generates bases stored in a single matrix, along whose height 2D frequencies get raveled.
 
     Using the "vectorization + Kronecker product" trick:
     :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)\operatorname{vec}(x)`.
     So unlike :func:`dft_2d_bases`, this function generates a single matrix
-    :math:`Y=Y_w^T\otimes Y_h`, whose row ``k`` is the flattened ``(i, j)``-th basis,
-    where ``k = min(w, upto_w) * i + j``.
+    :math:`Y=Y_w^T\otimes Y_h`, whose :math:`k`-th row is the flattened :math:`(i, j)`-th basis,
+    where :math:`k=wi+j`.
 
     Input image :math:`x` can be transformed with a single matrix multiplication.
     Specifically, the analysis process is :math:`X=Y\operatorname{vec}(x)`, and the synthesis
@@ -247,24 +236,15 @@ def dft_2d_bases_vec(h, w, upto_h=None, upto_w=None):
     Args:
         h (int): Image height.
         w
-        upto_h (int, optional): Up to how many bases in the height dimension. ``None`` means all.
-        upto_w
-
-    Warning:
-        ``upto_?`` features failed the unit tests.
 
     Returns:
-        numpy.ndarray: Complex matrix with flattened bases as rows. Row ``k``, when
-        :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the ``(i, j)``-th frequency
-        component, where ``k = min(w, upto_w) * i + j``. Of shape
-        ``(min(h, upto_h) * min(w, upto_w), h * w)``.
+        numpy.ndarray: Complex matrix with flattened bases as rows. The :math:`k`-th row,
+        when :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
+        component, where :math:`k=wi+j`. Of shape ``(h * w, h * w)``.
     """
-    if upto_h is None: # FIXME
-        upto_h = h
-    if upto_w is None:
-        upto_w = w
-    dft_mat_h, dft_mat_w = dft_2d_bases(h, w, upto_h=upto_h, upto_w=upto_w)
-    return np.kron(dft_mat_w.T, dft_mat_h)
+    dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
+    dft_mat = np.kron(dft_mat_w.T, dft_mat_h)
+    return dft_mat
 
 
 def sh_bases_real(l, n_lat, coord_convention='colatitude-azimuth', _check_orthonormality=False):
@@ -460,13 +440,6 @@ def main(func_name):
         assert np.allclose(np.imag(recon_2step), 0)
         recon_2step = np.real(recon_2step)
         cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step.astype(im.dtype))
-        # My two-step DFT, with fewer bases
-        dft_h_mat_comp, dft_w_mat_comp = dft_2d_bases(*im.shape, upto_h=10, upto_w=10)
-        coeffs_2step_comp = dft_h_mat_comp.dot(im).dot(dft_w_mat_comp)
-        recon_2step_comp = dft_h_mat_comp.conj().T.dot(coeffs_2step_comp).dot(dft_w_mat_comp.conj().T)
-        assert np.allclose(np.imag(recon_2step_comp), 0)
-        recon_2step_comp = np.real(recon_2step_comp)
-        cv2.imwrite(join(outdir, 'recon_2step_comp.png'), recon_2step_comp.astype(im.dtype))
         # NumPy DFT
         coeffs_np = np.fft.fft2(im, norm='ortho')
         recon_np = np.fft.ifft2(coeffs_np, norm='ortho')
@@ -480,13 +453,6 @@ def main(func_name):
         assert np.allclose(np.imag(recon_1step), 0)
         recon_1step = np.real(recon_1step)
         cv2.imwrite(join(outdir, 'recon_1step.png'), recon_1step.astype(im.dtype))
-        # My one-step DFT, with fewer bases
-        dft_mat_comp = dft_2d_bases_vec(*im.shape, upto_h=10, upto_w=10)
-        coeffs_1step_comp = dft_mat_comp.dot(im.ravel())
-        recon_1step_comp = dft_mat_comp.conj().T.dot(coeffs_1step_comp).reshape(im.shape)
-        assert np.allclose(np.imag(recon_1step_comp), 0)
-        recon_1step_comp = np.real(recon_1step_comp)
-        cv2.imwrite(join(outdir, 'recon_1step_comp.png'), recon_1step_comp.astype(im.dtype))
         # Compare coefficients
         xlib.visualization.matrix_as_heatmap_complex(
             coeffs_1step.reshape(im.shape) - coeffs_np, outpath=join(outdir, '1step-np.png'))
