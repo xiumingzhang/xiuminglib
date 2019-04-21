@@ -65,6 +65,29 @@ def is_symmetric(mat, eps=None):
     return np.allclose(mat, mat.T, atol=eps)
 
 
+def is_identity(mat, eps=None):
+    """Checks if a matrix is an identity matrix.
+
+    If the input is not even square, ``False`` is returned.
+
+    Args:
+        mat (numpy.ndarray): Input matrix.
+        eps (float, optional): Numerical tolerance for equality. ``None`` means
+            ``np.finfo(mat.dtype).eps``.
+
+    Returns:
+        bool: Whether the input is an identity matrix.
+    """
+    if eps is None:
+        eps = np.finfo(mat.dtype).eps
+
+    assert mat.ndim == 2
+    if mat.shape[0] != mat.shape[1]:
+        return False
+
+    return np.allclose(mat, np.eye(mat.shape[0]), atol=eps)
+
+
 def angle_between(vec1, vec2, radian=True):
     r"""Computes the angle between two vectors.
 

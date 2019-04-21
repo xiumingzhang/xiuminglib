@@ -122,25 +122,78 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
 
 
 def dct_1d_bases(n):
-    """Generates 1D discrete Fourier transform (DFT) bases.
+    """Generates 1D discrete cosine transform (DCT) bases.
 
-    Bases are rows of :math:`Y`, unitary: :math:`Y^HY=YY^H=I`, where :math:`Y^H` is the
-    conjugate transpose, and symmetric. The forward process (analysis) is :math:`X=Yx`,
-    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^HX`. See :func:`main` for example usages.
+    Bases are rows of :math:`Y`, which is orthogonal: :math:`Y^TY=YY^T=I`.
+    The forward process (analysis) is :math:`X=Yx`, and the inverse (synthesis)
+    is :math:`x=Y^{-1}X=Y^TX`. See :func:`main` for example usages and how this
+    produces the same results as :func:`scipy.fftpack.dct` (with ``norm='ortho'``).
 
     Args:
         n (int): Signal length.
 
     Returns:
-        numpy.ndarray: Matrix whose row :math:`i`, when dotted with signal (column) vector,
-        gives the coefficient for the :math:`i`-th Fourier component.
-        Of shape ``(n, n)``.
+        numpy.ndarray: Matrix whose :math:`i`-th row, when dotted with signal (column) vector,
+        gives the coefficient for the :math:`i`-th DCT component. Of shape ``(n, n)``.
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
-    omega = np.exp(-2 * np.pi * 1j / n)
-    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize
-    # so that unitary (i.e., energy-preserving)
+    omega = np.multiply(row_ind, (2 * col_ind + 1) / (2 * n) * np.pi)
+    wmat = np.cos(omega)
+    wmat[0, :] = wmat[0, :] / np.sqrt(2)
+    wmat = np.sqrt(2 / n) * wmat # normalize so that orthogonal
     return wmat
+
+
+def dct_2d_bases(h, w):
+    r"""Generates bases for 2D discrete cosine transform (DCT).
+
+    Bases are rows of :math:`Y_h` and :math:`Y_w`. See :func:`dct_1d_bases` for matrix properties.
+
+    Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
+    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is
+    :math:`x=Y_h^TXY_w^T`. See :func:`main` for example usages.
+
+    Args:
+        h (int): Image height.
+        w
+
+    Returns:
+        tuple:
+            - **dct_mat_h** (*numpy.ndarray*) -- DCT matrix :math:`Y_h` transforming rows
+              of the 2D signal. Of shape ``(h, h)``.
+            - **dct_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming columns. Of shape
+              ``(w, w)``.
+    """
+    dct_mat_h = dct_1d_bases(h)
+    dct_mat_w = dct_1d_bases(w).T
+    return dct_mat_h, dct_mat_w
+
+
+def dct_2d_bases_vec(h, w):
+    r"""Generates bases stored in a single matrix, along whose height 2D frequencies get raveled.
+
+    Using the "vectorization + Kronecker product" trick:
+    :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)\operatorname{vec}(x)`.
+    So unlike :func:`dct_2d_bases`, this function generates a single matrix
+    :math:`Y=Y_w^T\otimes Y_h`, whose :math:`k`-th row is the flattened :math:`(i, j)`-th basis,
+    where :math:`k=wi+j`.
+
+    Input image :math:`x` can be transformed with a single matrix multiplication.
+    Specifically, the analysis process is :math:`X=Y\operatorname{vec}(x)`, and the synthesis
+    process is :math:`x=\operatorname{unvec}(Y^TX)`. See :func:`main` for examples.
+
+    Args:
+        h (int): Image height.
+        w
+
+    Returns:
+        numpy.ndarray: Matrix with flattened bases as rows. The :math:`k`-th row,
+        when :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
+        component, where :math:`k=wi+j`. Of shape ``(h * w, h * w)``.
+    """
+    dct_mat_h, dct_mat_w = dct_2d_bases(h, w)
+    dct_mat = np.kron(dct_mat_w.T, dct_mat_h)
+    return dct_mat
 
 
 def dft_1d_bases(n):
@@ -160,8 +213,7 @@ def dft_1d_bases(n):
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
     omega = np.exp(-2 * np.pi * 1j / n)
-    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize
-    # so that unitary (i.e., energy-preserving)
+    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize so that unitary
     return wmat
 
 
@@ -191,9 +243,9 @@ def dft_2d_bases(h, w):
     Bases are rows of :math:`Y_h` and :math:`Y_w`. See :func:`dft_1d_bases` for matrix properties.
 
     Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
-    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is :math:`x=Y_h^HXY_w^H`.
-    See :func:`main` for example usages and how this produces the same results as :func:`numpy.fft.fft2` (with
-    ``norm='ortho'``).
+    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is
+    :math:`x=Y_h^HXY_w^H`. See :func:`main` for example usages and how this produces the
+    same results as :func:`numpy.fft.fft2` (with ``norm='ortho'``).
 
     See Also:
         ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]`` contains the
@@ -215,8 +267,7 @@ def dft_2d_bases(h, w):
               ``(w, w)``.
     """
     dft_mat_h = dft_1d_bases(h)
-    dft_mat_w = dft_1d_bases(w)
-    dft_mat_w = dft_mat_w.T # shouldn't matter, as it's symmetric
+    dft_mat_w = dft_1d_bases(w).T # shouldn't matter, as it's symmetric
     return dft_mat_h, dft_mat_w
 
 
@@ -392,9 +443,9 @@ def sh_bases_real(l, n_lat, coord_convention='colatitude-azimuth', _check_orthon
     return ymat, areas_on_unit_sphere
 
 
-def main(func_name):
+def main(test_id):
     """Unit tests that can also serve as example usage."""
-    if func_name == 'pca':
+    if test_id == 'pca':
         pts = np.random.rand(5, 8) # 8 points in 5D
         # Find all principal components
         n_pcs = pts.shape[0] - 1
@@ -406,17 +457,67 @@ def main(func_name):
         print("Recon:")
         print(pts_recon)
 
-    elif func_name == 'dft_1d_bases':
+    elif test_id == 'dct_1d_bases':
+        from scipy.fftpack import dct
+        import xiuminglib as xlib
+        signal = np.random.randint(0, 255, 8)
+        n = len(signal)
+        # Transform by my matrix
+        dct_mat = dct_1d_bases(n)
+        assert xlib.linear_algebra.is_identity(dct_mat.T.dot(dct_mat), eps=1e-10)
+        coeffs = dct_mat.dot(signal)
+        recon = dct_mat.T.dot(coeffs)
+        print("Max. difference between original and recon.: %e" % np.abs(signal - recon).max())
+        # Transform by SciPy
+        coeffs_sp = dct(signal, norm='ortho')
+        print("Max. magnitude difference: %e" % np.abs(coeffs - coeffs_sp).max())
+
+    elif test_id == 'dct_cameraman':
+        from os.path import join
+        from scipy.fftpack import dct
+        import cv2
+        import xiuminglib as xlib
+        outdir = join(xlib.constants['dir_tmp'], test_id)
+        xlib.general.makedirs(outdir, rm_if_exists=True)
+        im = cv2.imread(xlib.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
+        im = cv2.resize(im, (64, 64))
+        cv2.imwrite(join(outdir, 'orig.png'), im)
+        # Transform by my DCT (2-step)
+        dct_mat_h, dct_mat_w = dct_2d_bases(*im.shape)
+        coeffs_2step = dct_mat_h.dot(im).dot(dct_mat_w)
+        recon_2step = dct_mat_h.T.dot(coeffs_2step).dot(dct_mat_w.T)
+        cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step)
+        print("(Ours 2-Step Recon. vs. Orig.) Max. difference: %e" %
+              np.abs(im - recon_2step).max())
+        # Transform by my DCT (1-step)
+        dct_mat = dct_2d_bases_vec(*im.shape)
+        coeffs_1step = dct_mat.dot(im.ravel())
+        recon_1step = dct_mat.T.dot(coeffs_1step)
+        cv2.imwrite(join(outdir, 'recon_1step.png'), recon_1step.reshape(im.shape))
+        print("(Ours 1-Step Recon. vs. Orig.) Max. difference: %e" %
+              np.abs(im - recon_1step.reshape(im.shape)).max())
+        # Transform by SciPy
+        coeffs_sp = dct(dct(im.T, norm='ortho').T, norm='ortho')
+        xlib.visualization.matrix_as_heatmap(
+            coeffs_2step - coeffs_sp, outpath=join(outdir, '2step-sp.png'))
+        xlib.visualization.matrix_as_heatmap(
+            coeffs_1step.reshape(im.shape) - coeffs_sp, outpath=join(outdir, '1step-sp.png'))
+        print("(Ours 2-Step Coeff. vs. SciPy) Max. difference: %e" %
+              np.abs(coeffs_2step - coeffs_sp).max())
+        print("(Ours 1-Step Coeff. vs. SciPy) Max. difference: %e" %
+              np.abs(coeffs_1step.reshape(im.shape) - coeffs_sp).max())
+
+    elif test_id == 'dft_1d_bases':
         signal = np.random.randint(0, 255, 10)
         n = len(signal)
         # Transform by my matrix
         dft_mat = dft_1d_bases(n)
         coeffs = dft_mat.dot(signal)
-        # Transform by numpy
+        # Transform by NumPy
         coeffs_np = np.fft.fft(signal, norm='ortho')
         print("Max. magnitude difference: %e" % np.abs(coeffs - coeffs_np).max())
 
-    elif func_name == 'dft_2d_freq':
+    elif test_id == 'dft_2d_freq':
         h, w = 4, 8
         freq_h, freq_w = dft_2d_freq(h, w)
         print("Along height:")
@@ -424,11 +525,11 @@ def main(func_name):
         print("Along width:")
         print(freq_w)
 
-    elif func_name == 'dft_cameraman':
+    elif test_id == 'dft_cameraman':
         from os.path import join
         import cv2
         import xiuminglib as xlib
-        outdir = join(xlib.constants['dir_tmp'], func_name)
+        outdir = join(xlib.constants['dir_tmp'], test_id)
         xlib.general.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(xlib.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
@@ -466,7 +567,7 @@ def main(func_name):
         print("(NumPy vs. Ours One-Step)\tRecon.\tMax. mag. diff.:\t%e" %
               np.abs(recon_1step - recon_np).max())
 
-    elif func_name == 'sh_bases_real':
+    elif test_id == 'sh_bases_real':
         from os.path import join
         import xiuminglib as xlib
         ls = [1, 2, 3, 4]
@@ -504,14 +605,14 @@ def main(func_name):
             xlib.visualization.matrix_as_heatmap(sph_func_recon, outpath=join(tmp_dir, 'sph_recon_l%03d.png' % l))
 
     else:
-        raise NotImplementedError("Unit tests for %s" % func_name)
+        raise NotImplementedError("Unit tests for %s" % test_id)
 
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument('func', type=str, help="function to test")
+    parser.add_argument('test_id', type=str, help="function to test")
     args = parser.parse_args()
 
-    main(args.func)
+    main(args.test_id)
