@@ -65,6 +65,24 @@ def is_symmetric(mat, eps=None):
     return np.allclose(mat, mat.T, atol=eps)
 
 
+def angle_between(vec1, vec2, radian=True):
+    r"""Computes the angle between two vectors.
+
+    Args:
+        vec1 (numpy.ndarray): Vector 1.
+        vec2
+        radian (bool, optional): Whether to use radians.
+
+    Returns:
+        float: The angle :math:`\in [0,\pi]`.
+    """
+    cos = np.dot(vec1, vec2) / np.linalg.norm(vec1) / np.linalg.norm(vec2)
+    angle = np.arccos(np.clip(cos, -1, 1))
+    if not radian:
+        angle = angle / np.pi * 180
+    return angle
+
+
 def main(func_name):
     """Unit tests that can also serve as example usage."""
     if func_name == 'is_symmetric':
