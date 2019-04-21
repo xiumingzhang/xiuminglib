@@ -147,7 +147,8 @@ def dct_1d_bases(n):
 def dct_2d_bases(h, w):
     r"""Generates bases for 2D discrete cosine transform (DCT).
 
-    Bases are rows of :math:`Y_h` and :math:`Y_w`. See :func:`dct_1d_bases` for matrix properties.
+    Bases are given in two matrices :math:`Y_h` and :math:`Y_w`. See :func:`dct_1d_bases` for
+    their properties. Note that :math:`Y_w` has already been transposed.
 
     Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
     Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is
@@ -240,7 +241,8 @@ def dft_2d_freq(h, w):
 def dft_2d_bases(h, w):
     r"""Generates bases for 2D discrete Fourier transform (DFT).
 
-    Bases are rows of :math:`Y_h` and :math:`Y_w`. See :func:`dft_1d_bases` for matrix properties.
+    Bases are given in two matrices :math:`Y_h` and :math:`Y_w`. See :func:`dft_1d_bases` for
+    their properties. Note that :math:`Y_w` has already been transposed.
 
     Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
     Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is
