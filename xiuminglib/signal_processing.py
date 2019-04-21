@@ -215,6 +215,9 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
         upto_h (int, optional): Up to how many bases in the height dimension. ``None`` means all.
         upto_w
 
+    Warning:
+        ``upto_?`` features failed the unit tests.
+
     Returns:
         tuple:
             - **dft_mat_h** (*numpy.ndarray*) -- DFT matrix :math:`Y_h` transforming rows
@@ -222,9 +225,9 @@ def dft_2d_bases(h, w, upto_h=None, upto_w=None):
             - **dft_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming columns. Of shape
               ``(w, min(w, upto_w))``.
     """
-    dft_mat_h = dft_1d_bases(h, upto=upto_h)
+    dft_mat_h = dft_1d_bases(h, upto=upto_h) # FIXME: upto_? features
     dft_mat_w = dft_1d_bases(w, upto=upto_w) # shape: (upto_w, w)
-    dft_mat_w = dft_mat_w.T # should have no effect, because it's symmetric
+    dft_mat_w = dft_mat_w.T
     return dft_mat_h, dft_mat_w
 
 
@@ -457,6 +460,13 @@ def main(func_name):
         assert np.allclose(np.imag(recon_2step), 0)
         recon_2step = np.real(recon_2step)
         cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step.astype(im.dtype))
+        # My two-step DFT, with fewer bases
+        dft_h_mat_comp, dft_w_mat_comp = dft_2d_bases(*im.shape, upto_h=10, upto_w=10)
+        coeffs_2step_comp = dft_h_mat_comp.dot(im).dot(dft_w_mat_comp)
+        recon_2step_comp = dft_h_mat_comp.conj().T.dot(coeffs_2step_comp).dot(dft_w_mat_comp.conj().T)
+        assert np.allclose(np.imag(recon_2step_comp), 0)
+        recon_2step_comp = np.real(recon_2step_comp)
+        cv2.imwrite(join(outdir, 'recon_2step_comp.png'), recon_2step_comp.astype(im.dtype))
         # NumPy DFT
         coeffs_np = np.fft.fft2(im, norm='ortho')
         recon_np = np.fft.ifft2(coeffs_np, norm='ortho')
