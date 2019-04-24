@@ -493,6 +493,9 @@ def main(test_id):
               np.abs(im - recon_2step).max())
         # Transform by my DCT (1-step)
         dct_mat = dct_2d_bases_vec(*im.shape)
+        for i in range(dct_mat.shape[0]):
+            xlib.visualization.matrix_as_image(
+                dct_mat[i, :].reshape(im.shape), outpath=join(outdir, 'basis%06d.png' % i))
         coeffs_1step = dct_mat.dot(im.ravel())
         recon_1step = dct_mat.T.dot(coeffs_1step)
         cv2.imwrite(join(outdir, 'recon_1step.png'), recon_1step.reshape(im.shape))

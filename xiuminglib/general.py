@@ -68,29 +68,34 @@ def print_attrs(obj, excerpts=None, excerpt_win_size=60, max_recursion_depth=Non
                     )
 
 
-def sortglob(directory, filename, exts, ext_ignore_case=False):
+def sortglob(directory, filename='*', ext='*', ext_ignore_case=False):
     """Globs and then sorts according to a pattern ending in multiple extensions.
 
     Args:
         directory (str): Directory to glob, e.g., ``'/path/to/'``.
-        filename (str): Filename pattern excluding extensions, e.g., ``'batch000_*'``.
-        exts (set(str)): Extensions of interest, e.g., ``('.png', '.PNG')``.
+        filename (str or tuple(str), optional): Filename pattern excluding extensions, e.g., ``'batch000_*'``.
+        ext (str or tuple(str), optional): Extensions of interest, e.g., ``('png', 'PNG')``.
         ext_ignore_case (bool, optional): Whether to ignore case for extensions.
 
     Returns:
         list(str): Sorted list of files globbed.
     """
+    if isinstance(ext, str):
+        ext = (ext,)
+    if isinstance(filename, str):
+        filename = (filename,)
     ext_list = []
-    for ext in exts:
-        if not ext.startswith('.'):
-            ext = '.' + ext
+    for x in ext:
+        if not x.startswith('.'):
+            x = '.' + x
         if ext_ignore_case:
-            ext_list += [ext.lower(), ext.upper()]
+            ext_list += [x.lower(), x.upper()]
         else:
-            ext_list.append(ext)
+            ext_list.append(x)
     files = []
-    for ext in ext_list:
-        files += glob(join(directory, filename + ext))
+    for f in filename:
+        for e in ext_list:
+            files += glob(join(directory, f + e))
     files_sorted = sorted(files)
     return files_sorted
 
