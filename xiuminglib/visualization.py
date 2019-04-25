@@ -381,9 +381,6 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
                       outpath=None, contents_only=False, figtitle=None):
     """Visualizes a matrix as heatmap.
 
-    Warning:
-        Functional with Matplotlib 2.0.2, but buggy with 3.0.0.
-
     Args:
         mat (numpy.ndarray): Matrix to visualize as heatmp. May contain NaN's, which will be plotted white.
         cmap (str, optional): Colormap to use.
@@ -398,6 +395,12 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     Raises:
         ValueError: If ``mat`` has wrong dimensions.
     """
+    logger_name = thisfile + '->matrix_as_heatmap()'
+    if matplotlib.__version__ != '2.0.2':
+        logger.name = logger_name
+        logger.warning("Developed and tested with Matplotlib %s. Known to be buggy with 3.0.0",
+                       matplotlib.__version__)
+
     if outpath is None:
         outpath = join(xlib.constants['dir_tmp'], 'matrix_as_heatmap.png')
 
