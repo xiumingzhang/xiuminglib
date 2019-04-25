@@ -1,6 +1,6 @@
 import sys
 import os
-from os.path import abspath, join, exists, dirname
+from os.path import abspath, join, exists, dirname, isdir
 from shutil import rmtree
 import re
 from glob import glob
@@ -68,19 +68,22 @@ def print_attrs(obj, excerpts=None, excerpt_win_size=60, max_recursion_depth=Non
                     )
 
 
-def sortglob(directory, filename='*', ext='*', ext_ignore_case=False):
+def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     """Globs and then sorts according to a pattern ending in multiple extensions.
 
     Args:
         directory (str): Directory to glob, e.g., ``'/path/to/'``.
-        filename (str or tuple(str), optional): Filename pattern excluding extensions, e.g., ``'batch000_*'``.
-        ext (str or tuple(str), optional): Extensions of interest, e.g., ``('png', 'PNG')``.
+        filename (str or tuple(str), optional): Filename pattern excluding extensions, e.g., ``'img*'``.
+        ext (str or tuple(str), optional): Extensions of interest, e.g., ``('png', 'PNG')``. ``None``
+            means no extension, useful for files with no extension or folders.
         ext_ignore_case (bool, optional): Whether to ignore case for extensions.
 
     Returns:
         list(str): Sorted list of files globbed.
     """
-    if isinstance(ext, str):
+    if ext is None:
+        ext = ()
+    elif isinstance(ext, str):
         ext = (ext,)
     if isinstance(filename, str):
         filename = (filename,)
@@ -94,10 +97,28 @@ def sortglob(directory, filename='*', ext='*', ext_ignore_case=False):
             ext_list.append(x)
     files = []
     for f in filename:
-        for e in ext_list:
-            files += glob(join(directory, f + e))
+        if ext_list:
+            for e in ext_list:
+                files += glob(join(directory, f + e))
+        else:
+            files += glob(join(directory, f))
     files_sorted = sorted(files)
     return files_sorted
+
+
+def rmglob(path_pattern, exclude_dir=True):
+    """Globs a pattern and then deletes the matches.
+
+    Args:
+        path_pattern (str): Pattern to glob, e.g., ``'/path/to/img???.png'``.
+        exclude_dir (bool, optional): Whether to exclude directories from being deleted.
+    """
+    for x in glob(path_pattern):
+        if isdir(x):
+            if not exclude_dir:
+                rmtree(x)
+        else:
+            os.remove(x)
 
 
 def ask_to_proceed(msg, level='warning'):
@@ -138,7 +159,7 @@ def makedirs(directory, rm_if_exists=False):
     if exists(directory):
         if rm_if_exists:
             logger.name = logger_name
-            logger.info("Removed and then made: %s", directory)
+            logger.info("Removed and then remade: %s", directory)
             rmtree(directory)
             os.makedirs(directory, exist_ok=True)
     else:
