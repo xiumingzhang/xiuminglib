@@ -455,10 +455,10 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     # Save plot
     if contents_only:
         fig.savefig(outpath, dpi=dpi)
-        fig.clf()
     else:
         plt.savefig(outpath, bbox_inches='tight')
-        plt.close('all')
+
+    plt.close('all')
 
 
 def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
