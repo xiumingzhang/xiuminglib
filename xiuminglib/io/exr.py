@@ -15,15 +15,16 @@ class EXR():
     are produced by :mod:`xiuminglib.blender.render` and hence follow certain formats.
 
     Args:
-        exr_path (str): Path to the EXR file.
+        exr_path (str, optional): Path to the EXR file.
 
     Attributes:
-        exr_path (str)
+        exr_f (str): Path to the EXR file.
         data (dict): Data loaded.
     """
-    def __init__(self, exr_path):
+    def __init__(self, exr_path=None):
         self.exr_f = exr_path
-        self.data = self.load()
+        if self.exr_f is not None:
+            self.data = self.load()
 
     def load(self):
         r"""Loads an EXR as a dictionary of NumPy arrays.
@@ -38,6 +39,7 @@ class EXR():
         from time import time
         from subprocess import Popen
         logger_name = thisfile + '->EXR:load()'
+        assert self.exr_f is not None, "Set the exr_f first"
         npz_f = '/tmp/%s_t%s.npz' % \
             (basename(self.exr_f).replace('.exr', ''), time())
         # Convert to .npz
