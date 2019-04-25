@@ -390,6 +390,8 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means ``os.path.join(xlib.constants['dir_tmp'], 'matrix_as_heatmap.png')``.
         contents_only (bool, optional): Whether to plot only the contents (i.e., no borders, axes, etc.).
+            If ``True``, the heatmap will be of exactly the same size as your matrix, useful when you want to
+            plot heatmaps separately and later concatenate them into a single one.
         figtitle (str, optional): Figure title. ``None`` means no title.
 
     Raises:
