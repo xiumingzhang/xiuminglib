@@ -2,9 +2,7 @@ import sys
 import os
 from os.path import abspath, join, exists, dirname, isdir
 from shutil import rmtree
-import re
 from glob import glob
-import numpy as np
 
 from xiuminglib import config
 logger, thisfile = config.create_logger(abspath(__file__))
@@ -20,6 +18,7 @@ def print_attrs(obj, excerpts=None, excerpt_win_size=60, max_recursion_depth=Non
         excerpt_win_size (int, optional): How many characters get printed around a match.
         max_recursion_depth (int, optional): Maximum recursion depth. ``None`` means no limit.
     """
+    import re
     import jsonpickle
     import yaml
 
@@ -186,6 +185,8 @@ def load_or_save(data_f, fallback=None):
         Data loaded if ``data_f`` exists; otherwise, ``fallback``'s return
         (``None`` if no fallback).
     """
+    import numpy as np
+
     logger_name = thisfile + '->load_or_save()'
 
     # Decide data file type
@@ -219,3 +220,13 @@ def load_or_save(data_f, fallback=None):
     logger.name = logger_name
     logger.info(msg)
     return data
+
+
+def fix_terminal():
+    """Fixes messed up terminal."""
+    from shlex import split
+    from subprocess import Popen, DEVNULL
+
+    cmd = 'stty sane; tput rs1'
+    child = Popen(split(cmd), stdout=DEVNULL, stderr=DEVNULL)
+    _, _ = child.communicate()
