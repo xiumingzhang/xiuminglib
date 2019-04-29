@@ -361,10 +361,11 @@ def matrix_as_heatmap_complex(*args, **kwargs):
 
     Just pass in the parameters that :func:`matrix_as_heatmap` takes. ``'_mag'`` and ``'_phase'``
     will be appended to ``outpath`` to produce the magnitude and phase heatmaps, respectively.
+    Specifically, magnitude is computed by :func:`numpy.absolute`, and phase by :func:`numpy.angle`.
 
     Writes:
-        - Magnitude heatmap w/ a filename with mag suffix.
-        - Phase heatmap w/ a filename with phase suffix.
+        - A magnitude heatmap with ``'_mag'`` in its filename.
+        - A phase heatmap with ``'_phase'`` in its filename.
     """
     outpath = kwargs.get('outpath', None)
     if outpath is None:
