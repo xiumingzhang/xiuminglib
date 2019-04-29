@@ -14,7 +14,7 @@ logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def remove_objects(name_pattern, regex=False):
-    """Removes object(s) from current scene
+    """Removes object(s) from current scene.
 
     Args:
         name_pattern (str): Name or name pattern of object(s) to remove.
@@ -170,12 +170,11 @@ def add_cylinder_between(pt1, pt2, r, name=None):
 
 
 def add_rectangular_plane(center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2), name=None):
-    """Adds a rectangular plane specified by its center location, dimensions,
-    and where its +z points to.
+    """Adds a rectangular plane specified by its center location, dimensions, and where its +z points to.
 
     Args:
         center_loc (array_like, optional): Plane center location in world coordinates.
-        point_to (array_like, optional): Direction to which plane's +z points to in world coordinates.
+        point_to (array_like, optional): Point in world coordinates to which plane's +z points.
         size (array_like, optional): Sizes in x and y directions (0 in z).
         name (str, optional): Plane name.
 
