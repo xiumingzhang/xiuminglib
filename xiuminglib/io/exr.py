@@ -2,9 +2,9 @@ from os.path import abspath, dirname, join, basename
 import numpy as np
 import cv2
 
-import xiuminglib as xlib
+import xiuminglib as xm
 
-logger, thisfile = xlib.config.create_logger(abspath(__file__))
+logger, thisfile = xm.config.create_logger(abspath(__file__))
 
 
 class EXR():
@@ -148,7 +148,7 @@ class EXR():
             - composite.npy (ditto): composite by Blender.
         """
         logger_name = thisfile + '->extract_intrinsic_images_from_lighting_passes()'
-        xlib.general.makedirs(outdir)
+        xm.general.makedirs(outdir)
         data = self.data
 
         def collapse_passes(components):
@@ -171,35 +171,35 @@ class EXR():
         albedo = collapse_passes(['diffuse_color', 'glossy_color'])
         np.save(join(outdir, 'albedo.npy'), albedo)
         if vis:
-            xlib.visualization.matrix_as_image(albedo, outpath=join(outdir, 'albedo.png'))
+            xm.visualization.matrix_as_image(albedo, outpath=join(outdir, 'albedo.png'))
         # Shading
         shading = collapse_passes(['diffuse_indirect', 'diffuse_direct'])
         np.save(join(outdir, 'shading.npy'), shading)
         if vis:
-            xlib.visualization.matrix_as_image(shading, join(outdir, 'shading.png'))
+            xm.visualization.matrix_as_image(shading, join(outdir, 'shading.png'))
         # Specularity
         specularity = collapse_passes(['glossy_indirect', 'glossy_direct'])
         np.save(join(outdir, 'specularity.npy'), specularity)
         if vis:
-            xlib.visualization.matrix_as_image(specularity, join(outdir, 'specularity.png'))
+            xm.visualization.matrix_as_image(specularity, join(outdir, 'specularity.png'))
         # Reconstruction vs. ...
         recon = np.multiply(albedo, shading) + specularity
         recon[:, :, 3] = albedo[:, :, 3] # can't add up alpha channels
         np.save(join(outdir, 'recon.npy'), recon)
         if vis:
-            xlib.visualization.matrix_as_image(recon, join(outdir, 'recon.png'))
+            xm.visualization.matrix_as_image(recon, join(outdir, 'recon.png'))
         # ... composite from Blender, just for sanity check
         composite = collapse_passes(['composite'])
         np.save(join(outdir, 'composite.npy'), composite)
         if vis:
-            xlib.visualization.matrix_as_image(composite, join(outdir, 'composite.png'))
+            xm.visualization.matrix_as_image(composite, join(outdir, 'composite.png'))
         logger.name = logger_name
         logger.info("Intrinsic images extracted to %s", outdir)
 
 
 def main():
     """Unit tests that can also serve as example usage."""
-    tmp_dir = xlib.constants['dir_tmp']
+    tmp_dir = xm.constants['dir_tmp']
     exr_f = join(tmp_dir, 'test.exr')
     exr = EXR(exr_f)
     exr.extract_normal(join(tmp_dir, 'test.png'), vis=True)

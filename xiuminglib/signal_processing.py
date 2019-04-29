@@ -461,12 +461,12 @@ def main(test_id):
 
     elif test_id == 'dct_1d_bases':
         from scipy.fftpack import dct
-        import xiuminglib as xlib
+        import xiuminglib as xm
         signal = np.random.randint(0, 255, 8)
         n = len(signal)
         # Transform by my matrix
         dct_mat = dct_1d_bases(n)
-        assert xlib.linear_algebra.is_identity(dct_mat.T.dot(dct_mat), eps=1e-10)
+        assert xm.linear_algebra.is_identity(dct_mat.T.dot(dct_mat), eps=1e-10)
         coeffs = dct_mat.dot(signal)
         recon = dct_mat.T.dot(coeffs)
         print("Max. difference between original and recon.: %e" % np.abs(signal - recon).max())
@@ -478,10 +478,10 @@ def main(test_id):
         from os.path import join
         from scipy.fftpack import dct
         import cv2
-        import xiuminglib as xlib
-        outdir = join(xlib.constants['dir_tmp'], test_id)
-        xlib.general.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(xlib.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
+        import xiuminglib as xm
+        outdir = join(xm.constants['dir_tmp'], test_id)
+        xm.general.makedirs(outdir, rm_if_exists=True)
+        im = cv2.imread(xm.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)
         # Transform by my DCT (2-step)
@@ -494,7 +494,7 @@ def main(test_id):
         # Transform by my DCT (1-step)
         dct_mat = dct_2d_bases_vec(*im.shape)
         for i in range(dct_mat.shape[0]):
-            xlib.visualization.matrix_as_image(
+            xm.visualization.matrix_as_image(
                 dct_mat[i, :].reshape(im.shape), outpath=join(outdir, 'basis%06d.png' % i))
         coeffs_1step = dct_mat.dot(im.ravel())
         recon_1step = dct_mat.T.dot(coeffs_1step)
@@ -503,9 +503,9 @@ def main(test_id):
               np.abs(im - recon_1step.reshape(im.shape)).max())
         # Transform by SciPy
         coeffs_sp = dct(dct(im.T, norm='ortho').T, norm='ortho')
-        xlib.visualization.matrix_as_heatmap(
+        xm.visualization.matrix_as_heatmap(
             coeffs_2step - coeffs_sp, outpath=join(outdir, '2step-sp.png'))
-        xlib.visualization.matrix_as_heatmap(
+        xm.visualization.matrix_as_heatmap(
             coeffs_1step.reshape(im.shape) - coeffs_sp, outpath=join(outdir, '1step-sp.png'))
         print("(Ours 2-Step Coeff. vs. SciPy) Max. difference: %e" %
               np.abs(coeffs_2step - coeffs_sp).max())
@@ -533,10 +533,10 @@ def main(test_id):
     elif test_id == 'dft_cameraman':
         from os.path import join
         import cv2
-        import xiuminglib as xlib
-        outdir = join(xlib.constants['dir_tmp'], test_id)
-        xlib.general.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(xlib.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
+        import xiuminglib as xm
+        outdir = join(xm.constants['dir_tmp'], test_id)
+        xm.general.makedirs(outdir, rm_if_exists=True)
+        im = cv2.imread(xm.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)
         # My two-step DFT
@@ -560,11 +560,11 @@ def main(test_id):
         recon_1step = np.real(recon_1step)
         cv2.imwrite(join(outdir, 'recon_1step.png'), recon_1step.astype(im.dtype))
         # Compare coefficients
-        xlib.visualization.matrix_as_heatmap_complex(
+        xm.visualization.matrix_as_heatmap_complex(
             coeffs_1step.reshape(im.shape) - coeffs_np, outpath=join(outdir, '1step-np.png'))
-        xlib.visualization.matrix_as_heatmap_complex(
+        xm.visualization.matrix_as_heatmap_complex(
             coeffs_2step - coeffs_1step.reshape(im.shape), outpath=join(outdir, '2step-1step.png'))
-        xlib.visualization.matrix_as_heatmap_complex(
+        xm.visualization.matrix_as_heatmap_complex(
             coeffs_2step - coeffs_np, outpath=join(outdir, '2step-np.png'))
         # Quant.
         print("(NumPy vs. Ours Two-Step)\tRecon.\tMax. mag. diff.:\t%e" %
@@ -574,7 +574,7 @@ def main(test_id):
 
     elif test_id == 'sh_bases_real':
         from os.path import join
-        import xiuminglib as xlib
+        import xiuminglib as xm
         ls = [1, 2, 3, 4]
         n_steps_theta = 64
         for l in ls:
@@ -595,8 +595,8 @@ def main(test_id):
             sph_func = sph_func_1d.reshape((n_steps_theta, 2 * n_steps_theta))
             sph_func_ravel = sph_func.ravel()
             assert (sph_func_1d == sph_func_ravel).all()
-            tmp_dir = xlib.constants['dir_tmp']
-            xlib.visualization.matrix_as_heatmap(sph_func, outpath=join(tmp_dir, 'sph_orig.png'))
+            tmp_dir = xm.constants['dir_tmp']
+            xm.visualization.matrix_as_heatmap(sph_func, outpath=join(tmp_dir, 'sph_orig.png'))
             # Analysis
             coeffs = ymat.dot(np.multiply(weights, sph_func_ravel))
             print("\tGT")
@@ -607,7 +607,7 @@ def main(test_id):
             sph_func_1d_recon = ymat.T.dot(coeffs)
             sph_func_recon = sph_func_1d_recon.reshape(sph_func.shape)
             print("Max. magnitude difference: %e" % np.abs(sph_func_1d - sph_func_1d_recon).max())
-            xlib.visualization.matrix_as_heatmap(sph_func_recon, outpath=join(tmp_dir, 'sph_recon_l%03d.png' % l))
+            xm.visualization.matrix_as_heatmap(sph_func_recon, outpath=join(tmp_dir, 'sph_recon_l%03d.png' % l))
 
     else:
         raise NotImplementedError("Unit tests for %s" % test_id)
