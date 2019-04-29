@@ -227,6 +227,6 @@ def fix_terminal():
     from shlex import split
     from subprocess import Popen, DEVNULL
 
-    cmd = 'stty sane; tput rs1'
+    cmd = 'stty sane'
     child = Popen(split(cmd), stdout=DEVNULL, stderr=DEVNULL)
     _, _ = child.communicate()
