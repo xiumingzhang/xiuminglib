@@ -2,10 +2,9 @@ from os.path import abspath, basename, dirname, join
 from shutil import copy
 import numpy as np
 
-from xiuminglib import general as xg
+import xiuminglib as xm
 
-from xiuminglib import config
-logger, thisfile = config.create_logger(abspath(__file__))
+logger, thisfile = xm.config.create_logger(abspath(__file__))
 
 
 class Obj(object):
@@ -270,7 +269,7 @@ class Obj(object):
         f, ft, fn = self.f, self.ft, self.fn
         # mkdir if necessary
         outdir = dirname(objpath)
-        xg.makedirs(outdir)
+        xm.general.makedirs(outdir)
         # Write .obj
         with open(objpath, 'w') as fid:
             # Material file
@@ -419,7 +418,7 @@ class Mtl(object):
         assert (self.mtlfile is not None and self.newmtl is not None), \
             "'mtlfile' and 'newmtl' must not be 'None'"
         # mkdir if necessary
-        xg.makedirs(outdir)
+        xm.general.makedirs(outdir)
         # Write .mtl
         mtlpath = join(outdir, self.mtlfile)
         with open(mtlpath, 'w') as fid:

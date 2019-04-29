@@ -105,11 +105,11 @@ class LucasKanadeTracker():
         Writes:
             - Each frame with tracked points marked out.
         """
-        from xiuminglib import visualization as xv
+        import xiuminglib as xm
         for fi in range(0, len(self.frames) - 1):
             im = self.frames[fi + 1]
             pts = self.tracks[fi]
-            xv.scatter_on_image(im, pts, size=6, bgr=marker_bgr,
+            xm.visualization.scatter_on_image(im, pts, size=6, bgr=marker_bgr,
                                 outpath=join(out_dir, '%04d.png' % (fi + 1)))
 
     @staticmethod

@@ -6,10 +6,9 @@ except ModuleNotFoundError:
     # For building the doc
     pass
 
-from xiuminglib import general as xg
+import xiuminglib as xm
 
-from xiuminglib import config
-logger, thisfile = config.create_logger(abspath(__file__))
+logger, thisfile = xm.config.create_logger(abspath(__file__))
 
 
 def save_blend(outpath, delete_overwritten=False):
@@ -25,7 +24,7 @@ def save_blend(outpath, delete_overwritten=False):
     logger_name = thisfile + '->save_blend()'
 
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xm.general.makedirs(outdir)
     if exists(outpath) and delete_overwritten:
         remove(outpath)
 

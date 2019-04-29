@@ -7,10 +7,9 @@ except ModuleNotFoundError:
     # For building the doc
     pass
 
-from xiuminglib import general as xg
+import xiuminglib as xm
 
-from xiuminglib import config
-logger, thisfile = config.create_logger(abspath(__file__))
+logger, thisfile = xm.config.create_logger(abspath(__file__))
 
 
 def set_cycles(w=None, h=None,
@@ -260,7 +259,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
     logger_name = thisfile + '->render()'
 
     outdir = dirname(outpath)
-    xg.makedirs(outdir)
+    xm.general.makedirs(outdir)
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
