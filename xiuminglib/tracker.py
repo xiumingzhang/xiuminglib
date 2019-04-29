@@ -101,6 +101,9 @@ class LucasKanadeTracker():
         Args:
             out_dir (str): Output directory.
             marker_bgr (tuple, optional): Marker BGR color.
+
+        Writes:
+            - Each frame with tracked points marked out.
         """
         from xiuminglib import visualization as xv
         for fi in range(0, len(self.frames) - 1):

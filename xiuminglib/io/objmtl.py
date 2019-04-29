@@ -253,7 +253,14 @@ class Obj(object):
 
     # Output object to file
     def write_file(self, objpath):
-        """Writes the current model to a .obj file."""
+        """Writes the current model to a .obj file.
+
+        Args:
+            objpath (str): Path to the output .obj.
+
+        Writes:
+            - Output .obj file.
+        """
         logger_name = thisfile + '->Obj:write_file()'
         mtllib = self.mtllib
         o = self.o
@@ -402,6 +409,9 @@ class Mtl(object):
 
         Args:
             outdir (str): Output directory.
+
+        Writes:
+            - Output .mtl file.
         """
         import cv2
         logger_name = thisfile + '->Mtl:write_file()'

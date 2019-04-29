@@ -184,6 +184,9 @@ def load_or_save(data_f, fallback=None):
     Returns:
         Data loaded if ``data_f`` exists; otherwise, ``fallback``'s return
         (``None`` if no fallback).
+
+    Writes:
+        - Return by the fallback, if provided.
     """
     import numpy as np
 

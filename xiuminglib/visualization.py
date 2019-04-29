@@ -79,6 +79,9 @@ def pyplot_wrapper(*args,
     Raises:
         NotImplementedError: If ``func`` is not implemented.
         TypeError: If ``ci`` is of a wrong type.
+
+    Writes:
+        - The plot.
     """
     if ci is not None:
         assert func == 'plot', "CI makes sense only for `plot`"
@@ -201,6 +204,9 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
             :math:`\in [0, 255]`. If *array_like*, must be of shape N-by-3.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means ``os.path.join(xlib.constants['dir_tmp'], 'scatter_on_image.png')``.
+
+    Writes:
+        - The scatter plot overlaid over the image.
     """
     import cv2
 
@@ -262,6 +268,9 @@ def matrix_as_image(arr, outpath=None, gamma=None):
 
     Raises:
         ValueError: If ``arr`` is neither 2D or 3D.
+
+    Writes:
+        - An image of the matrix.
     """
     import cv2
 
@@ -396,6 +405,9 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
     Raises:
         ValueError: If ``mat`` has wrong dimensions.
+
+    Writes:
+        - A heatmap of the matrix.
     """
     logger_name = thisfile + '->matrix_as_heatmap()'
     if matplotlib.__version__ != '2.0.2':
@@ -489,6 +501,9 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
 
     Raises:
         TypeError: ``texmap`` is of a wrong type.
+
+    Writes:
+        - An image of where the vertices map to on the texture map.
     """
     import cv2
 
@@ -627,6 +642,9 @@ def axes3d_wrapper(
     Raises:
         NotImplementedError: If ``func`` is not yet implemented.
         ValueError: If ``outpath`` has a wrong extension.
+
+    Writes:
+        - One or multiple (if ``views`` is provided) views of the 3D plot.
     """
     logger_name = thisfile + '->axes3d_wrapper()'
 
@@ -739,6 +757,9 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
         out_obj (str): The output path of the surface .obj.
         res (int, optional): Resolution of the TDF.
         center (bool, optional): Whether to center these points around object space origin.
+
+    Writes:
+        - A .obj file of the isosurface.
     """
     from skimage.measure import marching_cubes_lewiner
     from trimesh import Trimesh

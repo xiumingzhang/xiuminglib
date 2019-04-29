@@ -55,8 +55,8 @@ class EXR():
         logger.info("Loaded %s", self.exr_f)
         return data
 
-    def extract_depth(self, alpha_exr, outpath, vis_raw=False):
-        """Combines an aliased, raw depth map and its alpha map into a .npy image.
+    def extract_depth(self, alpha_exr, outpath, vis=False):
+        """Combines a raw (aliased) depth map and its alpha map into anti-aliased depth.
 
         Output has black background, with bright values for closeness to the camera.
         If the alpha map is anti-aliased, the result depth map will be nicely anti-aliased.
@@ -64,7 +64,11 @@ class EXR():
         Args:
             alpha_exr (str): Path to the EXR file of the anti-aliased alpha map.
             outpath (str): Path to the result .npy file.
-            vis_raw (bool, optional): Whether to visualize the raw values as an image.
+            vis (bool, optional): Whether to visualize the raw values as an image.
+
+        Writes:
+            - A .npy file containing an aliased depth map and its alpha map.
+            - If ``vis``, a .png image of anti-aliased depth.
         """
         logger_name = thisfile + '->EXR:extract_depth()'
         dtype = 'uint8'
@@ -82,7 +86,7 @@ class EXR():
         if not outpath.endswith('.npy'):
             outpath += '.npy'
         np.save(outpath, np.dstack((arr, alpha)))
-        if vis_raw:
+        if vis:
             is_fg = depth < depth.max()
             max_val = depth[is_fg].max()
             depth[depth > max_val] = max_val # cap background depth at the object maximum depth
@@ -103,6 +107,10 @@ class EXR():
         Args:
             outpath (str): Path to the result .npy file.
             vis (bool, optional): Whether to visualize the normal vectors as an image.
+
+        Writes:
+            - A .npy file containing an aliased normal map and its alpha map.
+            - If ``vis``, a .png visualization of anti-aliased normals.
         """
         logger_name = thisfile + '->extract_normal()'
         dtype = 'uint8'
@@ -131,6 +139,13 @@ class EXR():
         Args:
             outdir (str): Directory to save the result .npy files to.
             vis (bool, optional): Whether to visualize the values as images.
+
+        Writes:
+            - albedo.npy (and its visualization if ``vis``).
+            - shading.npy (ditto).
+            - specularity.npy (ditto).
+            - recon.npy (ditto): reconstruction by combining albedo, shading, and specularity.
+            - composite.npy (ditto): composite by Blender.
         """
         logger_name = thisfile + '->extract_intrinsic_images_from_lighting_passes()'
         xlib.general.makedirs(outdir)

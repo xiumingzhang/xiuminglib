@@ -47,6 +47,9 @@ Depending on what functions you want to use, you may need to install:
         but with hindsight, `a one-liner <https://anaconda.org/kitsune.one/python-blender>`_
         *may* work just as well.
 
+    Trimesh
+        If you use conda, it's as simple as ``conda install -c conda-forge trimesh``.
+
 The library uses "on-demand" imports whenever possible, so that it won't fail on imports that you don't need. 
 
 
