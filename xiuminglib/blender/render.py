@@ -98,7 +98,9 @@ def easyset(w=None, h=None,
             ao=None,
             color_mode=None,
             file_format=None,
-            color_depth=None):
+            color_depth=None,
+            sampling_method=None,
+            n_aa_samples=None):
     """Sets some of the scene attributes more easily.
 
     Args:
@@ -110,6 +112,9 @@ def easyset(w=None, h=None,
         file_format (str, optional): File format of the render: ``'PNG'``, ``'OPEN_EXR'``, etc.
         color_depth (str, optional): Color depth of rendering: ``'8'`` or ``'16'`` for .png;
             ``'16'`` or ``'32'`` for .exr.
+        sampling_method (str, optional): Method to sample light and materials: ``'PATH'`` or
+            ``'BRANCHED_PATH'``.
+        n_aa_samples (int, optional): Number of anti-aliasing samples (used with ``'BRANCHED_PATH'``).
     """
     scene = bpy.context.scene
 
@@ -140,6 +145,14 @@ def easyset(w=None, h=None,
     # Color depth of rendering
     if color_depth is not None:
         scene.render.image_settings.color_depth = color_depth
+
+    # Method to sample light and materials
+    if sampling_method is not None:
+        scene.cycles.progressive = sampling_method
+
+    # Number of anti-aliasing samples
+    if n_aa_samples is not None:
+        scene.cycles.aa_samples = n_aa_samples
 
 
 def _render_prepare(cam, obj_names):

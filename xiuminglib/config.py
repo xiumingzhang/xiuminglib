@@ -23,24 +23,24 @@ def get_all(lib_dir):
     return modules
 
 
-def create_logger(file_abspath, level=logging.INFO):
+def create_logger(file_abspath, level=logging.INFO, path_starts_from='xiuminglib'):
     """Creates a logger for functions in the library.
 
     Args:
         file_abspath (str): Absolute path to the file that uses the logger.
-        level (int, optional): Logging level. Defaults to ``logging.INFO``.
+        level (int, optional): Logging level.
+        path_starts_from (str, optional): Truncates ``thisfile`` so that it starts from this.
 
     Returns:
         tuple:
             - **logger** (*logging.Logger*) -- Logger created.
-            - **thisfile** (*str*) -- Partial path to the user file, starting from package name.
+            - **thisfile** (*str*) -- Partial path to the user file (e.g., starting from package name).
     """
-    starting_from = 'xiuminglib'
     logging.basicConfig(level=level)
     logger = logging.getLogger()
     folder_names = file_abspath.split('/')
-    if starting_from in folder_names:
-        start_idx = folder_names.index(starting_from)
+    if path_starts_from in folder_names:
+        start_idx = folder_names.index(path_starts_from)
     else:
         start_idx = 0
     thisfile = '/'.join(folder_names[start_idx:])
