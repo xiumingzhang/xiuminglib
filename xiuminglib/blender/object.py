@@ -296,7 +296,7 @@ def _clear_nodetree_for_active_material(obj):
     for node in nodes:
         nodes.remove(node)
 
-    return node_tree, nodes
+    return node_tree
 
 
 def color_vertices(obj, vert_ind, colors):
@@ -365,7 +365,8 @@ def color_vertices(obj, vert_ind, colors):
                     from IPython import embed; embed()
 
     # Set up nodes for vertex colors
-    node_tree, nodes = _clear_nodetree_for_active_material(obj)
+    node_tree = _clear_nodetree_for_active_material(obj)
+    nodes = node_tree.nodes
     nodes.new('ShaderNodeAttribute')
     nodes.new('ShaderNodeBsdfDiffuse')
     nodes.new('ShaderNodeOutputMaterial')
@@ -381,64 +382,75 @@ def color_vertices(obj, vert_ind, colors):
     logger.warning("    ..., so node tree of '%s' has changed", obj.name)
 
 
+def _assert_cycles(scene):
+    """
+    Raises:
+        NotImplementedError: If rendering engine is not Cycles.
+    """
+    engine = scene.render.engine
+    if engine != 'CYCLES':
+        raise NotImplementedError(engine)
+
+
+def _make_texture_node(obj, texture_str):
+    mat = obj.active_material
+    node_tree = mat.node_tree
+    nodes = node_tree.nodes
+    nodes.new('ShaderNodeTexImage')
+    texture_node = nodes['Image Texture']
+    if texture_str == 'bundled':
+        texture = mat.active_texture
+        assert texture is not None, "No bundled texture found"
+        img = texture.image
+    else:
+        # Path given -- external texture map
+        bpy.data.images.load(texture_str, check_existing=True)
+        img = bpy.data.images[basename(texture_str)]
+        nodes.new('ShaderNodeTexCoord') # careless
+        node_tree.links.new(nodes['Texture Coordinate'].outputs['Generated'],
+                            texture_node.inputs['Vector'])
+    texture_node.image = img
+    return texture_node
+
+
 def setup_diffuse_nodetree(obj, texture, roughness=0):
-    r"""Sets up a diffuse texture node tree for the bundled texture.
+    r"""Sets up a diffuse texture node tree.
 
     Bundled texture can be an external texture map (carelessly mapped) or a pure color.
     Mathematically, the BRDF model used is either Lambertian (no roughness) or Oren-Nayar (with roughness).
 
     Args:
-        obj (bpy_types.Object): Object bundled with texture map.
+        obj (bpy_types.Object): Object, optionally bundled with texture map.
         texture (str or tuple): If string, must be ``'bundled'`` or path to the texture image.
             If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
         roughness (float, optional): Roughness in Oren-Nayar model. 0 gives Lambertian.
 
     Raises:
-        NotImplementedError: If rendering engine is not Cycles.
         TypeError: If ``texture`` is of wrong type.
     """
     logger_name = thisfile + '->setup_diffuse_nodetree()'
 
     scene = bpy.context.scene
-    engine = scene.render.engine
-    if engine != 'CYCLES':
-        raise NotImplementedError(engine)
+    _assert_cycles(scene)
 
-    node_tree, nodes = _clear_nodetree_for_active_material(obj)
+    node_tree = _clear_nodetree_for_active_material(obj)
+    nodes = node_tree.nodes
 
+    # Set color for diffuse node
+    diffuse_node = nodes.new('ShaderNodeBsdfDiffuse')
     if isinstance(texture, str):
-        nodes.new('ShaderNodeTexImage')
-        if texture == 'bundled':
-            texture = obj.active_material.active_texture
-            assert texture is not None, "No bundled texture found"
-            img = texture.image
-        else:
-            # Path given -- external texture map
-            bpy.data.images.load(texture, check_existing=True)
-            img = bpy.data.images[basename(texture)]
-            nodes.new('ShaderNodeTexCoord') # careless
-            node_tree.links.new(nodes['Texture Coordinate'].outputs['Generated'],
-                                nodes['Image Texture'].inputs['Vector'])
-        nodes['Image Texture'].image = img
-        nodes.new('ShaderNodeBsdfDiffuse')
-        nodes.new('ShaderNodeOutputMaterial')
-        node_tree.links.new(nodes['Image Texture'].outputs['Color'],
-                            nodes['Diffuse BSDF'].inputs['Color'])
-        node_tree.links.new(nodes['Diffuse BSDF'].outputs['BSDF'],
-                            nodes['Material Output'].inputs['Surface'])
-
+        texture_node = _make_texture_node(obj, texture)
+        node_tree.links.new(texture_node.outputs['Color'], diffuse_node.inputs['Color'])
     elif isinstance(texture, tuple):
-        color = texture
-        nodes.new('ShaderNodeBsdfDiffuse')
-        nodes['Diffuse BSDF'].inputs[0].default_value = color
-        nodes.new('ShaderNodeOutputMaterial')
-        node_tree.links.new(nodes['Diffuse BSDF'].outputs[0], nodes['Material Output'].inputs[0])
-
+        diffuse_node.inputs['Color'].default_value = texture
     else:
         raise TypeError(texture)
 
+    output_node = nodes.new('ShaderNodeOutputMaterial')
+    node_tree.links.new(diffuse_node.outputs['BSDF'], output_node.inputs['Surface'])
+
     # Roughness
-    node_tree.nodes['Diffuse BSDF'].inputs[1].default_value = roughness
+    diffuse_node.inputs['Roughness'].default_value = roughness
 
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
@@ -456,18 +468,14 @@ def setup_glossy_nodetree(obj, color=(1, 1, 1, 1), roughness=0):
         obj (bpy_types.Object): Object bundled with texture map.
         color (tuple, optional): RGBA values :math:`\in [0, 1]`.
         roughness (float, optional): Roughness. 0 means perfectly reflective.
-
-    Raises:
-        NotImplementedError: If rendering engine is not Cycles.
     """
     logger_name = thisfile + '->setup_glossy_nodetree()'
 
     scene = bpy.context.scene
-    engine = scene.render.engine
-    if engine != 'CYCLES':
-        raise NotImplementedError(engine)
+    _assert_cycles(scene)
 
-    node_tree, nodes = _clear_nodetree_for_active_material(obj)
+    node_tree = _clear_nodetree_for_active_material(obj)
+    nodes = node_tree.nodes
 
     nodes.new('ShaderNodeBsdfGlossy')
     nodes['Glossy BSDF'].inputs[0].default_value = color
@@ -491,18 +499,14 @@ def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
         obj (bpy_types.Object): Object bundled with texture map.
         color (tuple, optional): Emission RGBA :math:`\in [0, 1]`.
         strength (float, optional): Emission strength.
-
-    Raises:
-        NotImplementedError: If the rendering engine is not Cycles.
     """
     logger_name = thisfile + '->setup_emission_nodetree()'
 
     scene = bpy.context.scene
-    engine = scene.render.engine
-    if engine != 'CYCLES':
-        raise NotImplementedError(engine)
+    _assert_cycles(scene)
 
-    node_tree, nodes = _clear_nodetree_for_active_material(obj)
+    node_tree = _clear_nodetree_for_active_material(obj)
+    nodes = node_tree.nodes
 
     nodes.new('ShaderNodeEmission')
     nodes['Emission'].inputs[0].default_value = color
@@ -522,18 +526,14 @@ def setup_holdout_nodetree(obj):
 
     Args:
         obj (bpy_types.Object): Object bundled with texture map.
-
-    Raises:
-        NotImplementedError: If the rendering engine is not Cycles.
     """
     logger_name = thisfile + '->setup_holdout_nodetree()'
 
     scene = bpy.context.scene
-    engine = scene.render.engine
-    if engine != 'CYCLES':
-        raise NotImplementedError(engine)
+    _assert_cycles(scene)
 
-    node_tree, nodes = _clear_nodetree_for_active_material(obj)
+    node_tree = _clear_nodetree_for_active_material(obj)
+    nodes = node_tree.nodes
 
     nodes.new('ShaderNodeHoldout')
     nodes.new('ShaderNodeOutputMaterial')
@@ -544,6 +544,65 @@ def setup_holdout_nodetree(obj):
 
     logger.name = logger_name
     logger.info("Holdout node tree set up for '%s'", obj.name)
+
+
+def setup_retroreflective_nodetree(obj, texture, roughness=0, glossy_weight=0.1):
+    r"""Sets up a retroreflective texture node tree.
+
+    Bundled texture can be an external texture map (carelessly mapped) or a pure color.
+    Mathematically, the BRDF model is a mixture of a diffuse BRDF and a glossy BRDF using
+    incoming light directions as normals.
+
+    Args:
+        obj (bpy_types.Object): Object, optionally bundled with texture map.
+        texture (str or tuple): If string, must be ``'bundled'`` or path to the texture image.
+            If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
+        roughness (float, optional): Roughness for both the glossy and diffuse shaders.
+        glossy_weight (float, optional): Mixture weight for the glossy shader.
+
+    Raises:
+        TypeError: If ``texture`` is of wrong type.
+    """
+    logger_name = thisfile + '->setup_retroreflective_nodetree()'
+
+    scene = bpy.context.scene
+    _assert_cycles(scene)
+
+    node_tree = _clear_nodetree_for_active_material(obj)
+    nodes = node_tree.nodes
+
+    # Set color for diffuse and glossy nodes
+    diffuse_node = nodes.new('ShaderNodeBsdfDiffuse')
+    glossy_node = nodes.new('ShaderNodeBsdfGlossy')
+    if isinstance(texture, str):
+        texture_node = _make_texture_node(obj, texture)
+        node_tree.links.new(texture_node.outputs['Color'], diffuse_node.inputs['Color'])
+        node_tree.links.new(texture_node.outputs['Color'], glossy_node.inputs['Color'])
+    elif isinstance(texture, tuple):
+        diffuse_node.inputs['Color'].default_value = texture
+        glossy_node.inputs['Color'].default_value = texture
+    else:
+        raise TypeError(texture)
+
+    geometry_node = nodes.new('ShaderNodeNewGeometry')
+    mix_node = nodes.new('ShaderNodeMixShader')
+    output_node = nodes.new('ShaderNodeOutputMaterial')
+    node_tree.links.new(geometry_node.outputs['Incoming'], glossy_node.inputs['Normal'])
+    node_tree.links.new(diffuse_node.outputs['BSDF'], mix_node.inputs[1])
+    node_tree.links.new(glossy_node.outputs['BSDF'], mix_node.inputs[2])
+    node_tree.links.new(mix_node.outputs['Shader'], output_node.inputs['Surface'])
+
+    # Roughness
+    diffuse_node.inputs['Roughness'].default_value = roughness
+    glossy_node.inputs['Roughness'].default_value = roughness
+
+    mix_node.inputs['Fac'].default_value = glossy_weight
+
+    # Scene update necessary, as matrix_world is updated lazily
+    scene.update()
+
+    logger.name = logger_name
+    logger.info("Retroreflective node tree set up for '%s'", obj.name)
 
 
 def get_bmesh(obj):
