@@ -11,11 +11,11 @@ import xiuminglib as xm
 logger, thisfile = xm.config.create_logger(abspath(__file__))
 
 
-def save_blend(outpath, delete_overwritten=False):
+def save_blend(outpath=None, delete_overwritten=False):
     """Saves current scene to a .blend file.
 
     Args:
-        outpath (str): Path to save scene to, e.g., ``'~/foo.blend'``.
+        outpath (str, optional): Path to save the scene to, e.g., ``'~/foo.blend'``. ``None`` means saving to the current file.
         delete_overwritten (bool, optional): Whether to delete or keep as .blend1 the same-name file.
 
     Writes:
@@ -23,10 +23,12 @@ def save_blend(outpath, delete_overwritten=False):
     """
     logger_name = thisfile + '->save_blend()'
 
-    outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
-    if exists(outpath) and delete_overwritten:
-        remove(outpath)
+    if outpath is None:
+        outpath = ''
+    else:
+        xm.general.makedirs(dirname(outpath))
+        if exists(outpath) and delete_overwritten:
+            remove(outpath)
 
     try:
         # bpy.ops.file.autopack_toggle()
@@ -38,7 +40,11 @@ def save_blend(outpath, delete_overwritten=False):
     bpy.ops.wm.save_as_mainfile(filepath=outpath)
 
     logger.name = logger_name
-    logger.info("Saved to %s", outpath)
+    if outpath == '':
+        msg = "Saved to the original .blend file"
+    else:
+        msg = "Saved to %s" % outpath
+    logger.info(msg)
 
 
 def open_blend(inpath):
