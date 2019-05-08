@@ -23,9 +23,8 @@ def save_blend(outpath=None, delete_overwritten=False):
     """
     logger_name = thisfile + '->save_blend()'
 
-    if outpath is None:
-        outpath = ''
-    else:
+    if outpath is not None:
+        # "Save as" scenario: delete and then save
         xm.general.makedirs(dirname(outpath))
         if exists(outpath) and delete_overwritten:
             remove(outpath)
@@ -37,14 +36,18 @@ def save_blend(outpath=None, delete_overwritten=False):
         logger.name = logger_name
         logger.error("Failed to pack some files")
 
-    bpy.ops.wm.save_as_mainfile(filepath=outpath)
+    if outpath is None:
+        # "Save" scenario: save and then delete
+        bpy.ops.wm.save_as_mainfile()
+        outpath = bpy.context.blend_data.filepath
+        bakpath = outpath + '1'
+        if exists(bakpath) and delete_overwritten:
+            remove(bakpath)
+    else:
+        bpy.ops.wm.save_as_mainfile(filepath=outpath)
 
     logger.name = logger_name
-    if outpath == '':
-        msg = "Saved to the original .blend file"
-    else:
-        msg = "Saved to %s" % outpath
-    logger.info(msg)
+    logger.info("Saved to %s", outpath)
 
 
 def open_blend(inpath):
