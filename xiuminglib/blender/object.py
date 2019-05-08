@@ -330,7 +330,7 @@ def color_vertices(obj, vert_ind, colors):
         c = tuple(c)
         if len(c) == 3:
             colors[i] = c + (1,)
-        elif len(c) == 4: # FIXME: some Blender version needs 4-tuples?
+        elif len(c) == 4: # In case some Blender version needs 4-tuples
             colors[i] = c
         else:
             raise ValueError("Wrong color length: %d" % len(c))
@@ -361,8 +361,9 @@ def color_vertices(obj, vert_ind, colors):
             if color_idx is not None:
                 try:
                     vcol_layer.data[loop_idx].color = colors[color_idx]
-                except:
-                    from IPython import embed; embed()
+                except ValueError:
+                    # This Blender version requires 3-tuples
+                    vcol_layer.data[loop_idx].color = colors[color_idx][:3]
 
     # Set up nodes for vertex colors
     node_tree = _clear_nodetree_for_active_material(obj)
