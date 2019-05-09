@@ -127,7 +127,8 @@ def dct_1d_bases(n):
     Bases are rows of :math:`Y`, which is orthogonal: :math:`Y^TY=YY^T=I`.
     The forward process (analysis) is :math:`X=Yx`, and the inverse (synthesis)
     is :math:`x=Y^{-1}X=Y^TX`. See :func:`main` for example usages and how this
-    produces the same results as :func:`scipy.fftpack.dct` (with ``norm='ortho'``).
+    produces the same results as :func:`scipy.fftpack.dct` (with ``type=2`` and
+    ``norm='ortho'``).
 
     Args:
         n (int): Signal length.
@@ -148,7 +149,8 @@ def dct_2d_bases(h, w):
     r"""Generates bases for 2D discrete cosine transform (DCT).
 
     Bases are given in two matrices :math:`Y_h` and :math:`Y_w`. See :func:`dct_1d_bases` for
-    their properties. Note that :math:`Y_w` has already been transposed.
+    their properties. Note that :math:`Y_w` has already been transposed (hence, :math:`Y_hxY_w`
+    instead of :math:`Y_hxY_w^T` below).
 
     Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
     Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is
@@ -183,13 +185,19 @@ def dct_2d_bases_vec(h, w):
     Specifically, the analysis process is :math:`X=Y\operatorname{vec}(x)`, and the synthesis
     process is :math:`x=\operatorname{unvec}(Y^TX)`. See :func:`main` for examples.
 
+    Warning:
+        If you want to reconstruct the signal with only some (i.e., not all) bases, do not slice
+        those rows out from :math:`Y` and use only their coefficients. Instead, you should use the
+        full :math:`Y` matrix and set to zero the coefficients for the unused frequency components.
+        See :func:`main` for examples.
+
     Args:
         h (int): Image height.
         w
 
     Returns:
         numpy.ndarray: Matrix with flattened bases as rows. The :math:`k`-th row,
-        when :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
+        when :func:`numpy.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
         component, where :math:`k=wi+j`. Of shape ``(h * w, h * w)``.
     """
     dct_mat_h, dct_mat_w = dct_2d_bases(h, w)
@@ -250,12 +258,12 @@ def dft_2d_bases(h, w):
     same results as :func:`numpy.fft.fft2` (with ``norm='ortho'``).
 
     See Also:
-        ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]`` contains the
-        negative-frequency terms, in order of decreasingly negative frequency. For an even number
-        of input points, ``A[n/2]`` represents both positive and negative Nyquist frequency, and
-        is also purely real for real input. For an odd number of input points, ``A[(n-1)/2]``
+        From :mod:`numpy.fft` -- ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]``
+        contains the negative-frequency terms, in order of decreasingly negative frequency. For an
+        even number of input points, ``A[n/2]`` represents both positive and negative Nyquist frequency,
+        and is also purely real for real input. For an odd number of input points, ``A[(n-1)/2]``
         contains the largest positive frequency, while ``A[(n+1)/2]`` contains the largest negative
-        frequency. Source: :mod:`numpy.fft`.
+        frequency.
 
     Args:
         h (int): Image height.
@@ -292,7 +300,7 @@ def dft_2d_bases_vec(h, w):
 
     Returns:
         numpy.ndarray: Complex matrix with flattened bases as rows. The :math:`k`-th row,
-        when :func:`numpy.ndarray.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
+        when :func:`numpy.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
         component, where :math:`k=wi+j`. Of shape ``(h * w, h * w)``.
     """
     dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
@@ -476,7 +484,8 @@ def main(test_id):
 
     elif test_id == 'dct_cameraman':
         from os.path import join
-        from scipy.fftpack import dct
+        from copy import deepcopy
+        from scipy.fftpack import dct, idct
         import cv2
         import xiuminglib as xm
         outdir = join(xm.constants['dir_tmp'], test_id)
@@ -489,28 +498,38 @@ def main(test_id):
         coeffs_2step = dct_mat_h.dot(im).dot(dct_mat_w)
         recon_2step = dct_mat_h.T.dot(coeffs_2step).dot(dct_mat_w.T)
         cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step)
-        print("(Ours 2-Step Recon. vs. Orig.) Max. difference: %e" %
+        print("(Ours 2-Step Full Recon. vs. Orig.) Max. difference: %e" %
               np.abs(im - recon_2step).max())
         # Transform by my DCT (1-step)
         dct_mat = dct_2d_bases_vec(*im.shape)
-        for i in range(dct_mat.shape[0]):
-            xm.visualization.matrix_as_image(
-                dct_mat[i, :].reshape(im.shape), outpath=join(outdir, 'basis%06d.png' % i))
         coeffs_1step = dct_mat.dot(im.ravel())
         recon_1step = dct_mat.T.dot(coeffs_1step)
         cv2.imwrite(join(outdir, 'recon_1step.png'), recon_1step.reshape(im.shape))
-        print("(Ours 1-Step Recon. vs. Orig.) Max. difference: %e" %
+        print("(Ours 1-Step Full Recon. vs. Orig.) Max. difference: %e" %
               np.abs(im - recon_1step.reshape(im.shape)).max())
+        # for i in range(dct_mat.shape[0]):
+        #     xm.visualization.matrix_as_image(
+        #         dct_mat[i, :].reshape(im.shape), outpath=join(outdir, 'basis%06d.png' % i))
+        coeffs_1step_quarter = deepcopy(coeffs_1step).reshape(coeffs_2step.shape)
+        coeffs_1step_quarter[(coeffs_1step_quarter.shape[0] // 2):,
+                             (coeffs_1step_quarter.shape[1] // 2):] = 0
+        coeffs_1step_quarter = coeffs_1step_quarter.ravel()
+        recon_1step_quarter = dct_mat.T.dot(coeffs_1step_quarter)
+        cv2.imwrite(join(outdir, 'recon_1step_quarter.png'), recon_1step_quarter.reshape(im.shape))
         # Transform by SciPy
-        coeffs_sp = dct(dct(im.T, norm='ortho').T, norm='ortho')
+        coeffs_sp = dct(dct(im.T, type=2, norm='ortho').T, type=2, norm='ortho')
         xm.visualization.matrix_as_heatmap(
             coeffs_2step - coeffs_sp, outpath=join(outdir, '2step-sp.png'))
         xm.visualization.matrix_as_heatmap(
-            coeffs_1step.reshape(im.shape) - coeffs_sp, outpath=join(outdir, '1step-sp.png'))
-        print("(Ours 2-Step Coeff. vs. SciPy) Max. difference: %e" %
-              np.abs(coeffs_2step - coeffs_sp).max())
-        print("(Ours 1-Step Coeff. vs. SciPy) Max. difference: %e" %
-              np.abs(coeffs_1step.reshape(im.shape) - coeffs_sp).max())
+            coeffs_1step.reshape(coeffs_sp.shape) - coeffs_sp, outpath=join(outdir, '1step-sp.png'))
+        coeffs_sp_quarter = deepcopy(coeffs_sp)
+        coeffs_sp_quarter[(coeffs_sp.shape[0] // 2):, (coeffs_sp.shape[1] // 2):] = 0
+        recon_sp = idct(idct(coeffs_sp, type=2, norm='ortho').T, type=2, norm='ortho').T
+        recon_sp_quarter = idct(idct(coeffs_sp_quarter, type=2, norm='ortho').T, type=2, norm='ortho').T
+        cv2.imwrite(join(outdir, 'recon_scipy.png'), recon_sp)
+        cv2.imwrite(join(outdir, 'recon_scipy_quarter.png'), recon_sp_quarter)
+        print("(Ours 1-Step Quarter Recon. vs. SciPy) Max. difference: %e" %
+              np.abs(recon_sp_quarter.ravel() - recon_1step_quarter).max())
 
     elif test_id == 'dft_1d_bases':
         signal = np.random.randint(0, 255, 10)
