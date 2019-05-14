@@ -56,6 +56,7 @@ def remove_objects(name_pattern, regex=False):
 
 
 def import_object(model_path,
+                  axis_forward='-Z', axis_up='Y',
                   rot_mat=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
                   trans_vec=(0, 0, 0),
                   scale=1,
@@ -65,6 +66,8 @@ def import_object(model_path,
 
     Args:
         model_path (str): Path to object to add.
+        axis_forward (str, optional): Which direction is forward.
+        axis_up (str, optional): Which direction is upward.
         rot_mat (array_like, optional): 3-by-3 rotation matrix *preceding* translation.
         trans_vec (array_like, optional): 3D translation vector *following* rotation.
         scale (float, optional): Scale of the object.
@@ -81,7 +84,7 @@ def import_object(model_path,
 
     # Import
     if model_path.endswith('.obj'):
-        bpy.ops.import_scene.obj(filepath=model_path, axis_forward='-Z', axis_up='Y')
+        bpy.ops.import_scene.obj(filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
     else:
         raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
@@ -128,12 +131,14 @@ def import_object(model_path,
     return obj_list
 
 
-def export_object(obj_names, model_path):
+def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
     """Exports Blender object(s) to a .obj file.
 
     Args:
         obj_names (str or list(str)): Object name(s) to export.
         model_path (str): Output path ending with .obj.
+        axis_forward (str, optional): Which direction is forward.
+        axis_up (str, optional): Which direction is upward.
 
     Raises:
         NotImplementedError: If the output path doesn't end with .obj.
@@ -159,7 +164,8 @@ def export_object(obj_names, model_path):
             exported.append(o.name)
 
     bpy.ops.export_scene.obj(
-        filepath=model_path, use_selection=True, axis_forward='-Z', axis_up='Y')
+        filepath=model_path, use_selection=True,
+        axis_forward=axis_forward, axis_up=axis_up)
 
     logger.name = logger_name
     logger.info("%s Exported to %s", exported, model_path)
