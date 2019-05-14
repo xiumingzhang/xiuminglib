@@ -17,10 +17,10 @@ xiuminglib.blender.camera module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.blender.lighting module
-----------------------------------
+xiuminglib.blender.light module
+-------------------------------
 
-.. automodule:: xiuminglib.blender.lighting
+.. automodule:: xiuminglib.blender.light
     :members:
     :undoc-members:
     :show-inheritance:
