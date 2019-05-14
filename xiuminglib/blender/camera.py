@@ -252,6 +252,16 @@ def get_camera_matrix(cam, keep_disparity=False):
     You can ask for a 4-by-4 projection that projects :math:`(x, y, z, 1)` to
     :math:`(u, v, 1, d)`, where :math:`d` is the disparity, reciprocal of depth.
 
+    ``cam_mat.dot(pts)`` gives you projections in the following convention:
+
+    .. code-block:: none
+
+        +------------>
+        |       proj[:, 0]
+        |
+        |
+        v proj[:, 1]
+
     Args:
         cam (bpy_types.Object): Camera.
         keep_disparity (bool, optional): Whether matrices keep disparity or not.
@@ -280,8 +290,7 @@ def get_camera_matrix(cam, keep_disparity=False):
         raise ValueError(
             ("Render settings and camera intrinsic parameters mismatch. "
              "Such computed matrices will not make sense. Make them consistent first. "
-             "See error message from 'intrinsics_compatible_with_scene()' above for advice")
-        )
+             "See error message from 'intrinsics_compatible_with_scene()' above for advice"))
 
     # Intrinsics
 
