@@ -53,7 +53,7 @@ def pyplot_wrapper(*args,
         ci (list(float) or list(list(float)), optional): Confidence interval for ``x_i[j]`` is ``y_i[j] +/- ci[i][j]``.
             Effective only when ``func`` is ``'plot'``. List of floats for one line, and list of lists of floats
             for multiple lines.
-        func (str, optional): Which ``pyplot`` function to invoke: ``'plot'``, ``'hist'``, or ``'bar'``.
+        func (str, optional): Which ``pyplot`` function to invoke, e.g., ``'plot'`` or ``'bar'``.
         labels (list, optional): Labels for plot objects, to appear in the legend.
             ``None`` means no label for this object.
         legend_loc (str, optional): Legend location: ``'best'``, ``'upper right'``, ``'lower left'``, ``'right'``,
@@ -87,7 +87,7 @@ def pyplot_wrapper(*args,
         assert func == 'plot', "CI makes sense only for `plot`"
 
     if outpath is None:
-        outpath = join(xm.constants['dir_tmp'], 'plot.png')
+        outpath = join(xm.constants['dir_tmp'], 'pyplot_wrapper.png')
 
     plt.figure(figsize=figsize)
     ax = plt.gca()
@@ -104,6 +104,8 @@ def pyplot_wrapper(*args,
         func = plt.bar
     elif func == 'boxplot':
         func = plt.boxplot
+    elif func == 'scatter':
+        func = plt.scatter
     else:
         raise NotImplementedError(func)
 
@@ -618,7 +620,7 @@ def axes3d_wrapper(
         *args: Positional parameters that the wrapped function takes. See
             :class:`mpl_toolkits.mplot3d.Axes3D`.
         **kwargs: Keyword parameters.
-        func (str, optional): Which pyplot function to invoke: ``'scatter'``.
+        func (str, optional): Which pyplot function to invoke, e.g., ``'scatter'``.
         labels (list(str), optional): Labels for plot objects, to appear in the legend. Use ``None`` for
             no label for a certain object. ``None`` means no legend at all.
         legend_loc (str, optional): Legend location: ``'best'``, ``'upper right'``, ``'lower left'``,
@@ -651,7 +653,7 @@ def axes3d_wrapper(
     logger_name = thisfile + '->axes3d_wrapper()'
 
     if outpath is not None:
-        outpath = join(xm.constants['dir_tmp'], 'plot.png')
+        outpath = join(xm.constants['dir_tmp'], 'axes3d_wrapper.png')
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')
