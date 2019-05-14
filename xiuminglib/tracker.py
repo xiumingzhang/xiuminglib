@@ -109,7 +109,7 @@ class LucasKanadeTracker():
         for fi in range(0, len(self.frames) - 1):
             im = self.frames[fi + 1]
             pts = self.tracks[fi]
-            xm.visualization.scatter_on_image(im, pts, size=6, bgr=marker_bgr,
+            xm.vis.scatter_on_image(im, pts, size=6, bgr=marker_bgr,
                                 outpath=join(out_dir, '%04d.png' % (fi + 1)))
 
     @staticmethod

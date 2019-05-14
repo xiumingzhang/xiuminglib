@@ -171,28 +171,28 @@ class EXR():
         albedo = collapse_passes(['diffuse_color', 'glossy_color'])
         np.save(join(outdir, 'albedo.npy'), albedo)
         if vis:
-            xm.visualization.matrix_as_image(albedo, outpath=join(outdir, 'albedo.png'))
+            xm.vis.matrix_as_image(albedo, outpath=join(outdir, 'albedo.png'))
         # Shading
         shading = collapse_passes(['diffuse_indirect', 'diffuse_direct'])
         np.save(join(outdir, 'shading.npy'), shading)
         if vis:
-            xm.visualization.matrix_as_image(shading, join(outdir, 'shading.png'))
+            xm.vis.matrix_as_image(shading, join(outdir, 'shading.png'))
         # Specularity
         specularity = collapse_passes(['glossy_indirect', 'glossy_direct'])
         np.save(join(outdir, 'specularity.npy'), specularity)
         if vis:
-            xm.visualization.matrix_as_image(specularity, join(outdir, 'specularity.png'))
+            xm.vis.matrix_as_image(specularity, join(outdir, 'specularity.png'))
         # Reconstruction vs. ...
         recon = np.multiply(albedo, shading) + specularity
         recon[:, :, 3] = albedo[:, :, 3] # can't add up alpha channels
         np.save(join(outdir, 'recon.npy'), recon)
         if vis:
-            xm.visualization.matrix_as_image(recon, join(outdir, 'recon.png'))
+            xm.vis.matrix_as_image(recon, join(outdir, 'recon.png'))
         # ... composite from Blender, just for sanity check
         composite = collapse_passes(['composite'])
         np.save(join(outdir, 'composite.npy'), composite)
         if vis:
-            xm.visualization.matrix_as_image(composite, join(outdir, 'composite.png'))
+            xm.vis.matrix_as_image(composite, join(outdir, 'composite.png'))
         logger.name = logger_name
         logger.info("Intrinsic images extracted to %s", outdir)
 

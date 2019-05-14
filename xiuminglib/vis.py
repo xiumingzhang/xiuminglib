@@ -315,7 +315,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         im = np.dstack((im, im_a))
 
     if gamma is not None:
-        im = xm.image_processing.gamma_correct(im, gamma)
+        im = xm.imgproc.gamma_correct(im, gamma)
 
     outdir = dirname(outpath)
     xm.general.makedirs(outdir)
