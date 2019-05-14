@@ -1,7 +1,4 @@
 import numpy as np
-from scipy.sparse import issparse
-from scipy.sparse.linalg import eigsh
-from scipy.special import sph_harm
 
 
 def get(arr, top=True, n=1, n_std=None):
@@ -106,6 +103,52 @@ def angle_between(vec1, vec2, radian=True):
     return angle
 
 
+def to_homo(pts):
+    """Pads 2D or 3D points to homogeneous, by guessing which dimension to pad.
+
+    Args:
+        pts (numpy.ndarray): Input array of 2D or 3D points.
+
+    Raises:
+        ValueError: If ``pts`` is ambiguous to guess.
+
+    Returns:
+        numpy.ndarray: Homogeneous coordinates of the input points.
+    """
+    if pts.ndim == 1:
+        pts_homo = np.hstack((pts, 1))
+    elif pts.ndim == 2:
+        err_str = " (assumed to be # points) must be >3 to be not ambiguous"
+        h, w = pts.shape
+        if h > w: # tall
+            assert h > 3, "Input has height (%d) > width (%d); the height" % (h, w) + err_str
+            pts_homo = np.hstack((pts, np.ones((h, 1))))
+        elif h < w: # fat
+            assert w > 3, "If input has width (%d) > height (%d); the width" % (w, h) + err_str
+            pts_homo = np.vstack((pts, np.ones((1, w))))
+        else: # square
+            raise ValueError("Ambiguous square matrix that I can't guess how to pad")
+    else:
+        raise ValueError(pts.ndim)
+    return pts_homo
+
+
+def from_homo(pts, axis):
+    """Converts from homogeneous to non-homogeneous coordinates.
+
+    Args:
+        pts (numpy.ndarray): Input array of 2D or 3D points.
+        axis (int): The last slice of which dimension holds the w values.
+
+    Returns:
+        numpy.ndarray: Non-homogeneous coordinates of the input points.
+    """
+    arr = np.take(pts, range(pts.shape[axis] - 1), axis=axis)
+    w = np.take(pts, -1, axis=axis)
+    pts_nonhomo = np.divide(arr, w) # by broadcasting
+    return pts_nonhomo
+
+
 def main(func_name):
     """Unit tests that can also serve as example usage."""
     if func_name == 'is_symmetric':
@@ -116,6 +159,31 @@ def main(func_name):
         mat = np.random.random((10, 10))
         mat = mat + mat.T
         print(is_symmetric(mat))
+    elif func_name == 'to_homo':
+        arr = np.array([2, 3, 4])
+        print(arr)
+        print("to")
+        print(to_homo(arr))
+        print("~~~~~~")
+        # arr = np.array([[2, 3, 4]])
+        # print(arr)
+        # print("to")
+        # print(to_homo(arr))
+        # print("~~~~~~")
+        arr = np.array([[2, 3, 4, 5]])
+        print(arr)
+        print("to")
+        print(to_homo(arr))
+        print("~~~~~~")
+        # arr = np.array([[2, 3, 4], [2, 8, 3], [2, 9, 3]])
+        # print(arr)
+        # print("to")
+        # print(to_homo(arr))
+        # print("~~~~~~")
+        arr = np.array([[2, 3, 4], [2, 8, 3], [2, 9, 3], [2, 9, 3]])
+        print(arr)
+        print("to")
+        print(to_homo(arr))
     else:
         raise NotImplementedError("Unit tests for %s" % func_name)
 

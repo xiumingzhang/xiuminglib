@@ -33,10 +33,10 @@ xiuminglib.config module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.decorators module
-----------------------------
+xiuminglib.decor module
+-----------------------
 
-.. automodule:: xiuminglib.decorators
+.. automodule:: xiuminglib.decor
     :members:
     :undoc-members:
     :show-inheritance:
@@ -57,26 +57,26 @@ xiuminglib.geometry module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.image\_processing module
------------------------------------
+xiuminglib.imgproc module
+-------------------------
 
-.. automodule:: xiuminglib.image_processing
+.. automodule:: xiuminglib.imgproc
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.linear\_algebra module
----------------------------------
+xiuminglib.linalg module
+------------------------
 
-.. automodule:: xiuminglib.linear_algebra
+.. automodule:: xiuminglib.linalg
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.signal\_processing module
-------------------------------------
+xiuminglib.sigproc module
+-------------------------
 
-.. automodule:: xiuminglib.signal_processing
+.. automodule:: xiuminglib.sigproc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -89,10 +89,10 @@ xiuminglib.tracker module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.visualization module
--------------------------------
+xiuminglib.vis module
+---------------------
 
-.. automodule:: xiuminglib.visualization
+.. automodule:: xiuminglib.vis
     :members:
     :undoc-members:
     :show-inheritance:
