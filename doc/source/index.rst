@@ -31,13 +31,17 @@ Simply clone the repo and add it to your ``PYTHONPATH``.
     git clone https://github.com/xiumingzhang/xiuminglib.git
     export PYTHONPATH=<your_local_dirdir>/xiuminglib/:$PYTHONPATH
 
-Optional: OpenCV and Blender
-----------------------------
+Dependencies
+------------
 
 Depending on what functions you want to use, you may need to install:
 
-    OpenCV
-        If you use conda, it's as easy as ``conda install -c conda-forge opencv``.
+    OpenCV 3.3.0
+        If you use conda, it's as easy as ``conda install -c conda-forge opencv=3.3.0``.
+
+    Matplotlib 2.0.2
+        Some functions are known to be buggy with 3.0.0. If you use conda, do
+        ``conda install -c conda-forge matplotlib=2.0.2``.
 
     Blender
         Note this is different from installing Blender as an application, which has Python bundled.
@@ -46,6 +50,8 @@ Depending on what functions you want to use, you may need to install:
         `building it from source <https://blender.stackexchange.com/a/117213/30822>`_,
         but with hindsight, `a one-liner <https://anaconda.org/kitsune.one/python-blender>`_
         *may* work just as well.
+
+        If ``import bpy`` throws ``Segmentation fault``, try again with Python 3.6.3.
 
     Trimesh
         If you use conda, it's as simple as ``conda install -c conda-forge trimesh``.

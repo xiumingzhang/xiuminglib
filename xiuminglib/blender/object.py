@@ -1,5 +1,5 @@
 import re
-from os.path import abspath, basename
+from os.path import abspath, basename, dirname
 import numpy as np
 try:
     import bpy
@@ -9,8 +9,8 @@ except ModuleNotFoundError:
     # For building the doc
     pass
 
-from xiuminglib import config
-logger, thisfile = config.create_logger(abspath(__file__))
+import xiuminglib as xm
+logger, thisfile = xm.config.create_logger(abspath(__file__))
 
 
 def remove_objects(name_pattern, regex=False):
@@ -126,6 +126,43 @@ def import_object(model_path,
     if len(obj_list) == 1:
         return obj_list[0]
     return obj_list
+
+
+def export_object(obj_names, model_path):
+    """Exports Blender object(s) to a .obj file.
+
+    Args:
+        obj_names (str or list(str)): Object name(s) to export.
+        model_path (str): Output path ending with .obj.
+
+    Raises:
+        NotImplementedError: If the output path doesn't end with .obj.
+
+    Writes:
+        - Exported .obj file, possibly accompanied by a .mtl file.
+    """
+    logger_name = thisfile + '->export_object()'
+
+    if not model_path.endswith('.obj'):
+        raise NotImplementedError(".%s" % model_path.split('.')[-1])
+
+    out_dir = dirname(model_path)
+    xm.general.makedirs(out_dir)
+
+    if isinstance(obj_names, str):
+        obj_names = [obj_names]
+
+    exported = []
+    for o in [x for x in bpy.data.objects if x.type == 'MESH']:
+        o.select = o.name in obj_names
+        if o.select:
+            exported.append(o.name)
+
+    bpy.ops.export_scene.obj(
+        filepath=model_path, use_selection=True, axis_forward='-Z', axis_up='Y')
+
+    logger.name = logger_name
+    logger.info("%s Exported to %s", exported, model_path)
 
 
 def add_cylinder_between(pt1, pt2, r, name=None):

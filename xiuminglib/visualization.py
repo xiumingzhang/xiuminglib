@@ -411,10 +411,11 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
         - A heatmap of the matrix.
     """
     logger_name = thisfile + '->matrix_as_heatmap()'
-    if matplotlib.__version__ != '2.0.2':
+    ok_version = '2.0.2'
+    if matplotlib.__version__ != ok_version:
         logger.name = logger_name
-        logger.warning("Developed and tested with Matplotlib %s. Known to be buggy with 3.0.0",
-                       matplotlib.__version__)
+        logger.warning(("Developed and tested with Matplotlib %s (you are using %s). "
+                        "Known to be buggy with 3.0.0"), ok_version, matplotlib.__version__)
 
     if outpath is None:
         outpath = join(xm.constants['dir_tmp'], 'matrix_as_heatmap.png')
