@@ -652,7 +652,7 @@ def axes3d_wrapper(
     """
     logger_name = thisfile + '->axes3d_wrapper()'
 
-    if outpath is not None:
+    if outpath is None:
         outpath = join(xm.constants['dir_tmp'], 'axes3d_wrapper.png')
 
     fig = plt.figure(figsize=figsize)
