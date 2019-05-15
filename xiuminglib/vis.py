@@ -637,7 +637,8 @@ def axes3d_wrapper(
         *_fontsize (int, optional): Font size.
         *_rotation (float, optional): Tick rotation in degrees.
         grid (bool, optional): Whether to draw grid.
-        views (tuple, optional): List of elevation-azimuth angle pairs (in degrees).
+        views (list(tuple), optional): List of elevation-azimuth angle pairs (in degrees).
+            A good set of views is ``[(30, 0), (30, 45), (30, 90), (30, 135)]``.
         equal_axes (bool, optional): Whether to have the same scale for all axes.
         outpath (str, optional): Path to which the visualization is saved to. Should end with
             ``'.png'`` or ``'.pkl'`` (for offline interactive viewing).
