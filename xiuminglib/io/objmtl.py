@@ -257,7 +257,7 @@ class Obj(object):
         Args:
             objpath (str): Path to the output .obj.
 
-        Writes:
+        Writes
             - Output .obj file.
         """
         logger_name = thisfile + '->Obj:write_file()'
@@ -409,7 +409,7 @@ class Mtl(object):
         Args:
             outdir (str): Output directory.
 
-        Writes:
+        Writes
             - Output .mtl file.
         """
         import cv2

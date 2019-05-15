@@ -75,30 +75,27 @@ def remove_islands(im, min_n_pixels, connectivity=4):
     return im_clean
 
 
-def query_float_locations(im, query_pts, method='bilinear'):
-    """Queries interpolated values of float lactions on image.
+def query_grid(im, query_x, query_y, method='bilinear'):
+    """Queries a rectangular grid via interpolation.
 
-    Uses
-
-        - bilinear interpolation: can break big matrices into patches and work locally, or
+    Supported methods include
+        - bilinear interpolation: allowing you to break big matrices into patches and work locally; and
         - bivariate spline interpolation: fitting a global spline, so memory-intensive
-          and shows global effects.
-
-    Pixel values are considered as values at pixel centers: if ``im[0, 1]`` is :math:`0.68`,
-    then :math:`f(0.5, 1.5)=0.68`.
+          and showing global effects.
 
     Args:
         im (numpy.ndarray): H-by-W or H-by-W-by-C rectangular grid of data.
             Each of C channels is interpolated independently.
-        query_pts (array_like): Query locations of shape N-by-2 or length 2.
+        query_x (array_like): x coordinates of the queried locations.
+        query_y (array_like): y coordinates. Convention:
 
             .. code-block:: none
 
-                +---------> dim1
+                +---------> query_x
                 |
                 |
                 |
-                v dim0
+                v query_y
 
         method (str, optional): Interpolation method: ``'spline'`` or ``'bilinear'``.
 
@@ -107,11 +104,12 @@ def query_float_locations(im, query_pts, method='bilinear'):
         NotImplementedError: If interpolation method is not implemented.
 
     Returns:
-        numpy.ndarray: Interpolated values at query locations.
+        numpy.ndarray: Interpolated values at query locations, of shape ``(len(query_y), len(query_x))``
+        for single-channel input or ``(len(query_y), len(query_x), im.shape[2])`` for multi-channel input.
     """
     from scipy.interpolate import RectBivariateSpline, interp2d
 
-    logger_name = thisfile + '->query_float_locations()'
+    logger_name = thisfile + '->query_grid()'
 
     # Figure out image size and number of channels
     if im.ndim == 3:
@@ -136,15 +134,16 @@ def query_float_locations(im, query_pts, method='bilinear'):
     # Querying one point, very likely in a loop -- no printing
     if is_one_point:
         logger.name = logger_name
+        from IPython import embed; embed()
         logger.setLevel(config.logging_warn)
 
-    x = np.arange(h) + 0.5 # pixel center
-    y = np.arange(w) + 0.5
+    x = np.arange(h)
+    y = np.arange(w)
     query_x = query_pts[:, 0]
     query_y = query_pts[:, 1]
 
-    if np.min(query_x) < 0 or np.max(query_x) > h or \
-            np.min(query_y) < 0 or np.max(query_y) > w:
+    if np.min(query_x) < 0 or np.max(query_x) > h - 1 or \
+            np.min(query_y) < 0 or np.max(query_y) > w - 1:
         logger.name = logger_name
         logger.warning("Sure you want to query points outside 'im'?")
 
@@ -167,7 +166,7 @@ def query_float_locations(im, query_pts, method='bilinear'):
             raise NotImplementedError("Other interplation methods")
 
         logger.name = logger_name
-        logger.info("    ... done")
+        logger.info("... done")
 
     else:
         # Multiple channels
@@ -176,7 +175,6 @@ def query_float_locations(im, query_pts, method='bilinear'):
 
         interp_val = np.zeros((len(query_x), c))
         for i in range(c):
-
             z = im[:, :, i]
 
             logger.name = logger_name
@@ -188,13 +186,14 @@ def query_float_locations(im, query_pts, method='bilinear'):
 
             elif method == 'bilinear':
                 f = interp2d(y, x, z, kind='linear')
+                from IPython import embed; embed()
                 interp_val[:, i] = f(query_y, query_x)
 
             else:
                 raise NotImplementedError("Other interplation methods")
 
             logger.name = logger_name
-            logger.info("    ... done")
+            logger.info("... done")
 
     if is_one_point:
         interp_val = interp_val.reshape(c)

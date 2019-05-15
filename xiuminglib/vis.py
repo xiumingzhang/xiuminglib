@@ -80,7 +80,7 @@ def pyplot_wrapper(*args,
         NotImplementedError: If ``func`` is not implemented.
         TypeError: If ``ci`` is of a wrong type.
 
-    Writes:
+    Writes
         - The plot.
     """
     if ci is not None:
@@ -207,7 +207,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means ``os.path.join(xm.constants['dir_tmp'], 'scatter_on_image.png')``.
 
-    Writes:
+    Writes
         - The scatter plot overlaid over the image.
     """
     import cv2
@@ -271,7 +271,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     Raises:
         ValueError: If ``arr`` is neither 2D or 3D.
 
-    Writes:
+    Writes
         - An image of the matrix.
     """
     import cv2
@@ -365,7 +365,7 @@ def matrix_as_heatmap_complex(*args, **kwargs):
     will be appended to ``outpath`` to produce the magnitude and phase heatmaps, respectively.
     Specifically, magnitude is computed by :func:`numpy.absolute`, and phase by :func:`numpy.angle`.
 
-    Writes:
+    Writes
         - A magnitude heatmap with ``'_mag'`` in its filename.
         - A phase heatmap with ``'_phase'`` in its filename.
     """
@@ -409,7 +409,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     Raises:
         ValueError: If ``mat`` has wrong dimensions.
 
-    Writes:
+    Writes
         - A heatmap of the matrix.
     """
     logger_name = thisfile + '->matrix_as_heatmap()'
@@ -506,7 +506,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
     Raises:
         TypeError: ``texmap`` is of a wrong type.
 
-    Writes:
+    Writes
         - An image of where the vertices map to on the texture map.
     """
     import cv2
@@ -647,7 +647,7 @@ def axes3d_wrapper(
         NotImplementedError: If ``func`` is not yet implemented.
         ValueError: If ``outpath`` has a wrong extension.
 
-    Writes:
+    Writes
         - One or multiple (if ``views`` is provided) views of the 3D plot.
     """
     logger_name = thisfile + '->axes3d_wrapper()'
@@ -762,7 +762,7 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
         res (int, optional): Resolution of the TDF.
         center (bool, optional): Whether to center these points around object space origin.
 
-    Writes:
+    Writes
         - A .obj file of the isosurface.
     """
     from skimage.measure import marching_cubes_lewiner

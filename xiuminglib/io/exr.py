@@ -66,7 +66,7 @@ class EXR():
             outpath (str): Path to the result .npy file.
             vis (bool, optional): Whether to visualize the raw values as an image.
 
-        Writes:
+        Writes
             - A .npy file containing an aliased depth map and its alpha map.
             - If ``vis``, a .png image of anti-aliased depth.
         """
@@ -108,7 +108,7 @@ class EXR():
             outpath (str): Path to the result .npy file.
             vis (bool, optional): Whether to visualize the normal vectors as an image.
 
-        Writes:
+        Writes
             - A .npy file containing an aliased normal map and its alpha map.
             - If ``vis``, a .png visualization of anti-aliased normals.
         """
@@ -140,7 +140,7 @@ class EXR():
             outdir (str): Directory to save the result .npy files to.
             vis (bool, optional): Whether to visualize the values as images.
 
-        Writes:
+        Writes
             - albedo.npy (and its visualization if ``vis``).
             - shading.npy (ditto).
             - specularity.npy (ditto).

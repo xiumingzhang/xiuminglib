@@ -143,7 +143,7 @@ def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
     Raises:
         NotImplementedError: If the output path doesn't end with .obj.
 
-    Writes:
+    Writes
         - Exported .obj file, possibly accompanied by a .mtl file.
     """
     logger_name = thisfile + '->export_object()'

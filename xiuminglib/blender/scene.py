@@ -18,7 +18,7 @@ def save_blend(outpath=None, delete_overwritten=False):
         outpath (str, optional): Path to save the scene to, e.g., ``'~/foo.blend'``. ``None`` means saving to the current file.
         delete_overwritten (bool, optional): Whether to delete or keep as .blend1 the same-name file.
 
-    Writes:
+    Writes
         - A .blend file.
     """
     logger_name = thisfile + '->save_blend()'

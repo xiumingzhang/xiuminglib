@@ -178,5 +178,3 @@ intersphinx_mapping = {
     'opencv': ('https://docs.opencv.org/2.4/', None),
     'blender': ('https://docs.blender.org/api/current/', None),
 } # FIXME: some don't work
-
-napoleon_custom_sections = ['Writes']
