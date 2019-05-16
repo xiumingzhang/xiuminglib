@@ -208,16 +208,16 @@ def load_or_save(data_f, fallback=None):
         data = load_func(data_f)
         msg = "Loaded: "
     else:
-        msg = "Non-existent, "
+        msg = "File doesn't exist "
         if fallback is None:
             data = None
-            msg += "and fallback not provided: "
+            msg += "(fallback not provided): "
         else:
             data = fallback()
             out_dir = dirname(data_f)
             makedirs(out_dir)
             save_func(data_f, data)
-            msg += "but called fallback and saved its return: "
+            msg += "(fallback provided); fallback return now saved to: "
     msg += data_f
 
     logger.name = logger_name
