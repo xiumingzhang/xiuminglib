@@ -175,7 +175,7 @@ def pyplot_wrapper(*args,
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
+    xm.os.makedirs(outdir)
 
     # Save plot
     plt.savefig(outpath, bbox_inches='tight')
@@ -251,7 +251,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
+    xm.os.makedirs(outdir)
 
     # Write to disk
     cv2.imwrite(outpath, im)
@@ -320,7 +320,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         im = xm.imgproc.gamma_correct(im, gamma)
 
     outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
+    xm.os.makedirs(outdir)
 
     if im.shape[-1] == 4:
         # RGBA
@@ -466,7 +466,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
+    xm.os.makedirs(outdir)
 
     # Save plot
     if contents_only:
@@ -575,7 +575,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
+    xm.os.makedirs(outdir)
 
     # Save plot
     plt.savefig(outpath, bbox_inches='tight')
@@ -708,7 +708,7 @@ def axes3d_wrapper(
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
+    xm.os.makedirs(outdir)
 
     if equal_axes:
         # plt.axis('equal') # not working, hence the hack of creating a cubic bounding box

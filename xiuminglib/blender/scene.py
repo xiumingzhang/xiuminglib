@@ -25,7 +25,7 @@ def save_blend(outpath=None, delete_overwritten=False):
 
     if outpath is not None:
         # "Save as" scenario: delete and then save
-        xm.general.makedirs(dirname(outpath))
+        xm.os.makedirs(dirname(outpath))
         if exists(outpath) and delete_overwritten:
             remove(outpath)
 

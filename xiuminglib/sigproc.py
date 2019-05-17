@@ -489,7 +489,7 @@ def main(test_id):
         import cv2
         import xiuminglib as xm
         outdir = join(xm.constants['dir_tmp'], test_id)
-        xm.general.makedirs(outdir, rm_if_exists=True)
+        xm.os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(xm.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)
@@ -554,7 +554,7 @@ def main(test_id):
         import cv2
         import xiuminglib as xm
         outdir = join(xm.constants['dir_tmp'], test_id)
-        xm.general.makedirs(outdir, rm_if_exists=True)
+        xm.os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(xm.constants['path_cameraman'], cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)

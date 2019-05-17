@@ -17,6 +17,14 @@ xiuminglib.io.exr module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.io.general module
+----------------------------
+
+.. automodule:: xiuminglib.io.general
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.io.objmtl module
 ---------------------------
 

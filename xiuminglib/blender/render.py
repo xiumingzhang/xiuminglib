@@ -272,7 +272,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
     logger_name = thisfile + '->render()'
 
     outdir = dirname(outpath)
-    xm.general.makedirs(outdir)
+    xm.os.makedirs(outdir)
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 

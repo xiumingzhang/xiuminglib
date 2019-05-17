@@ -152,7 +152,7 @@ def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
         raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
     out_dir = dirname(model_path)
-    xm.general.makedirs(out_dir)
+    xm.os.makedirs(out_dir)
 
     if isinstance(obj_names, str):
         obj_names = [obj_names]

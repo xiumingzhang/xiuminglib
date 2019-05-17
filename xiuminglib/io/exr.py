@@ -148,7 +148,7 @@ class EXR():
             - composite.npy (ditto): composite by Blender.
         """
         logger_name = thisfile + '->extract_intrinsic_images_from_lighting_passes()'
-        xm.general.makedirs(outdir)
+        xm.os.makedirs(outdir)
         data = self.data
 
         def collapse_passes(components):

@@ -41,14 +41,6 @@ xiuminglib.decor module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.general module
--------------------------
-
-.. automodule:: xiuminglib.general
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 xiuminglib.geometry module
 --------------------------
 
@@ -65,10 +57,26 @@ xiuminglib.imgproc module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.interact module
+--------------------------
+
+.. automodule:: xiuminglib.interact
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.linalg module
 ------------------------
 
 .. automodule:: xiuminglib.linalg
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.os module
+--------------------
+
+.. automodule:: xiuminglib.os
     :members:
     :undoc-members:
     :show-inheritance:

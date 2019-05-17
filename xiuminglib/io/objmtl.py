@@ -269,7 +269,7 @@ class Obj(object):
         f, ft, fn = self.f, self.ft, self.fn
         # mkdir if necessary
         outdir = dirname(objpath)
-        xm.general.makedirs(outdir)
+        xm.os.makedirs(outdir)
         # Write .obj
         with open(objpath, 'w') as fid:
             # Material file
@@ -418,7 +418,7 @@ class Mtl(object):
         assert (self.mtlfile is not None and self.newmtl is not None), \
             "'mtlfile' and 'newmtl' must not be 'None'"
         # mkdir if necessary
-        xm.general.makedirs(outdir)
+        xm.os.makedirs(outdir)
         # Write .mtl
         mtlpath = join(outdir, self.mtlfile)
         with open(mtlpath, 'w') as fid:
