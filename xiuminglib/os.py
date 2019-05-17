@@ -80,6 +80,52 @@ def makedirs(directory, rm_if_exists=False):
         os.makedirs(directory, exist_ok=True)
 
 
+def make_exp_dir(directory, param_dict, rm_if_exists=False):
+    """Makes an experiment output folder by hashing the experiment parameters.
+
+    Args:
+        directory (str): The made folder will be under this.
+        param_dict (dict): Dictionary of the parameters identifying the experiment.
+            It is sorted by its keys, so different orders lead to the same hash.
+        rm_if_exists (bool, optional): Whether to remove the experiment folder
+            if it already exists.
+
+    Writes
+        - The experiment parameters in ``<directory>/<hash>/param.json``.
+
+    Returns:
+        str: The experiment output folder just made.
+    """
+    from collections import OrderedDict
+    from json import dump
+
+    logger_name = thisfile + '->make_exp_dir()'
+
+    hash_seed = os.environ.get('PYTHONHASHSEED', None)
+    if hash_seed != '0':
+        logger.name = logger_name
+        logger.warning(("PYTHONHASHSEED is not 0, so the same param_dict has different hashes "
+                        "across sessions. Consider disabling this randomization with "
+                        "`PYTHONHASHSEED=0 python your_script.py`"))
+
+    param_dict = OrderedDict(sorted(param_dict.items()))
+    param_hash = str(hash(str(param_dict)))
+    assert param_hash != '' # gotta be careful because of rm_if_exists
+
+    directory = join(directory, param_hash)
+    makedirs(directory, rm_if_exists=rm_if_exists)
+
+    # Write parameters into a .json
+    json_f = join(directory, 'param.json')
+    with open(json_f, 'w') as h:
+        dump(param_dict, h, indent=4, sort_keys=True)
+
+    logger.name = logger_name
+    logger.info("Parameters dumped to: %s", json_f)
+
+    return directory
+
+
 def fix_terminal():
     """Fixes messed up terminal."""
     from shlex import split
