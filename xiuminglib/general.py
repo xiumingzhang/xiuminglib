@@ -165,6 +165,26 @@ def makedirs(directory, rm_if_exists=False):
         os.makedirs(directory, exist_ok=True)
 
 
+def param2outdir(directory, rm_if_exists=False):
+    """Wraps :func:`os.makedirs` to support removing the directory if it already exists.
+
+    Args:
+        directory (str)
+        rm_if_exists (bool, optional): Whether to remove the directory (and its contents)
+            if it already exists.
+    """
+    logger_name = thisfile + '->makedirs()'
+
+    if exists(directory):
+        if rm_if_exists:
+            logger.name = logger_name
+            logger.info("Removed and then remade: %s", directory)
+            rmtree(directory)
+            os.makedirs(directory, exist_ok=True)
+    else:
+        os.makedirs(directory, exist_ok=True)
+
+
 def load_or_save(data_f, fallback=None):
     """Loads the data file if it exists. Otherwise, if fallback is provided,
     call fallback and save its return to disk.
