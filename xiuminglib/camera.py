@@ -28,7 +28,7 @@ class PerspCamera(object):
         - The active sensor size may be smaller than ``sensor_size``, depending on ``im_res``.
         - ``aov`` is a hardware property, having nothing to do with ``im_res``.
     """
-    def __init__(self, f=50., im_res=(256, 256), loc=(0, 0, 0), lookat=(0, 0, 0), up=(0, 1, 0)):
+    def __init__(self, f=50., im_res=(256, 256), loc=(1, 1, 1), lookat=(0, 0, 0), up=(0, 1, 0)):
         self.f_mm = f
         self.im_h, self.im_w = im_res
         self.loc = np.array(loc)
@@ -83,6 +83,7 @@ class PerspCamera(object):
         #        - right-handed: positive z is the look-at direction
         # cv axes expressed in obj space
         cvz_obj = self.lookat - self.loc
+        assert np.linalg.norm(cvz_obj) > 0, "Camera location and lookat coincide"
         cvx_obj = np.cross(cvz_obj, self.up)
         cvy_obj = np.cross(cvz_obj, cvx_obj)
         # Normalize
