@@ -188,7 +188,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
 
     Args:
         im (numpy.ndarray): Image to scatter on. H-by-W (grayscale) or H-by-W-by-3 (RGB) arrays
-            of type *numpy.uint8* or *numpy.uint16*.
+            of type ``numpy.uint8`` or ``numpy.uint16``.
         pts (array_like): Coordinates of the scatter point(s), of length 2 for just one point or
             shape N-by-2 for multiple points. Convention:
 

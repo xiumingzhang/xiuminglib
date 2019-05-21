@@ -149,6 +149,41 @@ def from_homo(pts, axis):
     return pts_nonhomo
 
 
+def normalize(vecs, axis=0):
+    """Normalizes one or multiple vectors.
+
+    Args:
+        vecs (array_like): 1D array for one vector; 2D array for multiple vectors.
+        axis (int, optional): Along which axis normalization is done. Use ``0`` when vectors
+            are columns of the 2D array, or ``1`` when vectors are rows.
+
+    Raises:
+        ValueError: If ``vecs`` is neither 1D nor 2D, or ``axis`` is illegal.
+
+    Returns:
+        numpy.ndarray: Normalized vector(s) of the same shape.
+    """
+    vecs = np.array(vecs)
+    n_dims = vecs.ndim
+    if axis < 0:
+        raise ValueError("Negative index not allowed for safety")
+    elif axis >= n_dims:
+        raise ValueError("Can't normalize along axis %d when you only have %d dimension(s)"
+                         % (axis, n_dims))
+    if n_dims == 1:
+        vecs_2d = vecs.reshape((-1, 1))
+    elif n_dims == 2:
+        vecs_2d = vecs
+    else:
+        raise ValueError("Input is neither 1D nor 2D, but %dD" % n_dims)
+    # Guaranteed to be 2D now
+    norms = np.linalg.norm(vecs_2d, axis=axis)
+    shape_for_broadcast = [-1, -1]
+    shape_for_broadcast[axis] = 1
+    vecs_normalized = np.divide(vecs_2d, norms.reshape(shape_for_broadcast)) # normalize
+    return vecs_normalized.reshape(vecs.shape)
+
+
 def main(func_name):
     """Unit tests that can also serve as example usage."""
     if func_name == 'is_symmetric':
