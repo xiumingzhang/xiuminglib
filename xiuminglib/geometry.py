@@ -363,6 +363,7 @@ def barycentric(pts, tvs):
     """
     pts = np.array(pts)
     tvs = np.array(tvs)
+    input_shape = pts.shape
     if pts.ndim == 1:
         pts = pts.reshape((1, -1))
 
@@ -380,7 +381,7 @@ def barycentric(pts, tvs):
     u = 1 - v - w
 
     uvw = np.hstack((u.reshape((-1, 1)), v.reshape((-1, 1)), w.reshape((-1, 1))))
-    return uvw
+    return uvw.reshape(input_shape)
 
 
 def main(func_name):
