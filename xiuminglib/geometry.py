@@ -277,6 +277,7 @@ def to_homo(pts):
     """
     if pts.ndim == 1:
         pts_homo = np.hstack((pts, 1))
+
     elif pts.ndim == 2:
         err_str = " (assumed to be # points) must be >3 to be not ambiguous"
         h, w = pts.shape
@@ -288,8 +289,10 @@ def to_homo(pts):
             pts_homo = np.vstack((pts, np.ones((1, w))))
         else: # square
             raise ValueError("Ambiguous square matrix that I can't guess how to pad")
+
     else:
         raise ValueError(pts.ndim)
+
     return pts_homo
 
 
@@ -324,12 +327,14 @@ def normalize(vecs, axis=0):
         numpy.ndarray: Normalized vector(s) of the same shape.
     """
     vecs = np.array(vecs)
+
     n_dims = vecs.ndim
     if axis < 0:
         raise ValueError("Negative index not allowed for safety")
     elif axis >= n_dims:
         raise ValueError("Can't normalize along axis %d when you only have %d dimension(s)"
                          % (axis, n_dims))
+
     if n_dims == 1:
         vecs_2d = vecs.reshape((-1, 1))
     elif n_dims == 2:
@@ -337,11 +342,45 @@ def normalize(vecs, axis=0):
     else:
         raise ValueError("Input is neither 1D nor 2D, but %dD" % n_dims)
     # Guaranteed to be 2D now
+
     norms = np.linalg.norm(vecs_2d, axis=axis)
     shape_for_broadcast = [-1, -1]
     shape_for_broadcast[axis] = 1
     vecs_normalized = np.divide(vecs_2d, norms.reshape(shape_for_broadcast)) # normalize
+
     return vecs_normalized.reshape(vecs.shape)
+
+
+def barycentric(pts, tvs):
+    """Computes barycentric coordinates of 3D point(s) w.r.t. a triangle.
+
+    Args:
+        pts (array_like): 3-array for one point; N-by-3 array for multiple points.
+        tvs (array_like): 3-by-3 array with rows being the triangle's vertices.
+
+    Returns:
+        numpy.ndarray: Barycentric coordinates of the same shape as the input.
+    """
+    pts = np.array(pts)
+    tvs = np.array(tvs)
+    if pts.ndim == 1:
+        pts = pts.reshape((1, -1))
+
+    vec0 = tvs[1] - tvs[0]
+    vec1 = tvs[2] - tvs[0]
+    vec2 = pts - tvs[0]
+    d00 = vec0.dot(vec0)
+    d01 = vec0.dot(vec1)
+    d11 = vec1.dot(vec1)
+    d20 = vec2.dot(vec0)
+    d21 = vec2.dot(vec1)
+    denom = d00 * d11 - d01 * d01
+    v = (d11 * d20 - d01 * d21) / denom
+    w = (d00 * d21 - d01 * d20) / denom
+    u = 1 - v - w
+
+    uvw = np.hstack((u.reshape((-1, 1)), v.reshape((-1, 1)), w.reshape((-1, 1))))
+    return uvw
 
 
 def main(func_name):
