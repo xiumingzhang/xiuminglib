@@ -85,105 +85,6 @@ def is_identity(mat, eps=None):
     return np.allclose(mat, np.eye(mat.shape[0]), atol=eps)
 
 
-def angle_between(vec1, vec2, radian=True):
-    r"""Computes the angle between two vectors.
-
-    Args:
-        vec1 (numpy.ndarray): Vector 1.
-        vec2
-        radian (bool, optional): Whether to use radians.
-
-    Returns:
-        float: The angle :math:`\in [0,\pi]`.
-    """
-    cos = np.dot(vec1, vec2) / np.linalg.norm(vec1) / np.linalg.norm(vec2)
-    angle = np.arccos(np.clip(cos, -1, 1))
-    if not radian:
-        angle = angle / np.pi * 180
-    return angle
-
-
-def to_homo(pts):
-    """Pads 2D or 3D points to homogeneous, by guessing which dimension to pad.
-
-    Args:
-        pts (numpy.ndarray): Input array of 2D or 3D points.
-
-    Raises:
-        ValueError: If ``pts`` is ambiguous to guess.
-
-    Returns:
-        numpy.ndarray: Homogeneous coordinates of the input points.
-    """
-    if pts.ndim == 1:
-        pts_homo = np.hstack((pts, 1))
-    elif pts.ndim == 2:
-        err_str = " (assumed to be # points) must be >3 to be not ambiguous"
-        h, w = pts.shape
-        if h > w: # tall
-            assert h > 3, "Input has height (%d) > width (%d); the height" % (h, w) + err_str
-            pts_homo = np.hstack((pts, np.ones((h, 1))))
-        elif h < w: # fat
-            assert w > 3, "If input has width (%d) > height (%d); the width" % (w, h) + err_str
-            pts_homo = np.vstack((pts, np.ones((1, w))))
-        else: # square
-            raise ValueError("Ambiguous square matrix that I can't guess how to pad")
-    else:
-        raise ValueError(pts.ndim)
-    return pts_homo
-
-
-def from_homo(pts, axis):
-    """Converts from homogeneous to non-homogeneous coordinates.
-
-    Args:
-        pts (numpy.ndarray): Input array of 2D or 3D points.
-        axis (int): The last slice of which dimension holds the w values.
-
-    Returns:
-        numpy.ndarray: Non-homogeneous coordinates of the input points.
-    """
-    arr = np.take(pts, range(pts.shape[axis] - 1), axis=axis)
-    w = np.take(pts, -1, axis=axis)
-    pts_nonhomo = np.divide(arr, w) # by broadcasting
-    return pts_nonhomo
-
-
-def normalize(vecs, axis=0):
-    """Normalizes one or multiple vectors.
-
-    Args:
-        vecs (array_like): 1D array for one vector; 2D array for multiple vectors.
-        axis (int, optional): Along which axis normalization is done. Use ``0`` when vectors
-            are columns of the 2D array, or ``1`` when vectors are rows.
-
-    Raises:
-        ValueError: If ``vecs`` is neither 1D nor 2D, or ``axis`` is illegal.
-
-    Returns:
-        numpy.ndarray: Normalized vector(s) of the same shape.
-    """
-    vecs = np.array(vecs)
-    n_dims = vecs.ndim
-    if axis < 0:
-        raise ValueError("Negative index not allowed for safety")
-    elif axis >= n_dims:
-        raise ValueError("Can't normalize along axis %d when you only have %d dimension(s)"
-                         % (axis, n_dims))
-    if n_dims == 1:
-        vecs_2d = vecs.reshape((-1, 1))
-    elif n_dims == 2:
-        vecs_2d = vecs
-    else:
-        raise ValueError("Input is neither 1D nor 2D, but %dD" % n_dims)
-    # Guaranteed to be 2D now
-    norms = np.linalg.norm(vecs_2d, axis=axis)
-    shape_for_broadcast = [-1, -1]
-    shape_for_broadcast[axis] = 1
-    vecs_normalized = np.divide(vecs_2d, norms.reshape(shape_for_broadcast)) # normalize
-    return vecs_normalized.reshape(vecs.shape)
-
-
 def main(func_name):
     """Unit tests that can also serve as example usage."""
     if func_name == 'is_symmetric':
@@ -194,31 +95,6 @@ def main(func_name):
         mat = np.random.random((10, 10))
         mat = mat + mat.T
         print(is_symmetric(mat))
-    elif func_name == 'to_homo':
-        arr = np.array([2, 3, 4])
-        print(arr)
-        print("to")
-        print(to_homo(arr))
-        print("~~~~~~")
-        # arr = np.array([[2, 3, 4]])
-        # print(arr)
-        # print("to")
-        # print(to_homo(arr))
-        # print("~~~~~~")
-        arr = np.array([[2, 3, 4, 5]])
-        print(arr)
-        print("to")
-        print(to_homo(arr))
-        print("~~~~~~")
-        # arr = np.array([[2, 3, 4], [2, 8, 3], [2, 9, 3]])
-        # print(arr)
-        # print("to")
-        # print(to_homo(arr))
-        # print("~~~~~~")
-        arr = np.array([[2, 3, 4], [2, 8, 3], [2, 9, 3], [2, 9, 3]])
-        print(arr)
-        print("to")
-        print(to_homo(arr))
     else:
         raise NotImplementedError("Unit tests for %s" % func_name)
 

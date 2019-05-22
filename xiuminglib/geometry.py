@@ -245,43 +245,153 @@ def ptcld2tdf(pts, res=128, center=False):
     return tdf
 
 
-def angle_between(v1, v2, in_radians=True):
-    """Computes the angle between two vectors.
+def angle_between(vec1, vec2, radian=True):
+    r"""Computes the angle between two vectors.
 
     Args:
-        v1 (array_like): Vector 1.
-        v2 (array_like): Vector 2.
-        in_radians (bool, optional): Whether results are reported in radians.
+        vec1 (numpy.ndarray): Vector 1.
+        vec2
+        radian (bool, optional): Whether to use radians.
 
     Returns:
-        float: Degree between the vectors, in radians or degrees.
+        float: The angle :math:`\in [0,\pi]`.
     """
-    # Validate inputs
-    v1 = np.array(v1)
-    v2 = np.array(v2)
-    assert (v1.shape == v2.shape), "Vectors must be of same length"
+    cos = np.dot(vec1, vec2) / np.linalg.norm(vec1) / np.linalg.norm(vec2)
+    angle = np.arccos(np.clip(cos, -1, 1))
+    if not radian:
+        angle = angle / np.pi * 180
+    return angle
 
-    v1 /= np.linalg.norm(v1)
-    v2 /= np.linalg.norm(v2)
 
-    deg = np.arccos(np.clip(np.dot(v1, v2), -1.0, 1.0))
-    if not in_radians:
-        deg *= 180 / np.pi
+def to_homo(pts):
+    """Pads 2D or 3D points to homogeneous, by guessing which dimension to pad.
 
-    return deg
+    Args:
+        pts (numpy.ndarray): Input array of 2D or 3D points.
+
+    Raises:
+        ValueError: If ``pts`` is ambiguous to guess.
+
+    Returns:
+        numpy.ndarray: Homogeneous coordinates of the input points.
+    """
+    if pts.ndim == 1:
+        pts_homo = np.hstack((pts, 1))
+    elif pts.ndim == 2:
+        err_str = " (assumed to be # points) must be >3 to be not ambiguous"
+        h, w = pts.shape
+        if h > w: # tall
+            assert h > 3, "Input has height (%d) > width (%d); the height" % (h, w) + err_str
+            pts_homo = np.hstack((pts, np.ones((h, 1))))
+        elif h < w: # fat
+            assert w > 3, "If input has width (%d) > height (%d); the width" % (w, h) + err_str
+            pts_homo = np.vstack((pts, np.ones((1, w))))
+        else: # square
+            raise ValueError("Ambiguous square matrix that I can't guess how to pad")
+    else:
+        raise ValueError(pts.ndim)
+    return pts_homo
+
+
+def from_homo(pts, axis):
+    """Converts from homogeneous to non-homogeneous coordinates.
+
+    Args:
+        pts (numpy.ndarray): Input array of 2D or 3D points.
+        axis (int): The last slice of which dimension holds the w values.
+
+    Returns:
+        numpy.ndarray: Non-homogeneous coordinates of the input points.
+    """
+    arr = np.take(pts, range(pts.shape[axis] - 1), axis=axis)
+    w = np.take(pts, -1, axis=axis)
+    pts_nonhomo = np.divide(arr, w) # by broadcasting
+    return pts_nonhomo
+
+
+def normalize(vecs, axis=0):
+    """Normalizes one or multiple vectors.
+
+    Args:
+        vecs (array_like): 1D array for one vector; 2D array for multiple vectors.
+        axis (int, optional): Along which axis normalization is done. Use ``0`` when vectors
+            are columns of the 2D array, or ``1`` when vectors are rows.
+
+    Raises:
+        ValueError: If ``vecs`` is neither 1D nor 2D, or ``axis`` is illegal.
+
+    Returns:
+        numpy.ndarray: Normalized vector(s) of the same shape.
+    """
+    vecs = np.array(vecs)
+    n_dims = vecs.ndim
+    if axis < 0:
+        raise ValueError("Negative index not allowed for safety")
+    elif axis >= n_dims:
+        raise ValueError("Can't normalize along axis %d when you only have %d dimension(s)"
+                         % (axis, n_dims))
+    if n_dims == 1:
+        vecs_2d = vecs.reshape((-1, 1))
+    elif n_dims == 2:
+        vecs_2d = vecs
+    else:
+        raise ValueError("Input is neither 1D nor 2D, but %dD" % n_dims)
+    # Guaranteed to be 2D now
+    norms = np.linalg.norm(vecs_2d, axis=axis)
+    shape_for_broadcast = [-1, -1]
+    shape_for_broadcast[axis] = 1
+    vecs_normalized = np.divide(vecs_2d, norms.reshape(shape_for_broadcast)) # normalize
+    return vecs_normalized.reshape(vecs.shape)
+
+
+def main(func_name):
+    """Unit tests that can also serve as example usage."""
+    if func_name in ('spherical2cartesian', 'cartesian2spherical'):
+        # cartesian2spherical() and spherical2cartesian()
+        pts_car = np.array([[-1, 2, 3],
+                            [4, -5, 6],
+                            [3, 5, -8],
+                            [-2, -5, 2],
+                            [4, -2, -23]])
+        print(pts_car)
+        pts_sph = cartesian2spherical(pts_car)
+        print(pts_sph)
+        pts_car_recover = spherical2cartesian(pts_sph)
+        print(pts_car_recover)
+    elif func_name == 'to_homo':
+        arr = np.array([2, 3, 4])
+        print(arr)
+        print("to")
+        print(to_homo(arr))
+        print("~~~~~~")
+        # arr = np.array([[2, 3, 4]])
+        # print(arr)
+        # print("to")
+        # print(to_homo(arr))
+        # print("~~~~~~")
+        arr = np.array([[2, 3, 4, 5]])
+        print(arr)
+        print("to")
+        print(to_homo(arr))
+        print("~~~~~~")
+        # arr = np.array([[2, 3, 4], [2, 8, 3], [2, 9, 3]])
+        # print(arr)
+        # print("to")
+        # print(to_homo(arr))
+        # print("~~~~~~")
+        arr = np.array([[2, 3, 4], [2, 8, 3], [2, 9, 3], [2, 9, 3]])
+        print(arr)
+        print("to")
+        print(to_homo(arr))
+    else:
+        raise NotImplementedError("Unit tests for %s" % func_name)
 
 
 if __name__ == '__main__':
-    # Unit tests
+    from argparse import ArgumentParser
 
-    # cartesian2spherical() and spherical2cartesian()
-    pts_car = np.array([[-1, 2, 3],
-                        [4, -5, 6],
-                        [3, 5, -8],
-                        [-2, -5, 2],
-                        [4, -2, -23]])
-    print(pts_car)
-    pts_sph = cartesian2spherical(pts_car)
-    print(pts_sph)
-    pts_car_recover = spherical2cartesian(pts_sph)
-    print(pts_car_recover)
+    parser = ArgumentParser()
+    parser.add_argument('func', type=str, help="function to test")
+    args = parser.parse_args()
+
+    main(args.func)
