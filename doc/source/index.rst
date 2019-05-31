@@ -56,7 +56,8 @@ Depending on what functions you want to use, you may also need to install:
         Note this is different from installing Blender as an application, which has Python bundled.
         Rather, this is installing Blender as a Python module: you've succeeded if you can
         ``import bpy`` in the Python you use. I did this "the hard way":
-        `building it from source <https://blender.stackexchange.com/a/117213/30822>`_,
+        `building it from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
+        with ``WITH_PYTHON_MODULE`` turned on in ``blender-git/blender/CMakeLists.txt``,
         but with hindsight, `a one-liner <https://anaconda.org/kitsune.one/python-blender>`_
         *may* work just as well.
 
