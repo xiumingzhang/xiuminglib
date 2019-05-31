@@ -23,25 +23,34 @@ questions, please open an issue there.
 Installation
 ============
 
-Simply clone the repo and add it to your ``PYTHONPATH``.
+Simply clone the repo and add it to your ``PYTHONPATH``:
 
 .. code-block:: bash
 
     cd <your_local_dir>
     git clone https://github.com/xiumingzhang/xiuminglib.git
-    export PYTHONPATH=<your_local_dirdir>/xiuminglib/:$PYTHONPATH
+    export PYTHONPATH="<your_local_dir>/xiuminglib/":"$PYTHONPATH"
 
 Dependencies
 ------------
 
-Depending on what functions you want to use, you may need to install:
+Besides super standard packages (like NumPy), you need:
+
+    SciPy
+        If you use conda, it's as easy as ``conda install scipy``.
 
     OpenCV 3.3.0
-        If you use conda, it's as easy as ``conda install -c conda-forge opencv=3.3.0``.
+        Do ``conda install -c conda-forge opencv=3.3.0``. If any ``lib*.so*`` is missing at runtime,
+        the easiest fix is to ``conda install`` the missing library to the same environment, maybe
+        followed by some symlinking (like linking ``libjasper.so`` to ``libjasper.so.1``) inside
+        ``<anaconda_dir>/envs/<env_name>/lib``. This is cleaner and easier than ``apt-get``, which
+        may break other things and usually requires ``sudo``.
 
     Matplotlib 2.0.2
         Some functions are known to be buggy with 3.0.0. If you use conda, do
         ``conda install -c conda-forge matplotlib=2.0.2``.
+
+Depending on what functions you want to use, you may also need to install:
 
     Blender
         Note this is different from installing Blender as an application, which has Python bundled.
@@ -54,9 +63,9 @@ Depending on what functions you want to use, you may need to install:
         If ``import bpy`` throws ``Segmentation fault``, try again with Python 3.6.3.
 
     Trimesh
-        If you use conda, it's as simple as ``conda install -c conda-forge trimesh``.
+        See `their installation guide <https://github.com/mikedh/trimesh/blob/master/docs/install.rst>`_.
 
-The library uses "on-demand" imports whenever possible, so that it won't fail on imports that you don't need. 
+The library uses "on-demand" imports whenever possible, so that it won't fail on imports that you don't need.
 
 
 Indices and tables
