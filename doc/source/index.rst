@@ -34,7 +34,7 @@ Simply clone the repo and add it to your ``PYTHONPATH``:
 Dependencies
 ------------
 
-Besides super standard packages (like NumPy), you need:
+The library is being developed under Python 3.6.3. Besides super standard packages (like NumPy), you need:
 
     SciPy
         If you use conda, it's as easy as ``conda install scipy``.
@@ -52,14 +52,23 @@ Besides super standard packages (like NumPy), you need:
 
 Depending on what functions you want to use, you may also need to install:
 
-    Blender
+    Blender 2.79
         Note this is different from installing Blender as an application, which has Python bundled.
         Rather, this is installing Blender as a Python module: you've succeeded if you can
-        ``import bpy`` in the Python you use. I did this "the hard way":
+        ``import bpy`` in your Python (i.e., not the Blender-bundled Python).
+        
+        I did this "the hard way":
         `building it from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
-        with ``WITH_PYTHON_MODULE`` turned on in ``blender-git/blender/CMakeLists.txt``,
-        but with hindsight, `a one-liner <https://anaconda.org/kitsune.one/python-blender>`_
-        *may* work just as well.
+        with ``WITH_PYTHON_MODULE`` turned on in ``blender-git/blender/CMakeLists.txt``. This gave me
+        control over library versions, etc., but if you are feeling lucky, you can try conda one-liners
+        (like `this one <https://anaconda.org/kitsune.one/python-blender>`_) for a pre-built one,
+        although I doubt it will just work magically.
+
+        Blender 2.80 made some API changes that are incompatible with this library, so please make sure
+        you check out
+        `the correct tag <https://git.blender.org/gitweb/gitweb.cgi/blender.git/tag/refs/tags/v2.79b>`_
+        with ``git checkout``, followed by ``git submodule update`` to ensure the submodules are of
+        the correct versions.
 
         If ``import bpy`` throws ``Segmentation fault``, try again with Python 3.6.3.
 
