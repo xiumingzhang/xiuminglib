@@ -31,10 +31,12 @@ Simply clone the repo and add it to your ``PYTHONPATH``:
     git clone https://github.com/xiumingzhang/xiuminglib.git
     export PYTHONPATH="<your_local_dir>/xiuminglib/":"$PYTHONPATH"
 
+The library is being developed and tested with Python 3.6.3.
+
 Dependencies
 ------------
 
-The library is being developed under Python 3.6.3. Besides super standard packages (like NumPy), you need:
+Besides super standard packages (like NumPy), you need:
 
     SciPy
         If you use conda, it's as easy as ``conda install scipy``.
@@ -54,13 +56,14 @@ Depending on what functions you want to use, you may also need to install:
 
     Blender 2.79
         Note this is different from installing Blender as an application, which has Python bundled.
-        Rather, this is installing Blender as a Python module: you've succeeded if you can
-        ``import bpy`` in your Python (i.e., not the Blender-bundled Python).
-        
+        Rather, this is installing Blender as a Python module: you've succeeded if you find ``bpy.so``
+        in the build's bin folder and can ``import bpy`` in your Python (not the Blender-bundled
+        Python) after you add it to your ``PYTHONPATH``.
+
         I did this "the hard way":
         `building it from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
-        with ``WITH_PYTHON_MODULE`` turned on in ``blender-git/blender/CMakeLists.txt``. This gave me
-        control over library versions, etc., but if you are feeling lucky, you can try conda one-liners
+        with ``-DWITH_PYTHON_MODULE=ON`` for CMake. This gave me control over library versions, etc.,
+        but if you are feeling lucky, you can try conda one-liners
         (like `this one <https://anaconda.org/kitsune.one/python-blender>`_) for a pre-built one,
         although I doubt it will just work magically.
 
