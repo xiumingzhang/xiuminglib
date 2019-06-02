@@ -58,7 +58,7 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=1, siz
     sun.data.shadow_soft_size = size # larger means softer shadows
 
     # Strength
-    engine = bpy.data.scenes['Scene'].render.engine
+    engine = bpy.context.scene.render.engine
     if engine == 'CYCLES':
         sun.data.node_tree.nodes['Emission'].inputs[1].default_value = energy
     else:
@@ -98,7 +98,7 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=100, 
     area.data.size = size # larger means softer shadows
 
     # Strength
-    engine = bpy.data.scenes['Scene'].render.engine
+    engine = bpy.context.scene.render.engine
     if engine == 'CYCLES':
         area.data.node_tree.nodes['Emission'].inputs[1].default_value = energy
     else:
@@ -132,7 +132,7 @@ def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
     point.data.shadow_soft_size = 0 # hard shadows
 
     # Strength
-    engine = bpy.data.scenes['Scene'].render.engine
+    engine = bpy.context.scene.render.engine
     if engine == 'CYCLES':
         point.data.node_tree.nodes['Emission'].inputs[1].default_value = energy
     else:
@@ -156,6 +156,9 @@ def add_light_env(env=(1, 1, 1, 1), strength=1):
         Handles using an image as the environment map.
     """
     logger_name = thisfile + '->add_light_env()'
+
+    engine = bpy.context.scene.render.engine
+    assert engine == 'CYCLES', "Rendering engine is not Cycles"
 
     if isinstance(env, str):
         raise NotImplementedError("Image as environment")

@@ -82,6 +82,10 @@ def import_object(model_path,
     """
     logger_name = thisfile + '->import_object()'
 
+    # Deselect all
+    for o in bpy.data.objects:
+        o.select = False
+
     # Import
     if model_path.endswith('.obj'):
         bpy.ops.import_scene.obj(filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
