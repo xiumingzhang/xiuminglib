@@ -75,7 +75,7 @@ def import_object(model_path,
         name (str, optional): Object name after import.
 
     Raises:
-        NotImplementedError: If the model is not an .obj file.
+        NotImplementedError: If the model is not a .obj or .ply file.
 
     Returns:
         bpy_types.Object or list(bpy_types.Object): Imported object(s).
@@ -85,6 +85,11 @@ def import_object(model_path,
     # Import
     if model_path.endswith('.obj'):
         bpy.ops.import_scene.obj(filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
+    elif model_path.endswith('.ply'):
+        bpy.ops.import_mesh.ply(filepath=model_path)
+
+        logger.name = logger_name
+        logger.warning("axis_forward and axis_up ignored for .ply")
     else:
         raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
