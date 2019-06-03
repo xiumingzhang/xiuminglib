@@ -1,4 +1,4 @@
-from os.path import abspath
+from os.path import abspath, basename
 import numpy as np
 try:
     import bpy
@@ -144,16 +144,15 @@ def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
     return point
 
 
-def add_light_env(env=(1, 1, 1, 1), strength=1):
+def add_light_env(env=(1, 1, 1, 1), strength=1, rot_vec_rad=(0, 0, 0), scale=(1, 1, 1)):
     r"""Adds environment lighting.
 
     Args:
         env (tuple(float) or str, optional): Environment map. If tuple, it's RGB or RGBA, each
             element of which :math:`\in [0,1]`. Otherwise, it's the path to an image.
         strength (float, optional): Light intensity.
-
-    Todo:
-        Handles using an image as the environment map.
+        rot_vec_rad (tuple(float), optional): Rotations in radians around x, y and z.
+        scale (tuple(float), optional): If all changed simultaneously, then no effects.
     """
     logger_name = thisfile + '->add_light_env()'
 
@@ -161,7 +160,8 @@ def add_light_env(env=(1, 1, 1, 1), strength=1):
     assert engine == 'CYCLES', "Rendering engine is not Cycles"
 
     if isinstance(env, str):
-        raise NotImplementedError("Image as environment")
+        bpy.data.images.load(env, check_existing=True)
+        env = bpy.data.images[basename(env)]
     else:
         if len(env) == 3:
             env += (1,)
@@ -171,11 +171,30 @@ def add_light_env(env=(1, 1, 1, 1), strength=1):
     world.use_nodes = True
     node_tree = world.node_tree
     nodes = node_tree.nodes
+    links = node_tree.links
 
-    node = nodes.new('ShaderNodeBackground')
-    node_tree.links.new(node.outputs['Background'], nodes['World Output'].inputs['Surface'])
-    node.inputs['Color'].default_value = env
-    node.inputs['Strength'].default_value = strength
+    bg_node = nodes.new('ShaderNodeBackground')
+    links.new(bg_node.outputs['Background'], nodes['World Output'].inputs['Surface'])
+
+    if isinstance(env, tuple):
+        # Color
+        bg_node.inputs['Color'].default_value = env
+
+        logger.name = logger_name
+        logger.warning("Environment is pure color, so rotation and scale have no effect")
+    else:
+        # Environment map
+        texcoord_node = nodes.new('ShaderNodeTexCoord')
+        env_node = nodes.new('ShaderNodeTexEnvironment')
+        env_node.image = env
+        mapping_node = nodes.new('ShaderNodeMapping')
+        mapping_node.rotation = rot_vec_rad
+        mapping_node.scale = scale
+        links.new(texcoord_node.outputs['Generated'], mapping_node.inputs['Vector'])
+        links.new(mapping_node.outputs['Vector'], env_node.inputs['Vector'])
+        links.new(env_node.outputs['Color'], bg_node.inputs['Color'])
+
+    bg_node.inputs['Strength'].default_value = strength
 
     logger.name = logger_name
-    logger.info("Environmental light added")
+    logger.info("Environment light added")
