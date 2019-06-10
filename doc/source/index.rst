@@ -66,12 +66,8 @@ Depending on what functions you want to use, you may also need to install:
         location so that a cluster of machines on the NFS can all use the build.
 
         If you only need Blender on a local machine, for which you can ``sudo``, then dependency
-        installations are almost automatic -- just run ``install_deps.sh``. When I did this, I had
-        to ``skip-osl``.
-
-        but if you are feeling lucky, you can try conda one-liners
-        (like `this one <https://anaconda.org/kitsune.one/python-blender>`_) for a pre-built one,
-        although I doubt it will just work magically.
+        installations are almost automatic -- just run ``install_deps.sh``, although when I did this,
+        I had to ``skip-osl`` to complete the run, for some reason I didn't take time to find out.
 
         Blender 2.80 made some API changes that are incompatible with this library, so please make sure
         you check out
