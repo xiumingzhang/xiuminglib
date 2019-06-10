@@ -60,9 +60,15 @@ Depending on what functions you want to use, you may also need to install:
         in the build's bin folder and can ``import bpy`` in your Python (not the Blender-bundled
         Python) after you add it to your ``PYTHONPATH``.
 
-        I did this "the hard way":
-        `building it from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
-        with ``-DWITH_PYTHON_MODULE=ON`` for CMake. This gave me control over library versions, etc.,
+        I did this "the hard way": first building all dependencies from source, and then
+        `building Blender from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
+        with ``-DWITH_PYTHON_MODULE=ON`` for CMake, primarily because I wanted to build to an NFS
+        location so that a cluster of machines on the NFS can all use the build.
+
+        If you only need Blender on a local machine, for which you can ``sudo``, then dependency
+        installations are almost automatic -- just run ``install_deps.sh``. When I did this, I had
+        to ``skip-osl``.
+
         but if you are feeling lucky, you can try conda one-liners
         (like `this one <https://anaconda.org/kitsune.one/python-blender>`_) for a pre-built one,
         although I doubt it will just work magically.
