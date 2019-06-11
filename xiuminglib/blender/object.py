@@ -6,7 +6,6 @@ try:
     import bmesh
     from mathutils import Matrix, Vector
 except ModuleNotFoundError:
-    # For building the doc
     pass
 
 from .. import config, os as xm_os

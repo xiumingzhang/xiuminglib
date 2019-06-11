@@ -8,7 +8,6 @@ try:
     from mathutils import Vector, Matrix, Quaternion
     from mathutils.bvhtree import BVHTree
 except ModuleNotFoundError:
-    # For building the doc
     pass
 
 from .. import config

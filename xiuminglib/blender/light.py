@@ -4,7 +4,6 @@ try:
     import bpy
     from mathutils import Vector
 except ModuleNotFoundError:
-    # For building the doc
     pass
 
 from .. import config

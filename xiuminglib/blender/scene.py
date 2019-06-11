@@ -3,7 +3,6 @@ from os.path import abspath, dirname, exists
 try:
     import bpy
 except ModuleNotFoundError:
-    # For building the doc
     pass
 
 from .. import config, os as xm_os
