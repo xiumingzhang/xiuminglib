@@ -1,7 +1,7 @@
 from os.path import abspath, exists, dirname
-import xiuminglib as xm
+from .. import config, os as xm_os
 
-logger, thisfile = xm.config.create_logger(abspath(__file__))
+logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def load_or_save(data_f, fallback=None):
@@ -54,7 +54,7 @@ def load_or_save(data_f, fallback=None):
         else:
             data = fallback()
             out_dir = dirname(data_f)
-            xm.os.makedirs(out_dir)
+            xm_os.makedirs(out_dir)
             save_func(data_f, data)
             msg += "(fallback provided); fallback return now saved to: "
     msg += data_f
