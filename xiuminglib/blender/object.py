@@ -9,8 +9,8 @@ except ModuleNotFoundError:
     # For building the doc
     pass
 
-import xiuminglib as xm
-logger, thisfile = xm.config.create_logger(abspath(__file__))
+from .. import config, os as xm_os
+logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def remove_objects(name_pattern, regex=False):
@@ -161,7 +161,7 @@ def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
         raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
     out_dir = dirname(model_path)
-    xm.os.makedirs(out_dir)
+    xm_os.makedirs(out_dir)
 
     if isinstance(obj_names, str):
         obj_names = [obj_names]

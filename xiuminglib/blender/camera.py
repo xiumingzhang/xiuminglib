@@ -11,7 +11,7 @@ except ModuleNotFoundError:
     # For building the doc
     pass
 
-from xiuminglib import config
+from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 from .object import get_bmesh

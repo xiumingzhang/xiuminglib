@@ -3,7 +3,7 @@ from os.path import abspath, join, exists, isdir
 from shutil import rmtree
 from glob import glob
 
-from xiuminglib import config
+from . import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 
