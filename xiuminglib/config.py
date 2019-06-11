@@ -47,6 +47,14 @@ def create_logger(file_abspath, level=logging.INFO, path_starts_from='xiuminglib
     return logger, thisfile
 
 
+def import_cv2():
+    try:
+        import cv2
+    except ModuleNotFoundError:
+        from google3.third_party.OpenCVX import cvx2 as cv2
+    return cv2
+
+
 # ---------------------------- Logging Colors
 
 

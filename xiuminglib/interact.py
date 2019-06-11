@@ -1,7 +1,7 @@
 import sys
 from os.path import abspath
 
-from xiuminglib import config
+from . import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 

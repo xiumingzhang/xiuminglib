@@ -1,9 +1,9 @@
 from os.path import abspath
 from copy import deepcopy
 import numpy as np
-import cv2
 
-from xiuminglib import config
+from . import config
+cv2 = config.import_cv2()
 logger, thisfile = config.create_logger(abspath(__file__))
 
 
