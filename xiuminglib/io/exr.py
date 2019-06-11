@@ -199,7 +199,7 @@ class EXR():
 
 def main():
     """Unit tests that can also serve as example usage."""
-    tmp_dir = constants['dir_tmp']
+    tmp_dir = constants.dir_tmp
     exr_f = join(tmp_dir, 'test.exr')
     exr = EXR(exr_f)
     exr.extract_normal(join(tmp_dir, 'test.png'), vis=True)
