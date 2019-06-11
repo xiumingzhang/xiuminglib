@@ -1,6 +1,8 @@
 from os.path import join
 import numpy as np
-import cv2
+
+from . import config
+cv2 = config.import_cv2()
 
 
 class LucasKanadeTracker():
