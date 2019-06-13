@@ -1,5 +1,4 @@
-from os import environ
-from os.path import dirname, join, abspath
+from os.path import dirname
 
 from .config import get_all
 __all__ = get_all(dirname(__file__))

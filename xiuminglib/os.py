@@ -60,24 +60,35 @@ def rmglob(path_pattern, exclude_dir=True):
             os.remove(x)
 
 
-def makedirs(directory, rm_if_exists=False):
+def makedirs(directory, rm_if_exists=False, google=False):
     """Wraps :func:`os.makedirs` to support removing the directory if it already exists.
 
     Args:
         directory (str)
         rm_if_exists (bool, optional): Whether to remove the directory (and its contents)
             if it already exists.
+        google (bool, optional): Whether on Google's infra.
     """
     logger_name = thisfile + '->makedirs()'
 
-    if exists(directory):
+    if google:
+        from google3.pyglib import gfile
+        exists_func = gfile.Exists
+        delete_func = gfile.DeleteRecursively
+        mkdir_func = gfile.MakeDirs
+    else:
+        exists_func = exists
+        delete_func = rmtree
+        mkdir_func = os.makedirs
+
+    if exists_func(directory):
         if rm_if_exists:
             logger.name = logger_name
             logger.info("Removed and then remade: %s", directory)
-            rmtree(directory)
-            os.makedirs(directory, exist_ok=True)
+            delete_func(directory)
+            mkdir_func(directory)
     else:
-        os.makedirs(directory, exist_ok=True)
+        mkdir_func(directory)
 
 
 def make_exp_dir(directory, param_dict, rm_if_exists=False):
