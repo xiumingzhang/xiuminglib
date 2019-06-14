@@ -1,13 +1,13 @@
 from os.path import abspath, dirname, join
 from shutil import move
 from time import time
+
 try:
     import bpy
 except ModuleNotFoundError:
     pass
 
 from .. import config, os as xm_os
-
 logger, thisfile = config.create_logger(abspath(__file__))
 
 
@@ -283,7 +283,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
 
     # Optionally overlay text
     if text is not None:
-        import cv2
+        cv2 = config.import_cv2()
         im = cv2.imread(outpath, cv2.IMREAD_UNCHANGED)
         cv2.putText(im, text['contents'], text['bottom_left_corner'],
                     cv2.FONT_HERSHEY_SIMPLEX, text['font_scale'],

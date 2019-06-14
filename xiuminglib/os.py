@@ -3,8 +3,8 @@ from os.path import abspath, join, exists, isdir
 from shutil import rmtree
 from glob import glob
 
-from . import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from .config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
 
 def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):

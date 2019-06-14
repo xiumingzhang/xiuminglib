@@ -1,8 +1,8 @@
 from os.path import abspath
 import numpy as np
 
-from . import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from .config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
 
 def cartesian2spherical(pts_cartesian, convention='lat-lng'):

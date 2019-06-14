@@ -3,8 +3,11 @@ from copy import deepcopy
 import numpy as np
 
 from . import config
-cv2 = config.import_cv2()
 logger, thisfile = config.create_logger(abspath(__file__))
+try:
+    cv2 = config.import_cv2()
+except ModuleNotFoundError:
+    pass
 
 
 def binarize(im, threshold=None):

@@ -411,7 +411,7 @@ class Mtl(object):
         Writes
             - Output .mtl file.
         """
-        import cv2
+        cv2 = config.import_cv2()
         logger_name = thisfile + '->Mtl:write_file()'
         # Validate inputs
         assert (self.mtlfile is not None and self.newmtl is not None), \

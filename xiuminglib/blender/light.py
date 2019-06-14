@@ -1,12 +1,13 @@
 from os.path import abspath, basename
 import numpy as np
+
 try:
     import bpy
     from mathutils import Vector
 except ModuleNotFoundError:
     pass
 
-from .. import config
+from ..config import create_logger
 logger, thisfile = config.create_logger(abspath(__file__))
 
 

@@ -9,7 +9,7 @@ logging_warn = logging.WARN
 # so that won't need to import a package just for its constants
 
 
-def to_import_at_init(lib_dir, incl_subpkg=False):
+def to_import_at_init(lib_dir, incl_subpkg=True):
     """Figures out what modules (and maybe also subpackages) to import in __init__()."""
     all_list = []
     for f in sorted(glob(join(lib_dir, '*'))):
@@ -52,6 +52,7 @@ def create_logger(file_abspath, level=logging.INFO, path_starts_from='xiuminglib
 
 
 def import_cv2():
+    """Handles Google's infra."""
     try:
         import cv2
     except ModuleNotFoundError:

@@ -1,6 +1,7 @@
 from os.path import abspath, exists, dirname
-from .. import config, os as xm_os
+import numpy as np
 
+from .. import config, os as xm_os
 logger, thisfile = config.create_logger(abspath(__file__))
 
 
@@ -27,8 +28,6 @@ def load_or_save(data_f, fallback=None):
     Writes
         - Return by the fallback, if provided.
     """
-    import numpy as np
-
     logger_name = thisfile + '->load_or_save()'
 
     # Decide data file type

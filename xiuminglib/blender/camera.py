@@ -2,6 +2,7 @@ from os import remove, rename
 from os.path import abspath, dirname, basename
 from time import time
 import numpy as np
+
 try:
     import bpy
     import bmesh
@@ -10,10 +11,10 @@ try:
 except ModuleNotFoundError:
     pass
 
+from .object import get_bmesh
+
 from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
-
-from .object import get_bmesh
 
 
 def add_camera(xyz=(0, 0, 0),
@@ -404,7 +405,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     Returns:
         numpy.ndarray: Camera :math:`z`-buffer.
     """
-    import cv2
+    cv2 = config.import_cv2()
 
     logger_name = thisfile + '->get_camera_zbuffer()'
 

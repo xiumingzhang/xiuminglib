@@ -2,8 +2,8 @@ from time import time, sleep
 from os import makedirs
 from os.path import abspath, join, dirname
 
-from . import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from .config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
 
 def timeit(somefunc):

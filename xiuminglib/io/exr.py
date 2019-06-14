@@ -1,10 +1,15 @@
 from os.path import abspath, dirname, join, basename
+from time import time
+from subprocess import Popen
 import numpy as np
 
 from .. import config, constants, vis as xm_vis, os as xm_os
 
-cv2 = config.import_cv2()
 logger, thisfile = config.create_logger(abspath(__file__))
+try:
+    cv2 = config.import_cv2()
+except ModuleNotFoundError:
+    pass
 
 
 class EXR():
@@ -36,8 +41,6 @@ class EXR():
         Returns:
             dict: Loaded EXR data.
         """
-        from time import time
-        from subprocess import Popen
         logger_name = thisfile + '->EXR:load()'
         assert self.exr_f is not None, "Set the exr_f first"
         npz_f = '/tmp/%s_t%s.npz' % \

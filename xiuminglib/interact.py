@@ -1,8 +1,8 @@
 import sys
 from os.path import abspath
 
-from . import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from .config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
 
 def print_attrs(obj, excerpts=None, excerpt_win_size=60, max_recursion_depth=None):

@@ -4,14 +4,6 @@ from os.path import dirname, abspath, join
 from pickle import dump
 import numpy as np
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
-import matplotlib.colors as mcolors
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
-
 from . import config, constants, geometry, imgproc, os as xm_os
 
 logger, thisfile = config.create_logger(abspath(__file__))
@@ -83,6 +75,10 @@ def pyplot_wrapper(*args,
     Writes
         - The plot.
     """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
     if ci is not None:
         assert func == 'plot', "CI makes sense only for `plot`"
 
@@ -340,6 +336,10 @@ def make_colormap(low, high):
     Returns:
         matplotlib.colors.LinearSegmentedColormap: Generated colormap.
     """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.colors as mcolors
+
     c = mcolors.ColorConverter().to_rgb
     if isinstance(low, str):
         low = c(low)
@@ -412,6 +412,11 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     Writes
         - A heatmap of the matrix.
     """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
     logger_name = thisfile + '->matrix_as_heatmap()'
     ok_version = '2.0.2'
     if matplotlib.__version__ != ok_version:
@@ -509,6 +514,11 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
     Writes
         - An image of where the vertices map to on the texture map.
     """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib.collections import LineCollection
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
     cv2 = config.import_cv2()
 
     if outpath is None:
@@ -651,6 +661,11 @@ def axes3d_wrapper(
     Writes
         - One or multiple (if ``views`` is provided) views of the 3D plot.
     """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
+
     logger_name = thisfile + '->axes3d_wrapper()'
 
     if outpath is None:

@@ -1,7 +1,4 @@
 import numpy as np
-from scipy.sparse import issparse
-from scipy.sparse.linalg import eigsh
-from scipy.special import sph_harm
 
 
 def smooth_1d(arr, win_size, kernel_type='half'):
@@ -69,6 +66,9 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
               ``n_pcs``-D PC space. Of shape ``n_pcs``-by-N. Each column is a point.
             - **data_mean** (*numpy.ndarray*) -- Mean that can be used to recover raw data. Of length M.
     """
+    from scipy.sparse import issparse
+    from scipy.sparse.linalg import eigsh
+
     if issparse(data_mat):
         data_mat = data_mat.toarray()
     else:
@@ -365,6 +365,8 @@ def sh_bases_real(l, n_lat, coord_convention='colatitude-azimuth', _check_orthon
               Used as weights for discrete summation to approximate continuous integration. Necessary in SH analysis.
               Flattened also in row-major order. Of length ``n_lat * (2 * n_lat)``.
     """
+    from scipy.special import sph_harm
+
     # Generate the l and m values for each matrix location
     l_mat = np.zeros(((l + 1) ** 2, n_lat * 2 * n_lat))
     m_mat = np.zeros(l_mat.shape)
@@ -486,8 +488,8 @@ def main(test_id):
         from os.path import join
         from copy import deepcopy
         from scipy.fftpack import dct, idct
-        import cv2
-        from . import os as xm_os
+        from . import config, constants, os as xm_os, vis as xm_vis
+        cv2 = config.import_cv2()
         outdir = join(constants.dir_tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(constants.path_cameraman, cv2.IMREAD_GRAYSCALE)
@@ -551,8 +553,8 @@ def main(test_id):
 
     elif test_id == 'dft_cameraman':
         from os.path import join
-        import cv2
-        from . import vis as xm_vis, os as xm_os
+        from . import config, vis as xm_vis, os as xm_os
+        cv2 = config.import_cv2()
         outdir = join(constants.dir_tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(constants.path_cameraman, cv2.IMREAD_GRAYSCALE)
