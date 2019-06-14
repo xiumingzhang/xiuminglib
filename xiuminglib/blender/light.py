@@ -8,7 +8,7 @@ except ModuleNotFoundError:
     pass
 
 from ..config import create_logger
-logger, thisfile = config.create_logger(abspath(__file__))
+logger, thisfile = create_logger(abspath(__file__))
 
 
 def point_light_to(light, target):
