@@ -87,3 +87,32 @@ def ask_to_proceed(msg, level='warning'):
             logger.error("Enter only y or n!")
     if response == 'n':
         sys.exit()
+
+
+def format_print(msg, fmt):
+    """Prints a message with format.
+
+    Args:
+        msg (str): Message to print.
+        fmt (str): Format; try your luck with any value (if it's illegal, you will
+            be prompted all legal values.
+
+    Raises:
+        ValueError: If the input format is illegal.
+    """
+    fmt_strs = {
+        'header': '\033[95m',
+        'okblue': '\033[94m',
+        'okgreen': '\033[92m',
+        'warn': '\033[93m',
+        'fail': '\033[91m',
+        'bold': '\033[1m',
+        'underline': '\033[4m',
+    }
+    end_str = '\033[0m'
+    if fmt in fmt_strs.keys():
+        start_str = fmt_strs[fmt]
+    else:
+        raise ValueError("Legal values for fmt: %s, but input is '%s'"
+                         % (list(fmt_strs.keys()), fmt))
+    print(start_str + msg + end_str)
