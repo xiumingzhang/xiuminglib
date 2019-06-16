@@ -113,8 +113,8 @@ def format_print(msg, fmt):
         start_str = fmt_strs[fmt]
         end_str = '\033[0m'
     elif len(fmt) == 1:
-        start_str = "".join([fmt] * 79) + "\n" # as per PEP8
-        end_str = '\n' + start_str[:-1]
+        start_str = "<" + "".join([fmt] * 78) + "\n" # as per PEP8
+        end_str = '\n' + start_str[1:-1] + ">"
     else:
         raise ValueError(
             ("Legal values for fmt: %s, plus any single character "
