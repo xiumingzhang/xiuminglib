@@ -95,7 +95,7 @@ def format_print(msg, fmt):
     Args:
         msg (str): Message to print.
         fmt (str): Format; try your luck with any value (if it's illegal, you will
-            be prompted all legal values.
+            be prompted with all legal values).
 
     Raises:
         ValueError: If the input format is illegal.
@@ -109,10 +109,15 @@ def format_print(msg, fmt):
         'bold': '\033[1m',
         'underline': '\033[4m',
     }
-    end_str = '\033[0m'
     if fmt in fmt_strs.keys():
         start_str = fmt_strs[fmt]
+        end_str = '\033[0m'
+    elif len(fmt) == 1:
+        start_str = "".join([fmt] * 79) + "\n" # as per PEP8
+        end_str = '\n' + start_str[:-1]
     else:
-        raise ValueError("Legal values for fmt: %s, but input is '%s'"
-                         % (list(fmt_strs.keys()), fmt))
+        raise ValueError(
+            ("Legal values for fmt: %s, plus any single character "
+             "(which will be repeated into the line separator), "
+             "but input is '%s'") % (list(fmt_strs.keys()), fmt))
     print(start_str + msg + end_str)
