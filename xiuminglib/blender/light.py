@@ -12,7 +12,7 @@ logger, thisfile = create_logger(abspath(__file__))
 
 
 def point_light_to(light, target):
-    """Points directional light to a target.
+    """Points the directional light to a target.
 
     Args:
         light (bpy_types.Object): Light object.
@@ -60,7 +60,7 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=1, siz
     # Strength
     engine = bpy.context.scene.render.engine
     if engine == 'CYCLES':
-        sun.data.node_tree.nodes['Emission'].inputs[1].default_value = energy
+        sun.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = energy
     else:
         raise NotImplementedError(engine)
 
@@ -71,7 +71,7 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=1, siz
 
 
 def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=100, size=0.1):
-    """Adds area light that emits light rays the lambertian way.
+    """Adds an area light that emits light rays the lambertian way.
 
     Args:
         xyz (tuple(float), optional): Location.
@@ -100,7 +100,7 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=100, 
     # Strength
     engine = bpy.context.scene.render.engine
     if engine == 'CYCLES':
-        area.data.node_tree.nodes['Emission'].inputs[1].default_value = energy
+        area.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = energy
     else:
         raise NotImplementedError(engine)
 
@@ -111,7 +111,7 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None, energy=100, 
 
 
 def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
-    """Adds omnidirectional point lamp.
+    """Adds an omnidirectional point lamp.
 
     Args:
         xyz (tuple(float), optional): Location.
@@ -134,7 +134,7 @@ def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
     # Strength
     engine = bpy.context.scene.render.engine
     if engine == 'CYCLES':
-        point.data.node_tree.nodes['Emission'].inputs[1].default_value = energy
+        point.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = energy
     else:
         raise NotImplementedError(engine)
 
@@ -142,6 +142,44 @@ def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
     logger.info("Omnidirectional point light added")
 
     return point
+
+
+def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, spot_size=0.785, spot_blend=0.15):
+    """Adds a spotlight lamp.
+
+    Args:
+        xyz (tuple(float), optional): Location.
+        name (str, optional): Light name.
+        energy (float, optional): Light intensity.
+        spot_size (float, optional): Angle, in radians, of the spotlight beam.
+        spot_blend (float, optional): Softness of the spotlight edge.
+
+    Returns:
+        bpy_types.Object: Light added.
+    """
+    logger_name = thisfile + '->add_light_spot()'
+
+    bpy.ops.object.lamp_add(type='SPOT', location=xyz)
+    spot = bpy.context.active_object
+
+    if name is not None:
+        spot.name = name
+
+    # Strength
+    engine = bpy.context.scene.render.engine
+    if engine == 'CYCLES':
+        spot.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = energy
+    else:
+        raise NotImplementedError(engine)
+
+    # Spot shape
+    spot.data.spot_size = spot_size
+    spot.data.spot_blend = spot_blend
+
+    logger.name = logger_name
+    logger.info("Spotlight lamp added")
+
+    return spot
 
 
 def add_light_env(env=(1, 1, 1, 1), strength=1, rot_vec_rad=(0, 0, 0), scale=(1, 1, 1)):
