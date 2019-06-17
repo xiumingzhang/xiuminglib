@@ -33,6 +33,14 @@ xiuminglib.config module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.constants module
+---------------------------
+
+.. automodule:: xiuminglib.constants
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.decor module
 -----------------------
 
