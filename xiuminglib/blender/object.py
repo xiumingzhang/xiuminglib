@@ -772,19 +772,23 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
     logger.info("Selected %s elements of '%s'", select_type, obj.name)
 
 
-def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=4):
+def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
     """Adds a sphere.
 
     Args:
         location (array_like, optional): Location of the sphere center.
         scale (float, optional): Scale of the sphere.
         n_subdiv (int, optional): Control of how round the sphere is.
+        name (str, optional): Name of the added sphere.
 
     Returns:
         bpy_types.Object: Sphere created.
     """
     bpy.ops.mesh.primitive_ico_sphere_add()
     sphere = bpy.context.active_object
+
+    if name is not None:
+        sphere.name = name
 
     sphere.location = location
     sphere.scale = (scale, scale, scale)
