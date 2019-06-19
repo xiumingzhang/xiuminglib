@@ -12,4 +12,5 @@ py_library(
         "//third_party/py/numpy",
         "//third_party/py/scipy",
     ],
+    data = glob(["data/**/*"]),
 )

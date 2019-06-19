@@ -449,8 +449,7 @@ def _make_texture_node(obj, texture_str):
     mat = obj.active_material
     node_tree = mat.node_tree
     nodes = node_tree.nodes
-    nodes.new('ShaderNodeTexImage')
-    texture_node = nodes['Image Texture']
+    texture_node = nodes.new('ShaderNodeTexImage')
     if texture_str == 'bundled':
         texture = mat.active_texture
         assert texture is not None, "No bundled texture found"
@@ -459,29 +458,34 @@ def _make_texture_node(obj, texture_str):
         # Path given -- external texture map
         bpy.data.images.load(texture_str, check_existing=True)
         img = bpy.data.images[basename(texture_str)]
-        nodes.new('ShaderNodeTexCoord') # careless
-        node_tree.links.new(nodes['Texture Coordinate'].outputs['Generated'],
+        # Careless texture mapping
+        texture_node.projection = 'SPHERE'
+        texcoord_node = nodes.new('ShaderNodeTexCoord')
+        node_tree.links.new(texcoord_node.outputs['Generated'],
                             texture_node.inputs['Vector'])
     texture_node.image = img
     return texture_node
 
 
-def setup_diffuse_nodetree(obj, texture, roughness=0):
-    r"""Sets up a diffuse texture node tree.
+def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
+    r"""Sets up a simple (diffuse or glossy) node tree.
 
-    Bundled texture can be an external texture map (carelessly mapped) or a pure color.
-    Mathematically, the BRDF model used is either Lambertian (no roughness) or Oren-Nayar (with roughness).
+    Bundled texture can be an external/bundled texture map (which will be
+        carelessly mapped) or simply a pure color.
 
     Args:
         obj (bpy_types.Object): Object, optionally bundled with texture map.
-        texture (str or tuple): If string, must be ``'bundled'`` or path to the texture image.
-            If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
-        roughness (float, optional): Roughness in Oren-Nayar model. 0 gives Lambertian.
+        texture (str or tuple): If string, must be ``'bundled'`` or path to the texture
+            image. If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
+        shader_type (str): Either ``'diffuse'`` or ``'glossy'``.
+        roughness (float, optional): If diffuse, the roughness in Oren-Nayar,
+            0 gives Lambertian. If glossy, 0 means perfectly reflective.
 
     Raises:
         TypeError: If ``texture`` is of wrong type.
+        ValueError: If ``shader_type`` is illegal.
     """
-    logger_name = thisfile + '->setup_diffuse_nodetree()'
+    logger_name = thisfile + '->setup_simple_nodetree()'
 
     scene = bpy.context.scene
     _assert_cycles(scene)
@@ -489,60 +493,32 @@ def setup_diffuse_nodetree(obj, texture, roughness=0):
     node_tree = _clear_nodetree_for_active_material(obj)
     nodes = node_tree.nodes
 
-    # Set color for diffuse node
-    diffuse_node = nodes.new('ShaderNodeBsdfDiffuse')
+    if shader_type == 'glossy':
+        shader_node = nodes.new('ShaderNodeBsdfGlossy')
+    elif shader_type == 'diffuse':
+        shader_node = nodes.new('ShaderNodeBsdfDiffuse')
+    else:
+        raise ValueError(shader_type)
+
     if isinstance(texture, str):
         texture_node = _make_texture_node(obj, texture)
-        node_tree.links.new(texture_node.outputs['Color'], diffuse_node.inputs['Color'])
+        node_tree.links.new(texture_node.outputs['Color'], shader_node.inputs['Color'])
     elif isinstance(texture, tuple):
-        diffuse_node.inputs['Color'].default_value = texture
+        shader_node.inputs['Color'].default_value = texture
     else:
         raise TypeError(texture)
 
     output_node = nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(diffuse_node.outputs['BSDF'], output_node.inputs['Surface'])
+    node_tree.links.new(shader_node.outputs['BSDF'], output_node.inputs['Surface'])
 
     # Roughness
-    diffuse_node.inputs['Roughness'].default_value = roughness
+    shader_node.inputs['Roughness'].default_value = roughness
 
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
     logger.name = logger_name
-    logger.info("Diffuse node tree set up for '%s'", obj.name)
-
-
-def setup_glossy_nodetree(obj, color=(1, 1, 1, 1), roughness=0):
-    r"""Sets up a glossy node tree for a pure color.
-
-    To extend it with texture maps, see :func:`setup_diffuse_nodetree`.
-
-    Args:
-        obj (bpy_types.Object): Object bundled with texture map.
-        color (tuple, optional): RGBA values :math:`\in [0, 1]`.
-        roughness (float, optional): Roughness. 0 means perfectly reflective.
-    """
-    logger_name = thisfile + '->setup_glossy_nodetree()'
-
-    scene = bpy.context.scene
-    _assert_cycles(scene)
-
-    node_tree = _clear_nodetree_for_active_material(obj)
-    nodes = node_tree.nodes
-
-    nodes.new('ShaderNodeBsdfGlossy')
-    nodes['Glossy BSDF'].inputs[0].default_value = color
-    nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(nodes['Glossy BSDF'].outputs[0], nodes['Material Output'].inputs[0])
-
-    # Roughness
-    node_tree.nodes['Glossy BSDF'].inputs['Roughness'].default_value = roughness
-
-    # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
-
-    logger.name = logger_name
-    logger.info("Glossy node tree set up for '%s'", obj.name)
+    logger.info("%s node tree set up for '%s'", shader_type.capitalize(), obj.name)
 
 
 def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
