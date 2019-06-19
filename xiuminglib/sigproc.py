@@ -490,9 +490,9 @@ def main(test_id):
         from scipy.fftpack import dct, idct
         from . import config, constants, os as xm_os, vis as xm_vis
         cv2 = config.import_cv2()
-        outdir = join(constants.dir_tmp, test_id)
+        outdir = join(constants.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(constants.path_cameraman, cv2.IMREAD_GRAYSCALE)
+        im = cv2.imread(constants.Path.cameraman, cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)
         # Transform by my DCT (2-step)
@@ -555,9 +555,9 @@ def main(test_id):
         from os.path import join
         from . import config, vis as xm_vis, os as xm_os
         cv2 = config.import_cv2()
-        outdir = join(constants.dir_tmp, test_id)
+        outdir = join(constants.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(constants.path_cameraman, cv2.IMREAD_GRAYSCALE)
+        im = cv2.imread(constants.Path.cameraman, cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)
         # My two-step DFT
@@ -616,7 +616,7 @@ def main(test_id):
             sph_func = sph_func_1d.reshape((n_steps_theta, 2 * n_steps_theta))
             sph_func_ravel = sph_func.ravel()
             assert (sph_func_1d == sph_func_ravel).all()
-            tmp_dir = constants.dir_tmp
+            tmp_dir = constants.Dir.tmp
             xm_vis.matrix_as_heatmap(sph_func, outpath=join(tmp_dir, 'sph_orig.png'))
             # Analysis
             coeffs = ymat.dot(np.multiply(weights, sph_func_ravel))

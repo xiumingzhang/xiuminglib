@@ -83,10 +83,10 @@ def makedirs(directory, rm_if_exists=False, google=False):
 
     if exists_func(directory):
         if rm_if_exists:
-            logger.name = logger_name
-            logger.info("Removed and then remade: %s", directory)
             delete_func(directory)
             mkdir_func(directory)
+            logger.name = logger_name
+            logger.info("Removed and then remade: %s", directory)
     else:
         mkdir_func(directory)
 

@@ -66,7 +66,7 @@ def pyplot_wrapper(*args,
         ylim
         grid (bool, optional): Whether to draw grid.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.dir_tmp, 'pyplot_wrapper.png')``.
+            ``None`` means ``os.path.join(constants.Dir.tmp, 'pyplot_wrapper.png')``.
 
     Raises:
         NotImplementedError: If ``func`` is not implemented.
@@ -83,7 +83,7 @@ def pyplot_wrapper(*args,
         assert func == 'plot', "CI makes sense only for `plot`"
 
     if outpath is None:
-        outpath = join(constants.dir_tmp, 'pyplot_wrapper.png')
+        outpath = join(constants.Dir.tmp, 'pyplot_wrapper.png')
 
     plt.figure(figsize=figsize)
     ax = plt.gca()
@@ -201,7 +201,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
         bgr (tuple or array_like(tuple), optional): BGR color(s) of scatter points. Each element
             :math:`\in [0, 255]`. If *array_like*, must be of shape N-by-3.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.dir_tmp, 'scatter_on_image.png')``.
+            ``None`` means ``os.path.join(constants.Dir.tmp, 'scatter_on_image.png')``.
 
     Writes
         - The scatter plot overlaid over the image.
@@ -211,7 +211,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
     logger_name = thisfile + '->scatter_on_image()'
 
     if outpath is None:
-        outpath = join(constants.dir_tmp, 'scatter_on_image.png')
+        outpath = join(constants.Dir.tmp, 'scatter_on_image.png')
 
     thickness = -1 # for filled circles
 
@@ -261,7 +261,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     Args:
         arr (numpy.ndarray): Array to be transformed into an image. Can be H-by-W or H-by-W-by-3.
         outpath (str, optional): Where to visualize the result to. ``None`` means
-            ``os.path.join(constants.dir_tmp, 'matrix_as_image.png')``.
+            ``os.path.join(constants.Dir.tmp, 'matrix_as_image.png')``.
         gamma (float, optional): For gamma correction.
 
     Raises:
@@ -275,7 +275,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     logger_name = thisfile + '->matrix_as_image()'
 
     if outpath is None:
-        outpath = join(constants.dir_tmp, 'matrix_as_image.png')
+        outpath = join(constants.Dir.tmp, 'matrix_as_image.png')
 
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max
@@ -371,7 +371,7 @@ def matrix_as_heatmap_complex(*args, **kwargs):
     """
     outpath = kwargs.get('outpath', None)
     if outpath is None:
-        outpath = join(constants.dir_tmp, 'matrix_as_heatmap_complex.png')
+        outpath = join(constants.Dir.tmp, 'matrix_as_heatmap_complex.png')
     for suffix in ('mag', 'phase'):
         l = outpath.split('.')
         l[-2] += '_' + suffix
@@ -400,7 +400,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
             (so that zero is no color, i.e., white). Useful when matrix consists of both positive and negative
             values, and 0 means "nothing". ``None`` means default colormap and auto range.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.dir_tmp, 'matrix_as_heatmap.png')``.
+            ``None`` means ``os.path.join(constants.Dir.tmp, 'matrix_as_heatmap.png')``.
         contents_only (bool, optional): Whether to plot only the contents (i.e., no borders, axes, etc.).
             If ``True``, the heatmap will be of exactly the same size as your matrix, useful when you want to
             plot heatmaps separately and later concatenate them into a single one.
@@ -425,7 +425,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
                         "Known to be buggy with 3.0.0"), ok_version, matplotlib.__version__)
 
     if outpath is None:
-        outpath = join(constants.dir_tmp, 'matrix_as_heatmap.png')
+        outpath = join(constants.Dir.tmp, 'matrix_as_heatmap.png')
 
     if mat.ndim != 2:
         raise ValueError("'mat' must have exactly 2 dimensions, but has %d" % mat.ndim)
@@ -505,7 +505,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
         ft (list(list(int)), optional): Texture faces used to connect UV points. Values start
             from 1, e.g., ``'[[1, 2, 3], [], [2, 3, 4, 5], ...]'``.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.dir_tmp, 'uv_on_texmap.png')``.
+            ``None`` means ``os.path.join(constants.Dir.tmp, 'uv_on_texmap.png')``.
         figtitle (str, optional): Figure title.
 
     Raises:
@@ -522,7 +522,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
     cv2 = config.import_cv2()
 
     if outpath is None:
-        outpath = join(constants.dir_tmp, 'uv_on_texmap.png')
+        outpath = join(constants.Dir.tmp, 'uv_on_texmap.png')
 
     figsize = 50
     dc = 'r' # color
@@ -652,7 +652,7 @@ def axes3d_wrapper(
         equal_axes (bool, optional): Whether to have the same scale for all axes.
         outpath (str, optional): Path to which the visualization is saved to. Should end with
             ``'.png'`` or ``'.pkl'`` (for offline interactive viewing).
-            ``None`` means ``os.path.join(constants.dir_tmp, 'axes3d_wrapper.png')``.
+            ``None`` means ``os.path.join(constants.Dir.tmp, 'axes3d_wrapper.png')``.
 
     Raises:
         NotImplementedError: If ``func`` is not yet implemented.
@@ -669,7 +669,7 @@ def axes3d_wrapper(
     logger_name = thisfile + '->axes3d_wrapper()'
 
     if outpath is None:
-        outpath = join(constants.dir_tmp, 'axes3d_wrapper.png')
+        outpath = join(constants.Dir.tmp, 'axes3d_wrapper.png')
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')

@@ -3,6 +3,7 @@
 py_library(
     name = "xiuminglib",
     srcs = glob(["xiuminglib/**/*.py"]),
+    data = glob(["data/**/*"]),
     srcs_version = "PY3",
     deps = [
         "//third_party/py/cvx2",
@@ -12,5 +13,4 @@ py_library(
         "//third_party/py/numpy",
         "//third_party/py/scipy",
     ],
-    data = glob(["data/**/*"]),
 )
