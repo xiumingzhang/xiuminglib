@@ -88,7 +88,8 @@ def import_object(model_path,
 
     # Import
     if model_path.endswith('.obj'):
-        bpy.ops.import_scene.obj(filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
+        bpy.ops.import_scene.obj(
+            filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
     elif model_path.endswith('.ply'):
         bpy.ops.import_mesh.ply(filepath=model_path)
 

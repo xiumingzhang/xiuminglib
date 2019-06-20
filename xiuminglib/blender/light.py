@@ -1,3 +1,9 @@
+"""Add functions in this module usually provide no setter for the lamp's 3D rotation,
+because one usually implicitly sets the rotation by pointing the light to an object
+(and specifying an up vector), by using :func:`point_light_to`.
+"""
+
+
 from os.path import abspath, basename
 import numpy as np
 
@@ -144,13 +150,15 @@ def add_light_point(xyz=(0, 0, 0), name=None, energy=100):
     return point
 
 
-def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, spot_size=0.785, spot_blend=0.15):
+def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, shadow_soft_size=0.1,
+                   spot_size=0.785, spot_blend=0.15):
     """Adds a spotlight lamp.
 
     Args:
         xyz (tuple(float), optional): Location.
         name (str, optional): Light name.
         energy (float, optional): Light intensity.
+        shadow_soft_size (float, optional): Light size for raytracing the shadow.
         spot_size (float, optional): Angle, in radians, of the spotlight beam.
         spot_blend (float, optional): Softness of the spotlight edge.
 
@@ -171,6 +179,8 @@ def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, spot_size=0.785, spot_b
         spot.data.node_tree.nodes['Emission'].inputs['Strength'].default_value = energy
     else:
         raise NotImplementedError(engine)
+
+    spot.data.shadow_soft_size = shadow_soft_size
 
     # Spot shape
     spot.data.spot_size = spot_size
