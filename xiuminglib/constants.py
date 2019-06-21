@@ -18,7 +18,19 @@ class Path:
 
     # Models
     armadillo = join(Dir.data, 'models/armadillo.ply')
-    buddha = join(Dir.data, 'models/buddha.ply')
-    bunny = join(Dir.data, 'models/bunny.ply')
-    dragon = join(Dir.data, 'models/dragon.ply')
+    buddha_prefix = join(Dir.data, 'models/buddha/happy_vrip')
+    buddha = buddha_prefix + '.ply'
+    buddha_res2 = buddha_prefix + '_res2.ply'
+    buddha_res3 = buddha_prefix + '_res3.ply'
+    buddha_res4 = buddha_prefix + '_res4.ply'
+    bunny_prefix = join(Dir.data, 'models/bunny/bun_zipper')
+    bunny = bunny_prefix + '.ply'
+    bunny_res2 = bunny_prefix + '_res2.ply'
+    bunny_res3 = bunny_prefix + '_res3.ply'
+    bunny_res4 = bunny_prefix + '_res4.ply'
+    dragon_prefix = join(Dir.data, 'models/dragon/dragon_vrip')
+    dragon = dragon_prefix + '.ply'
+    dragon_res2 = dragon_prefix + '_res2.ply'
+    dragon_res3 = dragon_prefix + '_res3.ply'
+    dragon_res4 = dragon_prefix + '_res4.ply'
     teapot = join(Dir.data, 'models/teapot.obj')
