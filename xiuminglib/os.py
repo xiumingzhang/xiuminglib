@@ -7,19 +7,27 @@ from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 
-def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
+def sortglob(directory, filename='*', ext=None, ext_ignore_case=False, google=False):
     """Globs and then sorts according to a pattern ending in multiple extensions.
 
     Args:
         directory (str): Directory to glob, e.g., ``'/path/to/'``.
-        filename (str or tuple(str), optional): Filename pattern excluding extensions, e.g., ``'img*'``.
-        ext (str or tuple(str), optional): Extensions of interest, e.g., ``('png', 'PNG')``. ``None``
-            means no extension, useful for files with no extension or folders.
+        filename (str or tuple(str), optional): Filename pattern excluding extensions,
+            e.g., ``'img*'``.
+        ext (str or tuple(str), optional): Extensions of interest, e.g.,
+            ``('png', 'PNG')``. ``None`` means no extension, useful for files with
+            no extension or folders.
         ext_ignore_case (bool, optional): Whether to ignore case for extensions.
+        google (bool, optional): Whether on Google's infra.
 
     Returns:
         list(str): Sorted list of files globbed.
     """
+    if google:
+        from google3.pyglib import gfile
+        glob_func = gfile.Glob
+    else:
+        glob_func = glob
     if ext is None:
         ext = ()
     elif isinstance(ext, str):
@@ -38,9 +46,9 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     for f in filename:
         if ext_list:
             for e in ext_list:
-                files += glob(join(directory, f + e))
+                files += glob_func(join(directory, f + e))
         else:
-            files += glob(join(directory, f))
+            files += glob_func(join(directory, f))
     files_sorted = sorted(files)
     return files_sorted
 
