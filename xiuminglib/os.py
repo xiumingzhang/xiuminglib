@@ -7,16 +7,18 @@ from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 
-def sortglob(directory, filename='*', ext=None, ext_ignore_case=False, google=False):
-    """Globs and then sorts according to a pattern ending in multiple extensions.
+def sortglob(directory, filename='*', ext=None,
+             ext_ignore_case=False, google=False):
+    """Globs and then sorts according to a pattern ending in multiple
+    extensions.
 
     Args:
         directory (str): Directory to glob, e.g., ``'/path/to/'``.
-        filename (str or tuple(str), optional): Filename pattern excluding extensions,
-            e.g., ``'img*'``.
+        filename (str or tuple(str), optional): Filename pattern excluding
+            extensions, e.g., ``'img*'``.
         ext (str or tuple(str), optional): Extensions of interest, e.g.,
-            ``('png', 'PNG')``. ``None`` means no extension, useful for files with
-            no extension or folders.
+            ``('png', 'PNG')``. ``None`` means no extension, useful for folders
+            or files with no extension.
         ext_ignore_case (bool, optional): Whether to ignore case for extensions.
         google (bool, optional): Whether on Google's infra.
 
@@ -58,7 +60,7 @@ def rmglob(path_pattern, exclude_dir=True):
 
     Args:
         path_pattern (str): Pattern to glob, e.g., ``'/path/to/img???.png'``.
-        exclude_dir (bool, optional): Whether to exclude directories from being deleted.
+        exclude_dir (bool, optional): Whether to exclude directories from being             deleted.
     """
     for x in glob(path_pattern):
         if isdir(x):
@@ -69,12 +71,13 @@ def rmglob(path_pattern, exclude_dir=True):
 
 
 def makedirs(directory, rm_if_exists=False, google=False):
-    """Wraps :func:`os.makedirs` to support removing the directory if it already exists.
+    """Wraps :func:`os.makedirs` to support removing the directory if it alread
+    exists.
 
     Args:
         directory (str)
-        rm_if_exists (bool, optional): Whether to remove the directory (and its contents)
-            if it already exists.
+        rm_if_exists (bool, optional): Whether to remove the directory (and its
+            contents) if it already exists.
         google (bool, optional): Whether on Google's infra.
     """
     logger_name = thisfile + '->makedirs()'
@@ -104,8 +107,9 @@ def make_exp_dir(directory, param_dict, rm_if_exists=False):
 
     Args:
         directory (str): The made folder will be under this.
-        param_dict (dict): Dictionary of the parameters identifying the experiment.
-            It is sorted by its keys, so different orders lead to the same hash.
+        param_dict (dict): Dictionary of the parameters identifying the
+            experiment. It is sorted by its keys, so different orders lead to
+            the same hash.
         rm_if_exists (bool, optional): Whether to remove the experiment folder
             if it already exists.
 
@@ -123,9 +127,10 @@ def make_exp_dir(directory, param_dict, rm_if_exists=False):
     hash_seed = os.environ.get('PYTHONHASHSEED', None)
     if hash_seed != '0':
         logger.name = logger_name
-        logger.warning(("PYTHONHASHSEED is not 0, so the same param_dict has different hashes "
-                        "across sessions. Consider disabling this randomization with "
-                        "`PYTHONHASHSEED=0 python your_script.py`"))
+        logger.warning(
+            ("PYTHONHASHSEED is not 0, so the same param_dict has different "
+             "hashes across sessions. Consider disabling this randomization "
+             "with `PYTHONHASHSEED=0 python your_script.py`"))
 
     param_dict = OrderedDict(sorted(param_dict.items()))
     param_hash = str(hash(str(param_dict)))

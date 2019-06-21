@@ -14,8 +14,10 @@ def save_blend(outpath=None, delete_overwritten=False):
     """Saves current scene to a .blend file.
 
     Args:
-        outpath (str, optional): Path to save the scene to, e.g., ``'~/foo.blend'``. ``None`` means saving to the current file.
-        delete_overwritten (bool, optional): Whether to delete or keep as .blend1 the same-name file.
+        outpath (str, optional): Path to save the scene to, e.g.,
+            ``'~/foo.blend'``. ``None`` means saving to the current file.
+        delete_overwritten (bool, optional): Whether to delete or keep
+            as .blend1 the same-name file.
 
     Writes
         - A .blend file.
