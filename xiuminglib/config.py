@@ -9,36 +9,21 @@ logging_warn = logging.WARN
 # so that won't need to import a package just for its constants
 
 
-def to_import_at_init(lib_dir, incl_subpkg=True):
-    """Figures out what modules (and maybe also subpackages) to import in __init__()."""
-    all_list = []
-    for f in sorted(glob(join(lib_dir, '*'))):
-        base = basename(f)
-        if not base.endswith('.pyc') and base != '__init__.py' and base != '__pycache__':
-            if base.endswith('.py'):
-                # Modules for sure will be imported
-                base = base[:-3]
-                all_list.append(base)
-            else:
-                assert isdir(f), "Neither a module (.py) nor a subpackage (folder): %s" % f
-                # Subpackages are to be imported only if asked
-                if incl_subpkg:
-                    all_list.append(base)
-    return all_list
-
-
-def create_logger(file_abspath, level=logging.INFO, path_starts_from='xiuminglib'):
+def create_logger(file_abspath, level=logging.INFO,
+                  path_starts_from='xiuminglib'):
     """Creates a logger for functions in the library.
 
     Args:
         file_abspath (str): Absolute path to the file that uses the logger.
         level (int, optional): Logging level.
-        path_starts_from (str, optional): Truncates ``thisfile`` so that it starts from this.
+        path_starts_from (str, optional): Truncates ``thisfile`` so that it
+            starts from this.
 
     Returns:
         tuple:
             - **logger** (*logging.Logger*) -- Logger created.
-            - **thisfile** (*str*) -- Partial path to the user file (e.g., starting from package name).
+            - **thisfile** (*str*) -- Partial path to the user file (e.g.,
+              starting from package name).
     """
     logging.basicConfig(level=level)
     logger = logging.getLogger()
@@ -49,6 +34,29 @@ def create_logger(file_abspath, level=logging.INFO, path_starts_from='xiuminglib
         start_idx = 0
     thisfile = '/'.join(folder_names[start_idx:])
     return logger, thisfile
+
+
+def to_import_at_init(lib_dir, incl_subpkg=True):
+    """Figures out what modules (and maybe also subpackages) to import in
+    __init__().
+    """
+    all_list = []
+    for f in sorted(glob(join(lib_dir, '*'))):
+        base = basename(f)
+        if not base.endswith('.pyc') and \
+                base != '__init__.py' and \
+                base != '__pycache__':
+            if base.endswith('.py'):
+                # Modules for sure will be imported
+                base = base[:-3]
+                all_list.append(base)
+            else:
+                assert isdir(f), \
+                    "Neither a module (.py) nor a subpackage (folder): %s" % f
+                # Subpackages are to be imported only if asked
+                if incl_subpkg:
+                    all_list.append(base)
+    return all_list
 
 
 def import_cv2():

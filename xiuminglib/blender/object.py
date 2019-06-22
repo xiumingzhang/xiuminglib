@@ -785,15 +785,28 @@ def smart_uv_unwrap(obj):
     """UV unwrapping using Blender's smart projection.
 
     A vertex may map to multiple UV locations, as one vertex is often shared by
-        multiple faces, and if a face uses V vertices, then it has V loops, each
-        of which has one UV location.
+    multiple faces, and if a face uses M vertices, then it has M loops, each of
+    which has one UV location.
 
     Args:
         obj (bpy_types.Object): Object to UV unwrap.
 
     Returns:
         numpy.ndarray: N-by-5 array with the columns being face index, loop
-            index, vertex index, U, and V.
+        index, vertex index, :math:`u`, and :math:`v`.
+
+        UV coordinate convention:
+
+        .. code-block:: none
+
+            (0, 1)
+                ^ v
+                |
+                |
+                |
+                |
+                +-----------> (1, 0)
+            (0, 0)        u
     """
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.context.scene.objects.active = obj

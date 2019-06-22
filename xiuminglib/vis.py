@@ -482,31 +482,27 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     plt.close('all')
 
 
-def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
+def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None,
+                 dotsize=4, dotcolor='r', linewidth=1, linecolor='b'):
     """Visualizes which points on texture map the vertices map to.
 
     Args:
-        u (numpy.array): The :math:`u` component of UV coordinates of the vertices.
-
-            .. code-block:: none
-
-                (0, 1)
-                    ^ v
-                    |
-                    |
-                    |
-                    |
-                    +-----------> (1, 0)
-                (0, 0)        u
-
+        u (numpy.array): The :math:`u` component of UV coordinates of the
+            vertices. See :func:`xiuminglib.blender.object.smart_uv_unwrap`
+            for the UV coordinate convention.
         v
-        texmap (numpy.ndarray or str): Loaded texture map or its path. If *numpy.ndarray*, can
-            be H-by-W (grayscale) or H-by-W-by-3 (color).
-        ft (list(list(int)), optional): Texture faces used to connect UV points. Values start
-            from 1, e.g., ``'[[1, 2, 3], [], [2, 3, 4, 5], ...]'``.
+        texmap (numpy.ndarray or str): Loaded texture map or its path. If
+            *numpy.ndarray*, can be H-by-W (grayscale) or H-by-W-by-3 (color).
+        ft (list(list(int)), optional): Texture faces used to connect UV points.
+            Values start from 1, e.g., ``'[[1, 2, 3], [], [2, 3, 4, 5], ...]'``.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.Dir.tmp, 'uv_on_texmap.png')``.
+            ``None`` means
+            ``os.path.join(constants.Dir.tmp, 'uv_on_texmap.png')``.
         figtitle (str, optional): Figure title.
+        dotsize (int, optional): Size of the UV dots.
+        dotcolor (str, optional): Their color.
+        linewidth (float, optional): Width of the lines connecting the UV dots.
+        linecolor (str, optional): Their color.
 
     Raises:
         TypeError: ``texmap`` is of a wrong type.
@@ -525,11 +521,6 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
         outpath = join(constants.Dir.tmp, 'uv_on_texmap.png')
 
     figsize = 50
-    dc = 'r' # color
-    ds = 4 # size of UV dots
-    lc = 'b' # color
-    lw = 1 # width of edges connecting UV dots
-
     fig = plt.figure(figsize=(figsize, figsize))
     if figtitle is not None:
         fig.title(figtitle)
@@ -539,7 +530,7 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
         texmap = cv2.imread(texmap, cv2.IMREAD_UNCHANGED)
     elif isinstance(texmap, np.ndarray):
         assert (len(texmap.shape) == 2 or len(texmap.shape) == 3), \
-            "'texmap' must be either h-by-w (grayscale) or h-by-w-by-3 (color)"
+            "'texmap' must be either H-by-W (grayscale) or H-by-W-by-3 (color)"
     else:
         raise TypeError("Wrong input format for 'texmap'")
 
@@ -558,23 +549,24 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None):
     ax.set_xlim([min(0, min(x)), max(w, max(x))])
     ax.set_ylim([max(h, max(y)), min(0, min(y))])
     im = ax.imshow(texmap, cmap='gray')
-    ax.scatter(x, y, c=dc, s=ds)
+    ax.scatter(x, y, c=dotcolor, s=dotsize)
     ax.set_aspect('equal')
 
     # Also connect these dots
     if ft is not None:
         lines = []
-        for vert_id in ft:
-            if vert_id: # not empty
-                # For each face
-                ind = [i - 1 for i in vert_id]
-                n_verts = len(ind)
-                for i in range(n_verts):
-                    lines.append([
-                        (x[ind[i]], y[ind[i]]), # starting point
-                        (x[ind[(i + 1) % n_verts]], y[ind[(i + 1) % n_verts]]) # ending point
-                    ])
-        line_collection = LineCollection(lines, linewidths=lw, colors=lc)
+        for vert_id in [x for x in ft if x]: # non-empty ones
+            assert min(vert_id) >= 1, "Indices in ft are 1-indexed"
+            # For each face
+            ind = [i - 1 for i in vert_id]
+            n_verts = len(ind)
+            for i in range(n_verts):
+                lines.append([
+                    (x[ind[i]], y[ind[i]]), # start
+                    (x[ind[(i + 1) % n_verts]], y[ind[(i + 1) % n_verts]]) # end
+                ])
+        line_collection = LineCollection(
+            lines, linewidths=linewidth, colors=linecolor)
         ax.add_collection(line_collection)
 
     # Colorbar
