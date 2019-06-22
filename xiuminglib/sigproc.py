@@ -7,8 +7,9 @@ def smooth_1d(arr, win_size, kernel_type='half'):
     Args:
         arr (array_like): 1D signal to smooth.
         win_size (int): Size of the smoothing window. Use odd number.
-        kernel_type (str, optional): Kernel type: ``'half'`` (e.g., normalized :math:`[2^{-2}, 2^{-1},
-            2^0, 2^{-1}, 2^{-2}]`) or ``'equal'`` (e.g., normalized :math:`[1, 1, 1, 1, 1]`).
+        kernel_type (str, optional): Kernel type: ``'half'`` (e.g., normalized
+            :math:`[2^{-2}, 2^{-1}, 2^0, 2^{-1}, 2^{-2}]`) or ``'equal'``
+            (e.g., normalized :math:`[1, 1, 1, 1, 1]`).
 
     Raises:
         ValueError: If kernel type is wrong.
@@ -21,8 +22,9 @@ def smooth_1d(arr, win_size, kernel_type='half'):
 
     # Generate kernel
     if kernel_type == 'half':
-        kernel = np.array([2 ** x if x < 0 else 2 ** -x
-                           for x in range(-int(win_size / 2), int(win_size / 2) + 1)])
+        kernel = np.array(
+            [2 ** x if x < 0 else 2 ** -x
+             for x in range(-int(win_size / 2), int(win_size / 2) + 1)])
     elif kernel_type == 'equal':
         kernel = np.ones(win_size)
     else:
@@ -43,28 +45,32 @@ def smooth_1d(arr, win_size, kernel_type='half'):
 def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
     """Performs principal component (PC) analysis on data.
 
-    Via eigendecomposition of covariance matrix. See :func:`main` for example usages,
-    including reconstructing data with top K PCs.
+    Via eigendecomposition of covariance matrix. See :func:`main` for example
+    usages, including reconstructing data with top K PCs.
 
     Args:
-        data_mat (array_like): Data matrix of N data points in the M-D space, of shape
-            M-by-N, where each column is a point.
-        n_pcs (int, optional): Number of top PCs requested. ``None`` means :math:`M-1`.
-        eig_method (str, optional): Method for eigendecomposition of the symmetric covariance matrix:
-            ``'numpy.linalg.eigh'`` or ``'scipy.sparse.linalg.eigsh'``.
+        data_mat (array_like): Data matrix of N data points in the M-D space,
+            of shape M-by-N, where each column is a point.
+        n_pcs (int, optional): Number of top PCs requested. ``None`` means
+            :math:`M-1`.
+        eig_method (str, optional): Method for eigendecomposition of the
+            symmetric covariance matrix: ``'numpy.linalg.eigh'`` or
+            ``'scipy.sparse.linalg.eigsh'``.
 
     Raises:
         NotImplementedError: If ``eig_method`` is not implemented.
 
     Returns:
         tuple:
-            - **pcvars** (*numpy.ndarray*) -- PC variances (eigenvalues of covariance matrix)
-              in descending order.
-            - **pcs** (*numpy.ndarray*) -- Corresponding PCs (normalized eigenvectors), of shape
-              M-by-``n_pcs``. Each column is a PC.
-            - **projs** (*numpy.ndarray*) -- Data points centered and then projected to the
-              ``n_pcs``-D PC space. Of shape ``n_pcs``-by-N. Each column is a point.
-            - **data_mean** (*numpy.ndarray*) -- Mean that can be used to recover raw data. Of length M.
+            - **pcvars** (*numpy.ndarray*) -- PC variances (eigenvalues of
+              covariance matrix) in descending order.
+            - **pcs** (*numpy.ndarray*) -- Corresponding PCs (normalized
+              eigenvectors), of shape M-by-``n_pcs``. Each column is a PC.
+            - **projs** (*numpy.ndarray*) -- Data points centered and then
+              projected to the ``n_pcs``-D PC space. Of shape ``n_pcs``-by-N.
+              Each column is a point.
+            - **data_mean** (*numpy.ndarray*) -- Mean that can be used to
+              recover raw data. Of length M.
     """
     from scipy.sparse import issparse
     from scipy.sparse.linalg import eigsh
@@ -81,8 +87,9 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
     # ------ Compute covariance matrix of data
 
     covmat = np.cov(data_mat) # auto handles uncentered data
-    # covmat is real and symmetric in theory, but may not be so due to numerical issues,
-    # so eigendecomposition method should be told explicitly to exploit symmetry constraints
+    # covmat is real and symmetric in theory, but may not be so
+    # due to numerical issues, so eigendecomposition method should be told
+    # explicitly to exploit symmetry constraints
 
     # ------ Compute eigenvalues and eigenvectors
 
@@ -101,7 +108,8 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
         # eig_vals in ascending order
         # eig_vecs columns are normalized eigenvectors
 
-        # FIXME: sometimes the eigenvalues are not sorted? Subnormals appear. All zero eigenvectors
+        # FIXME: sometimes the eigenvalues are not sorted? Subnormals appear.
+        # All zero eigenvectors
         sort_ind = eig_vals.argsort() # ascending
         eig_vals = eig_vals[sort_ind]
         eig_vecs = eig_vecs[:, sort_ind]
@@ -125,17 +133,18 @@ def dct_1d_bases(n):
     """Generates 1D discrete cosine transform (DCT) bases.
 
     Bases are rows of :math:`Y`, which is orthogonal: :math:`Y^TY=YY^T=I`.
-    The forward process (analysis) is :math:`X=Yx`, and the inverse (synthesis)
-    is :math:`x=Y^{-1}X=Y^TX`. See :func:`main` for example usages and how this
-    produces the same results as :func:`scipy.fftpack.dct` (with ``type=2`` and
-    ``norm='ortho'``).
+    The forward process (analysis) is :math:`X=Yx`, and the inverse
+    (synthesis) is :math:`x=Y^{-1}X=Y^TX`. See :func:`main` for example usages
+    and how this produces the same results as :func:`scipy.fftpack.dct` (with
+    ``type=2`` and ``norm='ortho'``).
 
     Args:
         n (int): Signal length.
 
     Returns:
-        numpy.ndarray: Matrix whose :math:`i`-th row, when dotted with signal (column) vector,
-        gives the coefficient for the :math:`i`-th DCT component. Of shape ``(n, n)``.
+        numpy.ndarray: Matrix whose :math:`i`-th row, when dotted with signal
+        (column) vector, gives the coefficient for the :math:`i`-th DCT
+        component. Of shape ``(n, n)``.
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
     omega = np.multiply(row_ind, (2 * col_ind + 1) / (2 * n) * np.pi)
@@ -148,13 +157,15 @@ def dct_1d_bases(n):
 def dct_2d_bases(h, w):
     r"""Generates bases for 2D discrete cosine transform (DCT).
 
-    Bases are given in two matrices :math:`Y_h` and :math:`Y_w`. See :func:`dct_1d_bases` for
-    their properties. Note that :math:`Y_w` has already been transposed (hence, :math:`Y_hxY_w`
-    instead of :math:`Y_hxY_w^T` below).
+    Bases are given in two matrices :math:`Y_h` and :math:`Y_w`. See
+    :func:`dct_1d_bases` for their properties. Note that :math:`Y_w` has
+    already been transposed (hence, :math:`Y_hxY_w` instead of
+    :math:`Y_hxY_w^T` below).
 
-    Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
-    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is
-    :math:`x=Y_h^TXY_w^T`. See :func:`main` for example usages.
+    Input image :math:`x` should be transformed by both matrices (i.e., along
+    both dimensions). Specifically, the analysis process is :math:`X=Y_hxY_w`,
+    and the synthesis process is :math:`x=Y_h^TXY_w^T`. See :func:`main` for
+    example usages.
 
     Args:
         h (int): Image height.
@@ -162,10 +173,10 @@ def dct_2d_bases(h, w):
 
     Returns:
         tuple:
-            - **dct_mat_h** (*numpy.ndarray*) -- DCT matrix :math:`Y_h` transforming rows
-              of the 2D signal. Of shape ``(h, h)``.
-            - **dct_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming columns. Of shape
-              ``(w, w)``.
+            - **dct_mat_h** (*numpy.ndarray*) -- DCT matrix :math:`Y_h`
+              transforming rows of the 2D signal. Of shape ``(h, h)``.
+            - **dct_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming\
+              columns. Of shape ``(w, w)``.
     """
     dct_mat_h = dct_1d_bases(h)
     dct_mat_w = dct_1d_bases(w).T
@@ -173,22 +184,25 @@ def dct_2d_bases(h, w):
 
 
 def dct_2d_bases_vec(h, w):
-    r"""Generates bases stored in a single matrix, along whose height 2D frequencies get raveled.
+    r"""Generates bases stored in a single matrix, along whose height 2D
+    frequencies get raveled.
 
     Using the "vectorization + Kronecker product" trick:
-    :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)\operatorname{vec}(x)`.
-    So unlike :func:`dct_2d_bases`, this function generates a single matrix
-    :math:`Y=Y_w^T\otimes Y_h`, whose :math:`k`-th row is the flattened :math:`(i, j)`-th basis,
-    where :math:`k=wi+j`.
+    :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)
+    \operatorname{vec}(x)`. So unlike :func:`dct_2d_bases`, this function
+    generates a single matrix :math:`Y=Y_w^T\otimes Y_h`, whose :math:`k`-th
+    row is the flattened :math:`(i, j)`-th basis, where :math:`k=wi+j`.
 
-    Input image :math:`x` can be transformed with a single matrix multiplication.
-    Specifically, the analysis process is :math:`X=Y\operatorname{vec}(x)`, and the synthesis
-    process is :math:`x=\operatorname{unvec}(Y^TX)`. See :func:`main` for examples.
+    Input image :math:`x` can be transformed with a single matrix
+    multiplication. Specifically, the analysis process is :math:`X=Y
+    \operatorname{vec}(x)`, and the synthesis process is :math:`x=
+    \operatorname{unvec}(Y^TX)`. See :func:`main` for examples.
 
     Warning:
-        If you want to reconstruct the signal with only some (i.e., not all) bases, do not slice
-        those rows out from :math:`Y` and use only their coefficients. Instead, you should use the
-        full :math:`Y` matrix and set to zero the coefficients for the unused frequency components.
+        If you want to reconstruct the signal with only some (i.e., not all)
+        bases, do not slice those rows out from :math:`Y` and use only their
+        coefficients. Instead, you should use the full :math:`Y` matrix and
+        set to zero the coefficients for the unused frequency components.
         See :func:`main` for examples.
 
     Args:
@@ -196,9 +210,10 @@ def dct_2d_bases_vec(h, w):
         w
 
     Returns:
-        numpy.ndarray: Matrix with flattened bases as rows. The :math:`k`-th row,
-        when :func:`numpy.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
-        component, where :math:`k=wi+j`. Of shape ``(h * w, h * w)``.
+        numpy.ndarray: Matrix with flattened bases as rows. The :math:`k`-th
+        row, when :func:`numpy.reshape`'ed into ``(h, w)``, is the :math:`
+        (i, j)`-th frequency component, where :math:`k=wi+j`. Of shape
+        ``(h * w, h * w)``.
     """
     dct_mat_h, dct_mat_w = dct_2d_bases(h, w)
     dct_mat = np.kron(dct_mat_w.T, dct_mat_h)
@@ -208,21 +223,23 @@ def dct_2d_bases_vec(h, w):
 def dft_1d_bases(n):
     """Generates 1D discrete Fourier transform (DFT) bases.
 
-    Bases are rows of :math:`Y`, which is unitary (:math:`Y^HY=YY^H=I`, where :math:`Y^H`
-    is the conjugate transpose) and symmetric. The forward process (analysis) is :math:`X=Yx`,
-    and the inverse (synthesis) is :math:`x=Y^{-1}X=Y^HX`. See :func:`main` for example usages.
+    Bases are rows of :math:`Y`, which is unitary (:math:`Y^HY=YY^H=I`,
+    where :math:`Y^H` is the conjugate transpose) and symmetric. The forward
+    process (analysis) is :math:`X=Yx`, and the inverse (synthesis) is
+    :math:`x=Y^{-1}X=Y^HX`. See :func:`main` for example usages.
 
     Args:
         n (int): Signal length.
 
     Returns:
-        numpy.ndarray: Matrix whose :math:`i`-th row, when dotted with signal (column) vector,
-        gives the coefficient for the :math:`i`-th Fourier component.
-        Of shape ``(n, n)``.
+        numpy.ndarray: Matrix whose :math:`i`-th row, when dotted with signal
+        (column) vector, gives the coefficient for the :math:`i`-th Fourier
+        component. Of shape ``(n, n)``.
     """
     col_ind, row_ind = np.meshgrid(range(n), range(n))
     omega = np.exp(-2 * np.pi * 1j / n)
-    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n) # normalize so that unitary
+    wmat = np.power(omega, col_ind * row_ind) / np.sqrt(n)
+    # Normalize so that unitary
     return wmat
 
 
@@ -235,9 +252,10 @@ def dft_2d_freq(h, w):
 
     Returns:
         tuple:
-            - **freq_h** (*numpy.ndarray*) -- Sample frequencies, in cycles per pixel, along the height
-              dimension. E.g., if ``freq_h[i, j] == 0.5``, then the ``(i, j)``-th component repeats
-              every 2 pixels along the height dimension.
+            - **freq_h** (*numpy.ndarray*) -- Sample frequencies, in cycles
+              per pixel, along the height dimension. E.g., if ``freq_h[i, j]
+              == 0.5``, then the ``(i, j)``-th component repeats every 2
+              pixels along the height dimension.
             - **freq_w**
     """
     freq_h = np.fft.fftfreq(h)
@@ -249,20 +267,24 @@ def dft_2d_freq(h, w):
 def dft_2d_bases(h, w):
     r"""Generates bases for 2D discrete Fourier transform (DFT).
 
-    Bases are given in two matrices :math:`Y_h` and :math:`Y_w`. See :func:`dft_1d_bases` for
-    their properties. Note that :math:`Y_w` has already been transposed.
+    Bases are given in two matrices :math:`Y_h` and :math:`Y_w`. See
+    :func:`dft_1d_bases` for their properties. Note that :math:`Y_w` has
+    already been transposed.
 
-    Input image :math:`x` should be transformed by both matrices (i.e., along both dimensions).
-    Specifically, the analysis process is :math:`X=Y_hxY_w`, and the synthesis process is
-    :math:`x=Y_h^HXY_w^H`. See :func:`main` for example usages and how this produces the
-    same results as :func:`numpy.fft.fft2` (with ``norm='ortho'``).
+    Input image :math:`x` should be transformed by both matrices (i.e., along
+    both dimensions). Specifically, the analysis process is :math:`X=Y_hxY_w`,
+    and the synthesis process is :math:`x=Y_h^HXY_w^H`. See :func:`main` for
+    example usages and how this produces the same results as
+    :func:`numpy.fft.fft2` (with ``norm='ortho'``).
 
     See Also:
-        From :mod:`numpy.fft` -- ``A[1:n/2]`` contains the positive-frequency terms, and ``A[n/2+1:]``
-        contains the negative-frequency terms, in order of decreasingly negative frequency. For an
-        even number of input points, ``A[n/2]`` represents both positive and negative Nyquist frequency,
-        and is also purely real for real input. For an odd number of input points, ``A[(n-1)/2]``
-        contains the largest positive frequency, while ``A[(n+1)/2]`` contains the largest negative
+        From :mod:`numpy.fft` -- ``A[1:n/2]`` contains the positive-frequency
+        terms, and ``A[n/2+1:]`` contains the negative-frequency terms, in
+        order of decreasingly negative frequency. For an even number of input
+        points, ``A[n/2]`` represents both positive and negative Nyquist
+        frequency, and is also purely real for real input. For an odd number
+        of input points, ``A[(n-1)/2]`` contains the largest positive
+        frequency, while ``A[(n+1)/2]`` contains the largest negative
         frequency.
 
     Args:
@@ -271,10 +293,10 @@ def dft_2d_bases(h, w):
 
     Returns:
         tuple:
-            - **dft_mat_h** (*numpy.ndarray*) -- DFT matrix :math:`Y_h` transforming rows
-              of the 2D signal. Of shape ``(h, h)``.
-            - **dft_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming columns. Of shape
-              ``(w, w)``.
+            - **dft_mat_h** (*numpy.ndarray*) -- DFT matrix :math:`Y_h`
+              transforming rows of the 2D signal. Of shape ``(h, h)``.
+            - **dft_mat_w** (*numpy.ndarray*) -- :math:`Y_w` transforming
+              columns. Of shape ``(w, w)``.
     """
     dft_mat_h = dft_1d_bases(h)
     dft_mat_w = dft_1d_bases(w).T # shouldn't matter, as it's symmetric
@@ -282,26 +304,29 @@ def dft_2d_bases(h, w):
 
 
 def dft_2d_bases_vec(h, w):
-    r"""Generates bases stored in a single matrix, along whose height 2D frequencies get raveled.
+    r"""Generates bases stored in a single matrix, along whose height 2D
+    frequencies get raveled.
 
     Using the "vectorization + Kronecker product" trick:
-    :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)\operatorname{vec}(x)`.
-    So unlike :func:`dft_2d_bases`, this function generates a single matrix
-    :math:`Y=Y_w^T\otimes Y_h`, whose :math:`k`-th row is the flattened :math:`(i, j)`-th basis,
-    where :math:`k=wi+j`.
+    :math:`\operatorname{vec}(Y_hxY_w)=\left(Y_w^T\otimes Y_h\right)
+    \operatorname{vec}(x)`. So unlike :func:`dft_2d_bases`, this function
+    generates a single matrix :math:`Y=Y_w^T\otimes Y_h`, whose :math:`k`-th
+    row is the flattened :math:`(i, j)`-th basis, where :math:`k=wi+j`.
 
-    Input image :math:`x` can be transformed with a single matrix multiplication.
-    Specifically, the analysis process is :math:`X=Y\operatorname{vec}(x)`, and the synthesis
-    process is :math:`x=\operatorname{unvec}(Y^HX)`. See :func:`main` for examples.
+    Input image :math:`x` can be transformed with a single matrix
+    multiplication. Specifically, the analysis process is
+    :math:`X=Y\operatorname{vec}(x)`, and the synthesis process is
+    :math:`x=\operatorname{unvec}(Y^HX)`. See :func:`main` for examples.
 
     Args:
         h (int): Image height.
         w
 
     Returns:
-        numpy.ndarray: Complex matrix with flattened bases as rows. The :math:`k`-th row,
-        when :func:`numpy.reshape`'ed into ``(h, w)``, is the :math:`(i, j)`-th frequency
-        component, where :math:`k=wi+j`. Of shape ``(h * w, h * w)``.
+        numpy.ndarray: Complex matrix with flattened bases as rows. The
+        :math:`k`-th row, when :func:`numpy.reshape`'ed into ``(h, w)``, is
+        the :math:`(i, j)`-th frequency component, where :math:`k=wi+j`.
+        Of shape ``(h * w, h * w)``.
     """
     dft_mat_h, dft_mat_w = dft_2d_bases(h, w)
     dft_mat = np.kron(dft_mat_w.T, dft_mat_h)
