@@ -779,3 +779,34 @@ def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
     bpy.ops.object.modifier_apply(modifier='Subsurf', apply_as='DATA')
 
     return sphere
+
+
+def smart_uv_unwrap(obj):
+    """UV unwrapping using Blender's smart projection.
+
+    A vertex may map to multiple UV locations, as one vertex is often shared by
+        multiple faces, and if a face uses V vertices, then it has V loops, each
+        of which has one UV location.
+
+    Args:
+        obj (bpy_types.Object): Object to UV unwrap.
+
+    Returns:
+        numpy.ndarray: N-by-5 array with the columns being face index, loop
+            index, vertex index, U, and V.
+    """
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.context.scene.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project()
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    fi_li_vi_u_v = []
+    for f in obj.data.polygons:
+        for vi, li in zip(f.vertices, f.loop_indices):
+            uv = obj.data.uv_layers.active.data[li].uv
+            fi_li_vi_u_v.append([f.index, li, vi, uv.x, uv.y])
+    fi_li_vi_u_v = np.array(fi_li_vi_u_v)
+
+    return fi_li_vi_u_v

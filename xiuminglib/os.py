@@ -6,6 +6,8 @@ from glob import glob
 from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
+from .interact import format_print
+
 
 def sortglob(directory, filename='*', ext=None,
              ext_ignore_case=False, google=False):
@@ -158,3 +160,28 @@ def fix_terminal():
     cmd = 'stty sane'
     child = Popen(split(cmd), stdout=DEVNULL, stderr=DEVNULL)
     _, _ = child.communicate()
+
+
+def call(cmd, cwd=None):
+    """Executes a command in shell.
+
+    Args:
+        cmd (str): Command to be executed.
+        cwd (str, optional): Directory to execute the command in. ``None`` means
+            current directory.
+
+    Raises:
+        RuntimeError: If the command exit code is non-zero.
+    """
+    from subprocess import Popen, PIPE
+
+    process = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=cwd, shell=True)
+    output, error = process.communicate() # waits for completion
+    output, error = output.decode(), error.decode()
+
+    if output != '':
+        format_print(output, 'O')
+    if process.returncode != 0:
+        if error != '':
+            format_print(error, 'E')
+        raise RuntimeError
