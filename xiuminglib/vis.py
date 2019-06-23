@@ -174,7 +174,7 @@ def pyplot_wrapper(*args,
     xm_os.makedirs(outdir)
 
     # Save plot
-    plt.savefig(outpath, bbox_inches='tight')
+    _savefig(outpath)
 
     plt.close('all')
 
@@ -474,15 +474,12 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     xm_os.makedirs(outdir)
 
     # Save plot
-    if contents_only:
-        fig.savefig(outpath, dpi=dpi)
-    else:
-        plt.savefig(outpath, bbox_inches='tight')
+    _savefig(outpath, contents_only=contents_only, dpi=dpi)
 
     plt.close('all')
 
 
-def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None,
+def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
                  dotsize=4, dotcolor='r', linewidth=1, linecolor='b'):
     """Visualizes which points on texture map the vertices map to.
 
@@ -493,19 +490,19 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None,
         v
         texmap (numpy.ndarray or str): Loaded texture map or its path. If
             *numpy.ndarray*, can be H-by-W (grayscale) or H-by-W-by-3 (color).
-        ft (list(list(int)), optional): Texture faces used to connect UV points.
-            Values start from 1, e.g., ``'[[1, 2, 3], [], [2, 3, 4, 5], ...]'``.
+        ft (list(list(int)), optional): Texture faces used to connect the
+            UV points. Values start from 1, e.g., ``'[[1, 2, 3], [],
+            [2, 3, 4, 5], ...]'``.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means
             ``os.path.join(constants.Dir.tmp, 'uv_on_texmap.png')``.
-        figtitle (str, optional): Figure title.
-        dotsize (int, optional): Size of the UV dots.
-        dotcolor (str, optional): Their color.
-        linewidth (float, optional): Width of the lines connecting the UV dots.
+        dotsize (int or list(int), optional): Size(s) of the UV dots.
+        dotcolor (str or list(str), optional): Their color(s).
+        linewidth (float, optional): Width of the lines connecting the dots.
         linecolor (str, optional): Their color.
 
     Raises:
-        TypeError: ``texmap`` is of a wrong type.
+        ValueError: If ``texmap`` is of the wrong value.
 
     Writes
         - An image of where the vertices map to on the texture map.
@@ -522,17 +519,18 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None,
 
     figsize = 50
     fig = plt.figure(figsize=(figsize, figsize))
-    if figtitle is not None:
-        fig.title(figtitle)
 
     # Preprocess input
     if isinstance(texmap, str):
         texmap = cv2.imread(texmap, cv2.IMREAD_UNCHANGED)
-    elif isinstance(texmap, np.ndarray):
-        assert (len(texmap.shape) == 2 or len(texmap.shape) == 3), \
-            "'texmap' must be either H-by-W (grayscale) or H-by-W-by-3 (color)"
+    if len(texmap.shape) == 2:
+        add_colorbar = True # for grayscale
+    elif len(texmap.shape) == 3:
+        add_colorbar = False # for color texture maps
     else:
-        raise TypeError("Wrong input format for 'texmap'")
+        raise ValueError(
+            ("texmap must be either H-by-W (grayscale) or H-by-W-by-3 "
+             "(color), or a path to such images"))
 
     h, w = texmap.shape[:2]
     x = u * w
@@ -549,10 +547,10 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None,
     ax.set_xlim([min(0, min(x)), max(w, max(x))])
     ax.set_ylim([max(h, max(y)), min(0, min(y))])
     im = ax.imshow(texmap, cmap='gray')
-    ax.scatter(x, y, c=dotcolor, s=dotsize)
+    ax.scatter(x, y, c=dotcolor, s=dotsize, zorder=2)
     ax.set_aspect('equal')
 
-    # Also connect these dots
+    # Connect these dots
     if ft is not None:
         lines = []
         for vert_id in [x for x in ft if x]: # non-empty ones
@@ -562,27 +560,43 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None, figtitle=None,
             n_verts = len(ind)
             for i in range(n_verts):
                 lines.append([
-                    (x[ind[i]], y[ind[i]]), # start
-                    (x[ind[(i + 1) % n_verts]], y[ind[(i + 1) % n_verts]]) # end
-                ])
+                    (x[ind[i]], y[ind[i]]),
+                    (x[ind[(i + 1) % n_verts]], y[ind[(i + 1) % n_verts]])
+                ]) # line start and end
         line_collection = LineCollection(
-            lines, linewidths=linewidth, colors=linecolor)
+            lines, linewidths=linewidth, colors=linecolor, zorder=1)
         ax.add_collection(line_collection)
-
-    # Colorbar
-    # Create an axes on the right side of ax. The width of cax will be 2%
-    # of ax and the padding between cax and ax will be fixed at 0.1 inch.
-    cax = make_axes_locatable(ax).append_axes('right', size='2%', pad=0.2)
-    plt.colorbar(im, cax=cax)
 
     # Make directory, if necessary
     outdir = dirname(outpath)
     xm_os.makedirs(outdir)
 
-    # Save plot
-    plt.savefig(outpath, bbox_inches='tight')
+    # Colorbar
+    if add_colorbar:
+        # Create an axes on the right side of ax. The width of cax will be 2%
+        # of ax and the padding between cax and ax will be fixed at 0.1 inch.
+        cax = make_axes_locatable(ax).append_axes('right', size='2%', pad=0.2)
+        plt.colorbar(im, cax=cax)
+
+    # Save
+    contents_only = not add_colorbar
+    _savefig(outpath, contents_only=contents_only)
 
     plt.close('all')
+
+
+def _savefig(outpath, contents_only=False, dpi=None):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    if contents_only:
+        ax = plt.gca()
+        ax.set_position([0, 0, 1, 1])
+        ax.set_axis_off()
+        plt.savefig(outpath, dpi=dpi)
+    else:
+        plt.savefig(outpath, bbox_inches='tight', dpi=dpi)
 
 
 def axes3d_wrapper(
@@ -744,13 +758,13 @@ def axes3d_wrapper(
     # Save plot
     if outpath.endswith('.png'):
         if views is None:
-            plt.savefig(outpath, bbox_inches='tight')
+            _savefig(outpath)
         else:
             for elev, azim in views:
                 ax.view_init(elev, azim)
                 plt.draw()
-                plt.savefig(outpath.replace('.png', '_elev%d_azim%d.png' % (elev, azim)),
-                            bbox_inches='tight')
+                _savefig(outpath.replace(
+                    '.png', '_elev%d_azim%d.png' % (elev, azim)))
     elif outpath.endswith('.pkl'):
         # FIXME: can't laod
         with open(outpath, 'wb') as h:
