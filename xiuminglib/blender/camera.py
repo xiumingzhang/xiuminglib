@@ -630,7 +630,9 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
             ``'zbuffer'``. Ray casting is more robust than comparing the
             vertex's depth against :math:`z`-buffer (inaccurate when the
             render resolution is low, or when object's own depth variation is
-            small compared with its overall depth.
+            small compared with its overall depth). The advantage of the
+            :math:`z`-buffer, though, is its runtime independent of number
+            of vertices.
         perc_eps (float, optional): Threshold for percentage difference
             between test value :math:`x` and true value :math:`y`. :math:`x`
             is considered equal to :math:`y` when :math:`\frac{|x - y|}{y}`
