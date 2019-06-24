@@ -355,15 +355,17 @@ def _clear_nodetree_for_active_material(obj):
 def color_vertices(obj, vert_ind, colors):
     r"""Colors each vertex of interest with the given color.
 
-    Colors are defined for vertex loops, in fact. This function uses the same color
-    for all loops of a vertex. Useful for making a 3D heatmap.
+    Colors are defined for vertex loops, in fact. This function uses the same
+    color for all loops of a vertex. Useful for making a 3D heatmap.
 
     Args:
         obj (bpy_types.Object): Object.
-        vert_ind (int or list(int)): Index/indices of vertex/vertices to color.
-        colors (tuple or list(tuple)): RGB value(s) to paint on vertex/vertices.
-            Values :math:`\in [0, 1]`. If one tuple, this color will be applied to all vertices.
-            If list of tuples, must be of the same length as ``vert_ind``.
+        vert_ind (int or list(int)): Index/indices of vertex/vertices to
+            color.
+        colors (tuple or list(tuple)): RGB value(s) to paint on
+            vertex/vertices. Values :math:`\in [0, 1]`. If one tuple,
+            this color will be applied to all vertices. If list of tuples,
+            must be of the same length as ``vert_ind``.
 
     Raises:
         ValueError: If color length is wrong.
@@ -378,7 +380,8 @@ def color_vertices(obj, vert_ind, colors):
     if isinstance(colors, tuple):
         colors = [colors] * len(vert_ind)
     assert (len(colors) == len(vert_ind)), \
-        "`colors` and `vert_ind` must be of the same length, or `colors` is a single tuple"
+        ("`colors` and `vert_ind` must be of the same length, "
+         "or `colors` is a single tuple")
     for i, c in enumerate(colors):
         c = tuple(c)
         if len(c) == 3:
@@ -402,8 +405,9 @@ def color_vertices(obj, vert_ind, colors):
     else:
         vcol_layer = mesh.vertex_colors.new()
 
-    # A vertex and one of its edges combined are called a loop, which has a color
-    # So if a vertex has four outgoing edges, it has four colors for the four loops
+    # A vertex and one of its edges combined are called a loop, which has a
+    # color. So if a vertex has four outgoing edges, it has four colors for
+    # the four loops
     for poly in mesh.polygons:
         for loop_idx in poly.loop_indices:
             loop_vert_idx = mesh.loops[loop_idx].vertex_index
@@ -421,19 +425,19 @@ def color_vertices(obj, vert_ind, colors):
     # Set up nodes for vertex colors
     node_tree = _clear_nodetree_for_active_material(obj)
     nodes = node_tree.nodes
-    nodes.new('ShaderNodeAttribute')
-    nodes.new('ShaderNodeBsdfDiffuse')
-    nodes.new('ShaderNodeOutputMaterial')
+    attr_node = nodes.new('ShaderNodeAttribute')
+    diffuse_node = nodes.new('ShaderNodeBsdfDiffuse')
+    output_node = nodes.new('ShaderNodeOutputMaterial')
     nodes['Attribute'].attribute_name = vcol_layer.name
-    node_tree.links.new(nodes['Attribute'].outputs[0], nodes['Diffuse BSDF'].inputs[0])
-    node_tree.links.new(nodes['Diffuse BSDF'].outputs[0], nodes['Material Output'].inputs[0])
+    node_tree.links.new(attr_node.outputs[0], diffuse_node.inputs[0])
+    node_tree.links.new(diffuse_node.outputs[0], output_node.inputs[0])
 
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
     logger.name = logger_name
     logger.info("Vertex color(s) added to '%s'", obj.name)
-    logger.warning("    ..., so node tree of '%s' has changed", obj.name)
+    logger.warning("..., so node tree of '%s' has changed", obj.name)
 
 
 def _assert_cycles(scene):
@@ -784,9 +788,13 @@ def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
 def smart_uv_unwrap(obj):
     """UV unwrapping using Blender's smart projection.
 
-    A vertex may map to multiple UV locations, as one vertex is often shared by
-    multiple faces, and if a face uses M vertices, then it has M loops, each of
-    which has one UV location.
+    A vertex may map to multiple UV locations, as one vertex is often shared
+    by multiple faces, and if a face uses M vertices, then it has M loops,
+    each of which has one UV location.
+
+    Note:
+        If a vertex belongs to no face, it doesn't get a UV coordinate,
+        so don't assume you can get a UV for any given vertex index.
 
     Args:
         obj (bpy_types.Object): Object to UV unwrap.

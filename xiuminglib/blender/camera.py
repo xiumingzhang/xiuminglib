@@ -387,18 +387,21 @@ def get_camera_matrix(cam, keep_disparity=False):
 def get_camera_zbuffer(cam, save_to=None, hide=None):
     """Gets :math:`z`-buffer of the camera.
 
-    Values are :math:`z` components in camera-centered coordinate system, where
+    Values are :math:`z` components in camera-centered coordinate system,
+    where
 
     - :math:`x` is horizontal;
     - :math:`y` is down (to align with the actual pixel coordinates);
-    - right-handed: positive :math:`z` is look-at direction and means "in front of camera."
+    - right-handed: positive :math:`z` is look-at direction and means
+      "in front of camera."
 
-    Origin is camera center, not image plane (one focal length away from origin).
+    Origin is the camera center, not image plane (one focal length away
+    from origin).
 
     Args:
         cam (bpy_types.Object): Camera.
-        save_to (str, optional): Path to which the .exr :math:`z`-buffer will be saved.
-            None means don't save.
+        save_to (str, optional): Path to which the .exr :math:`z`-buffer will
+            be saved. ``None`` means don't save.
         hide (str or list(str)): Names of objects to be hidden while rendering
             this camera's :math:`z`-buffer.
 
@@ -416,7 +419,8 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
             hide = [hide]
         for element in hide:
             assert isinstance(element, str), \
-                "`hide` should contain object names (i.e., strings), not objects themselves"
+                ("`hide` should contain object names (i.e., strings), "
+                 "not objects themselves")
 
     if save_to is None:
         outpath = '/tmp/%s_zbuffer' % time()
@@ -437,14 +441,14 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
         nodes.remove(node)
 
     # Set up nodes for z pass
-    nodes.new('CompositorNodeRLayers')
-    nodes.new('CompositorNodeOutputFile')
-    node_tree.links.new(nodes['Render Layers'].outputs[2], nodes['File Output'].inputs[0])
-    nodes['File Output'].format.file_format = 'OPEN_EXR'
-    nodes['File Output'].format.color_mode = 'RGB'
-    nodes['File Output'].format.color_depth = '32' # full float
-    nodes['File Output'].base_path = dirname(outpath)
-    nodes['File Output'].file_slots[0].path = basename(outpath)
+    rlayers_node = nodes.new('CompositorNodeRLayers')
+    output_node = nodes.new('CompositorNodeOutputFile')
+    node_tree.links.new(rlayers_node.outputs[2], output_node.inputs[0])
+    output_node.format.file_format = 'OPEN_EXR'
+    output_node.format.color_mode = 'RGB'
+    output_node.format.color_depth = '32' # full float
+    output_node.base_path = dirname(outpath)
+    output_node.file_slots[0].path = basename(outpath)
 
     # Hide objects from z-buffer, if necessary
     if hide is not None:
@@ -456,7 +460,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
 
     # Render
     scene.cycles.samples = 1
-    scene.render.filepath = '/tmp/%s_rgb.png' % time() # redirect RGB rendering to avoid overwritting
+    scene.render.filepath = '/tmp/%s_rgb.png' % time() # to avoid overwritting
     bpy.ops.render.render(write_still=True)
 
     w = scene.render.resolution_x
@@ -475,8 +479,10 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     # Load z-buffer as array
     exr_path = outpath + '%04d' % scene.frame_current + '.exr'
     im = cv2.imread(exr_path, cv2.IMREAD_UNCHANGED)
-    assert (np.array_equal(im[:, :, 0], im[:, :, 1]) and np.array_equal(im[:, :, 0], im[:, :, 2])), \
-        "BGR channels of the z-buffer should be all the same, but they are not"
+    assert (np.array_equal(im[:, :, 0], im[:, :, 1]) and \
+            np.array_equal(im[:, :, 0], im[:, :, 2])), \
+        ("BGR channels of the z-buffer should be all the same, "
+         "but they are not")
     zbuffer = im[:, :, 0]
 
     # Delete or move the .exr as user wants
@@ -518,14 +524,16 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
         cam (bpy_types.Object): Camera.
         obj_names (str or list(str), optional): Names of objects of interest.
             ``None`` means all objects.
-        world_coords (bool, optional): Whether to return world or local coordinates.
+        world_coords (bool, optional): Whether to return world or local
+            coordinates.
 
     Returns:
         tuple:
-            - **xyzs** (*mathutils.Vector or list(mathutils.Vector)*) -- 3D local coordinates.
-              Value being ``None`` means no intersections.
-            - **intersect_objnames** (*str or list(str)*) -- Name(s) of object(s) responsible
-              for intersections. ``None`` means no intersection.
+            - **xyzs** (*mathutils.Vector or list(mathutils.Vector)*) -- 3D
+              local coordinates. Value being ``None`` means no intersections.
+            - **intersect_objnames** (*str or list(str)*) -- Name(s) of
+              object(s) responsible for intersections. ``None`` means no
+              intersection.
     """
     logger_name = thisfile + '->backproject_uv_to_3d()'
 
@@ -556,14 +564,15 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
 
     for i in range(uvs.shape[0]):
 
-        # Compute the infinitely far point on the line passing camera center and projecting to uv
+        # Compute the infinitely far point on the line passing camera center
+        # and projecting to uv
         uv = uvs[i, :]
         uv1d = np.append(uv, [1, 0])
         xyzw = cam_mat.inverted() * Vector(uv1d) # w = 0; world
 
         # Ray start and direction in world coordinates
-        ray_start_world = cam.location # origin in camera coordinates
-        ray_dir_world = 1e10 * Vector(xyzw[:3]) - ray_start_world # boost it for robust matrix multiplications
+        ray_from_world = cam.location
+        ray_to_world = Vector(xyzw[:3])
 
         first_intersect = None
         first_intersect_objname = None
@@ -575,19 +584,21 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
             world2obj = obj2world.inverted()
 
             # Ray start and direction in local coordinates
-            ray_start = world2obj * ray_start_world
-            ray_dir = world2obj * ray_dir_world
+            ray_from = world2obj * ray_from_world
+            ray_to = world2obj * ray_to_world
 
             # Ray tracing
-            loc, _, _, dist = tree.ray_cast(ray_start, ray_dir)
+            loc, dist = raycast(tree, ray_from, ray_to)
 
-            # See if this intersection is closer to camera center
+            # See if this intersection is closer to camera center than
+            # previous intersections with other objects
             if (dist is not None) and (dist < dist_min):
                 if world_coords:
                     first_intersect = obj2world * loc
                 else:
                     first_intersect = loc
                 first_intersect_objname = obj_name
+                dist_min = dist
 
         xyzs[i] = first_intersect
         intersect_objnames[i] = first_intersect_objname
@@ -601,32 +612,38 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
     return xyzs, intersect_objnames
 
 
-def get_visible_vertices(cam, obj, ignore_occlusion=False, perc_z_eps=1e-6, hide=None):
-    r"""Gets vertices that are visible (projected within frame *and* unoccluded) from camera.
-
-    Warning:
-        Depth is considered the same within certain percentage, so the results may be inaccurate
-        when object's own depth variation is small compared with its overall depth.
-
-    Rasterized :math:`z`-buffer (instead of ray tracing) used for speed.
-    Since :math:`z`-buffer may cover other objects, this function takes occlusion by other.
-    objects into account, but you can opt to ignore the :math:`z`-buffer such that occluded
-    vertices are also considered visible.
+def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
+                         method='raycast', perc_eps=1e-6):
+    r"""Gets vertices that are visible (projected within frame *and*
+    unoccluded) from camera.
 
     Args:
         cam (bpy_types.Object): Camera.
         obj (bpy_types.Object): Object of interest.
-        ignore_occlusion (bool, optional): Whether to ignore occlusion (including self-occlusion).
-        perc_z_eps (float, optional): Threshold for percentage difference between the query :math:`z_q`
-            and buffered :math:`z_b`. :math:`z_q` is considered equal to :math:`z_b` when
-            :math:`\frac{|z_q - z_b|}{z_b} <` this. Useless if ``ignore_occlusion``.
-        hide (str or list(str), optional): Names of objects to be hidden while rendering this camera's
-            :math:`z`-buffer. Useless if ``ignore_occlusion``.
+        ignore_occlusion (bool, optional): Whether to ignore all occlusion
+            (including self-occlusion). Useful for finding out which vertices
+            fall inside the camera view.
+        hide (str or list(str), optional): Names of objects to be hidden
+            while rendering this camera's :math:`z`-buffer. No effect if
+            ``ignore_occlusion``.
+        method (str, optional): Visibility test method: ``'raycast'`` or
+            ``'zbuffer'``. Ray casting is more robust than comparing the
+            vertex's depth against :math:`z`-buffer (inaccurate when the
+            render resolution is low, or when object's own depth variation is
+            small compared with its overall depth.
+        perc_eps (float, optional): Threshold for percentage difference
+            between test value :math:`x` and true value :math:`y`. :math:`x`
+            is considered equal to :math:`y` when :math:`\frac{|x - y|}{y}`
+            is smaller. No effect if ``ignore_occlusion``.
 
     Returns:
         list: Indices of vertices that are visible.
     """
     logger_name = thisfile + '->get_visible_vertices()'
+
+    legal = ('zbuffer', 'raycast')
+    assert method in legal, \
+        "Legal methods: %s, but found '%s'" % (legal, method)
 
     scene = bpy.context.scene
     w, h = scene.render.resolution_x, scene.render.resolution_y
@@ -637,39 +654,88 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, perc_z_eps=1e-6, hide
 
     # Get z-buffer
     if not ignore_occlusion:
-        zbuffer = get_camera_zbuffer(cam, hide=hide)
+        if method == 'zbuffer':
+            zbuffer = get_camera_zbuffer(cam, hide=hide)
+        else:
+            zbuffer = None
 
     # Get mesh data from object
     bm = bmesh.new()
     bm.from_mesh(obj.data)
+    if zbuffer is None:
+        tree = BVHTree.FromBMesh(bm)
+        world2obj = obj.matrix_world.inverted()
+        ray_from = world2obj * cam.location # object's local coordinates
+
+    def are_close(x, y):
+        return (x - y) / y < perc_eps
 
     visible_vert_ind = []
     # For each of its vertices
+    # TODO: vectorize for speed
     for bv in bm.verts:
 
         # Check if its projection falls inside frame
         v_world = obj.matrix_world * bv.co # local to world
         uv = np.array(cam_mat * v_world) # project to 2D
         uv = uv[:-1] / uv[-1]
-        if uv[0] >= 0 and uv[0] < w * scale and uv[1] >= 0 and uv[1] < h * scale:
-            # Yes
+        if uv[0] >= 0 and uv[0] < w * scale and \
+                uv[1] >= 0 and uv[1] < h * scale:
+            # Falls into the camera view
 
             if ignore_occlusion:
                 # Considered visible already
-                visible_vert_ind.append(bv.index)
+                visible = True
             else:
-                # Proceed to check occlusion with z-buffer
-                v_cv = ext_mat * v_world # world to camera to CV
-                z = v_cv[-1]
-                z_min = zbuffer[int(uv[1]), int(uv[0])]
-                if (z - z_min) / z_min < perc_z_eps:
-                    visible_vert_ind.append(bv.index)
+                # Check occlusion
+                if zbuffer is None:
+                    # ... by raycasting
+                    ray_to = bv.co # local coordinates
+                    ray_dist_no_occlu = (ray_to - ray_from).length
+                    _, ray_dist = raycast(tree, ray_from, ray_to)
+                    visible = ray_dist is not None and \
+                        are_close(ray_dist_no_occlu, ray_dist)
+                else:
+                    # ... by comparing against z-buffer
+                    v_cv = ext_mat * v_world # world to camera to CV
+                    z = v_cv[-1]
+                    z_min = zbuffer[int(uv[1]), int(uv[0])]
+                    visible = are_close(z, z_min)
+
+            if visible:
+                visible_vert_ind.append(bv.index)
 
     logger.name = logger_name
     logger.info("Visibility test done with camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
     return visible_vert_ind
+
+
+def raycast(obj_bvh_tree, ray_from_objspc, ray_to_objspc):
+    """Casts a ray to an object.
+
+    Args:
+        obj_bvh_tree (BVHTree): Constructed BVH tree of the object.
+        ray_from_objspc (Vector): Ray origin, in object's local coordinates.
+        ray_to_objspc (Vector): Ray goes through this point, also specified
+            in the object's local coordinates. Note that the ray doesn't stop
+            at this point, and this is just for computing the ray direction.
+
+    Returns:
+        tuple:
+            - **hit_loc** (*Vector*) -- Hit location on the object, in the
+              object's local coordinates. ``None`` means no intersection.
+            - **ray_dist** (*float*) -- Distance that the ray has traveled
+              before hitting the object. If ``ray_to_objspc`` is a vertex
+              on the object, then this return value is useful for checking
+              for self occlusion. ``None`` means no intersection.
+    """
+    ray_dir = 1e10 * (ray_to_objspc - ray_from_objspc) # robustify
+    hit_loc, _, _, ray_dist = obj_bvh_tree.ray_cast(ray_from_objspc, ray_dir)
+    if hit_loc is None:
+        assert ray_dist is None
+    return hit_loc, ray_dist
 
 
 def get_2d_bounding_box(obj, cam):
