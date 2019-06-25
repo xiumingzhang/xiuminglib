@@ -26,7 +26,8 @@ def remove_objects(name_pattern, regex=False):
     removed = []
 
     if regex:
-        assert (name_pattern != '*'), "Want to match everything? Correct regex for this is '.*'"
+        assert (name_pattern != '*'), \
+            "Want to match everything? Correct regex for that is '.*'"
 
         name_pattern = re.compile(name_pattern)
 
@@ -142,7 +143,7 @@ def import_object(model_path,
 
 
 def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
-    """Exports Blender object(s) to a .obj file.
+    """Exports Blender object(s) to a file.
 
     Args:
         obj_names (str or list(str)): Object name(s) to export.
@@ -475,13 +476,17 @@ def _make_texture_node(obj, texture_str):
 def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
     r"""Sets up a simple (diffuse or glossy) node tree.
 
-    Bundled texture can be an external/bundled texture map (which will be
-        carelessly mapped) or simply a pure color.
+    Texture can be an bundled texture map, a path to an external texture map,
+    or simply a pure color.
+
+    If a path to an external image, it will be texture mapped carelessly. See
+    private function :func:`_make_texture_node` for how this is done.
 
     Args:
         obj (bpy_types.Object): Object, optionally bundled with texture map.
-        texture (str or tuple): If string, must be ``'bundled'`` or path to the texture
-            image. If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
+        texture (str or tuple): If string, must be ``'bundled'`` or path to
+            the texture image. If tuple, must be of 4 floats
+            :math:`\in [0, 1]` as RGBA values.
         shader_type (str): Either ``'diffuse'`` or ``'glossy'``.
         roughness (float, optional): If diffuse, the roughness in Oren-Nayar,
             0 gives Lambertian. If glossy, 0 means perfectly reflective.
@@ -507,14 +512,16 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
 
     if isinstance(texture, str):
         texture_node = _make_texture_node(obj, texture)
-        node_tree.links.new(texture_node.outputs['Color'], shader_node.inputs['Color'])
+        node_tree.links.new(texture_node.outputs['Color'],
+                            shader_node.inputs['Color'])
     elif isinstance(texture, tuple):
         shader_node.inputs['Color'].default_value = texture
     else:
         raise TypeError(texture)
 
     output_node = nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(shader_node.outputs['BSDF'], output_node.inputs['Surface'])
+    node_tree.links.new(shader_node.outputs['BSDF'],
+                        output_node.inputs['Surface'])
 
     # Roughness
     shader_node.inputs['Roughness'].default_value = roughness
@@ -523,7 +530,8 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
     scene.update()
 
     logger.name = logger_name
-    logger.info("%s node tree set up for '%s'", shader_type.capitalize(), obj.name)
+    logger.info("%s node tree set up for '%s'",
+                shader_type.capitalize(), obj.name)
 
 
 def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
