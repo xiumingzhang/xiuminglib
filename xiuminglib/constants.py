@@ -4,7 +4,8 @@ from os.path import abspath, join, dirname
 
 class Dir:
     tmp = environ.get('TMP_DIR', '/tmp/')
-    mstatus = join(environ.get('MSTATUS_BACKEND_DIR', '/tmp/machine-status'), 'runtime')
+    mstatus = join(
+        environ.get('MSTATUS_BACKEND_DIR', '/tmp/machine-status'), 'runtime')
     data = abspath(join(dirname(__file__), '..', 'data'))
 
 

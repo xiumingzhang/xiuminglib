@@ -1,9 +1,140 @@
 from time import time, sleep
-from os import makedirs
-from os.path import abspath, join, dirname
+from os import makedirs, environ
+import os.path
+from os.path import abspath, join, dirname, basename, getmtime
 
 from .config import create_logger
+from .os import call
 logger, thisfile = create_logger(abspath(__file__))
+
+
+def colossus_accessible(somefunc):
+    """Wraps functions to read from and write to Google Colossus.
+
+    This doesn't depend on Blaze, as it's using the ``fileutil`` CLI, rather
+    than ``google3.pyglib.gfile``. This is convenient in at least two cases:
+
+    - You are too lazy to use Blaze, want to run tests quickly on your local
+      machine, and need access to CNS files.
+    - Your IO is more complex than what ``with gfile.Open(...) as h:`` can do
+      (e.g., a Blender function importing an object from a path), in which
+      case you have to copy the CNS file to local ("local" here could also
+      mean a Borglet's local).
+
+    Warning:
+        Because it's hard (if possible at all) to figure out which path is
+        input, and which is output, there are two hacks, the first of which
+        is harmless but inefficient, and the second may lead to wrong
+        behaviors depending on what your input is:
+
+        - CNS paths that exist before ``somefunc`` gets run will be copied to
+          local, and local paths that are modified by ``somefunc`` will be
+          copied to CNS. Consequently, if ``somefunc`` output already exists,
+          it will be copied to local, get overwritten by ``somefunc``, and
+          finally copied back to CNS. Harmless but inefficient.
+        - It's easy to identify a CNS path, but not so a local path. The hack
+          here is to consider any string containing ``'/'`` that doesn't start
+          with ``'/cns/'`` as a local path. This could be wrong of course.
+    """
+    logger_name = thisfile + '->@colossus_accessible(%s)' % somefunc.__name__
+
+    def _is_cnspath(path):
+        return isinstance(path, str) and path.startswith('/cns/')
+
+    def _could_be_path(x):
+        # FIXME: not-so-elegant heuristic
+        return isinstance(x, str) and '/' in x
+
+    # $TMP set by Borg or yourself (e.g., with .bashrc)
+    tmp_dir = environ.get('TMP', '/tmp/')
+
+    def _get_cns_info(cns_path):
+        # Existence; file or directory
+        testf = call('fileutil test -f %s' % cns_path)
+        testd = call('fileutil test -d %s' % cns_path)
+        if testf == 1 and testd == 1:
+            exists = False
+            isdir = False
+        elif testf == 1 and testd == 0:
+            exists = True
+            isdir = True
+        elif testf == 0 and testd == 1:
+            exists = True
+            isdir = False
+        else:
+            raise NotImplementedError("What does this even mean?")
+        # Deal with '/'-ending paths
+        if cns_path.endswith('/'):
+            assert isdir, "Not a directory, but ends with '/'?"
+            cns_path = cns_path[:-1]
+            assert not cns_path.endswith('/'), "Path shouldn't end with '//'"
+        # Path guaranteed not to end with '/', so that basename is not ''
+        local_path = join(tmp_dir, '%f_%s' % (time(), basename(cns_path)))
+        return cns_path, exists, isdir, local_path
+
+    def _get_local_info(local_path):
+        exists = os.path.exists(local_path)
+        isdir = os.path.isdir(local_path)
+        # Deal with '/'-ending paths
+        if local_path.endswith('/'):
+            assert isdir, "Not a directory, but ends with '/'?"
+            local_path = local_path[:-1]
+            assert not local_path.endswith('/')
+        return local_path, exists, isdir
+
+    def _cp(src, dst, isdir=False):
+        parallel_copy = 10
+        cmd = 'fileutil cp -f'
+        if isdir:
+            cmd += '-R -parallel_copy=%d' % parallel_copy
+        cmd += ' %s %s' % (src, dst)
+        assert call(cmd) == 0, "Copy failed"
+        logger.name = logger_name
+        logger.info("\n%s\n\tcopied to\n%s", src, dst)
+
+    def wrapper(*arg, **kwargs):
+        # Fetch info. for all CNS paths
+        arg_local, kwargs_local = [], {}
+        cns_info, local_info = {}, {}
+        for x in arg:
+            if _is_cnspath(x):
+                cns_path, cns_exists, cns_isdir, local_path = _get_cns_info(x)
+                cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
+                arg_local.append(local_path)
+            elif _could_be_path(x): # don't touch non-CNS files
+                local_path, local_exists, local_isdir = _get_local_info(x)
+                local_info[local_path] = (local_exists, local_isdir)
+                arg_local.append(local_path)
+            else: # intact
+                arg_local.append(x)
+        for k, v in kwargs.items():
+            if _is_cnspath(v):
+                cns_path, cns_exists, cns_isdir, local_path = _get_cns_info(v)
+                cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
+                kwargs_local[k] = local_path
+            elif _could_be_path(v): # don't touch non-CNS files
+                local_path, local_exists, local_isdir = _get_local_info(v)
+                local_info[local_path] = (local_exists, local_isdir)
+                kwargs_local[k] = local_path
+            else: # intact
+                kwargs_local[k] = v
+        # For reading: copy CNS paths that exist to local
+        # TODO: what if some of those paths are not input, so copying them to
+        # local is a waste?
+        for cns_path, (cns_exists, cns_isdir, local_path) in cns_info.items():
+            if cns_exists:
+                _cp(cns_path, local_path, isdir=cns_isdir)
+        # Run the real function
+        t0 = time()
+        results = somefunc(*arg_local, **kwargs_local)
+        # For writing: copy local paths that are just modified and correspond
+        # to CNS paths to CNS
+        for cns_path, (cns_exists, cns_isdir, local_path) in cns_info.items():
+            if os.path.exists(local_path) and getmtime(local_path) > t0:
+                _cp(local_path, cns_path, isdir=cns_isdir)
+        return results
+
+    return wrapper
 
 
 def timeit(somefunc):
@@ -51,6 +182,7 @@ def main():
         sleep(1)
         return x + y, x + z, y + z, x + y + z
     print(findsums(1, 2, 3))
+
     # existok
     newdir = join(dirname(__file__), 'test')
     makedirs_ = existok(makedirs)

@@ -167,11 +167,11 @@ def call(cmd, cwd=None):
 
     Args:
         cmd (str): Command to be executed.
-        cwd (str, optional): Directory to execute the command in. ``None`` means
-            current directory.
+        cwd (str, optional): Directory to execute the command in. ``None``
+            means current directory.
 
-    Raises:
-        RuntimeError: If the command exit code is non-zero.
+    Returns:
+        int: Command exit code. 0 means a successful call.
     """
     from subprocess import Popen, PIPE
 
@@ -184,4 +184,5 @@ def call(cmd, cwd=None):
     if process.returncode != 0:
         if error != '':
             format_print(error, 'E')
-        raise RuntimeError
+
+    return process.returncode
