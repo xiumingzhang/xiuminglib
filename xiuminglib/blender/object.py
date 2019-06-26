@@ -146,21 +146,19 @@ def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
     """Exports Blender object(s) to a file.
 
     Args:
-        obj_names (str or list(str)): Object name(s) to export.
-        model_path (str): Output path ending with .obj.
+        obj_names (str or list(str)): Object name(s) to export. Must be a
+            single string if output format is .ply.
+        model_path (str): Output .obj or .ply path.
         axis_forward (str, optional): Which direction is forward.
         axis_up (str, optional): Which direction is upward.
 
     Raises:
-        NotImplementedError: If the output path doesn't end with .obj.
+        NotImplementedError: If the output path doesn't end with .obj or .ply.
 
     Writes
-        - Exported .obj file, possibly accompanied by a .mtl file.
+        - Exported model file, possibly accompanied by a material file.
     """
     logger_name = thisfile + '->export_object()'
-
-    if not model_path.endswith('.obj'):
-        raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
     out_dir = dirname(model_path)
     xm_os.makedirs(out_dir)
@@ -174,9 +172,17 @@ def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
         if o.select:
             exported.append(o.name)
 
-    bpy.ops.export_scene.obj(
-        filepath=model_path, use_selection=True,
-        axis_forward=axis_forward, axis_up=axis_up)
+    if model_path.endswith('.ply'):
+        assert len(obj_names) == 1, \
+            ".ply holds a single object; use .obj for multiple objects"
+        bpy.ops.export_mesh.ply(
+            filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
+    elif model_path.endswith('.obj'):
+        bpy.ops.export_scene.obj(
+            filepath=model_path, use_selection=True,
+            axis_forward=axis_forward, axis_up=axis_up)
+    else:
+        raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
     logger.name = logger_name
     logger.info("%s Exported to %s", exported, model_path)
