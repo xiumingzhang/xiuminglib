@@ -69,8 +69,10 @@ def import_object(model_path,
         model_path (str): Path to object to add.
         axis_forward (str, optional): Which direction is forward.
         axis_up (str, optional): Which direction is upward.
-        rot_mat (array_like, optional): 3-by-3 rotation matrix *preceding* translation.
-        trans_vec (array_like, optional): 3D translation vector *following* rotation.
+        rot_mat (array_like, optional): 3-by-3 rotation matrix *preceding*
+            translation.
+        trans_vec (array_like, optional): 3D translation vector *following*
+            rotation.
         scale (float, optional): Scale of the object.
         merge (bool, optional): Whether to merge objects into one.
         name (str, optional): Object name after import.
@@ -105,7 +107,8 @@ def import_object(model_path,
         context = bpy.context.copy()
         context['active_object'] = objs_to_merge[0]
         context['selected_objects'] = objs_to_merge
-        context['selected_editable_bases'] = [bpy.context.scene.object_bases[o.name] for o in objs_to_merge]
+        context['selected_editable_bases'] = \
+            [bpy.context.scene.object_bases[o.name] for o in objs_to_merge]
         bpy.ops.object.join(context)
         objs_to_merge[0].name = 'merged' # change object name
         # objs_to_merge[0].data.name = 'merged' # change mesh name
@@ -142,15 +145,17 @@ def import_object(model_path,
     return obj_list
 
 
-def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
+def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
     """Exports Blender object(s) to a file.
 
     Args:
         obj_names (str or list(str)): Object name(s) to export. Must be a
             single string if output format is .ply.
         model_path (str): Output .obj or .ply path.
-        axis_forward (str, optional): Which direction is forward.
-        axis_up (str, optional): Which direction is upward.
+        axis_forward (str, optional): Which direction is forward. For .obj,
+            the default is ``'-Z'``, and ``'Y'`` for .ply.
+        axis_up (str, optional): Which direction is upward. For .obj, the
+            default is ``'Y'``, and ``'Z'`` for .ply.
 
     Raises:
         NotImplementedError: If the output path doesn't end with .obj or .ply.
@@ -175,12 +180,25 @@ def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
     if model_path.endswith('.ply'):
         assert len(obj_names) == 1, \
             ".ply holds a single object; use .obj for multiple objects"
+
+        if axis_forward is None:
+            axis_forward = 'Y'
+        if axis_up is None:
+            axis_up = 'Z'
+
         bpy.ops.export_mesh.ply(
             filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
+
     elif model_path.endswith('.obj'):
+        if axis_forward is None:
+            axis_forward = '-Z'
+        if axis_up is None:
+            axis_up = 'Y'
+
         bpy.ops.export_scene.obj(
             filepath=model_path, use_selection=True,
             axis_forward=axis_forward, axis_up=axis_up)
+
     else:
         raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
@@ -471,10 +489,13 @@ def _make_texture_node(obj, texture_str):
         bpy.data.images.load(texture_str, check_existing=True)
         img = bpy.data.images[basename(texture_str)]
         # Careless texture mapping
-        texture_node.projection = 'SPHERE'
+        texture_node.projection = 'FLAT'
         texcoord_node = nodes.new('ShaderNodeTexCoord')
-        node_tree.links.new(texcoord_node.outputs['Generated'],
-                            texture_node.inputs['Vector'])
+        if obj.data.uv_layers.active is None:
+            texcoord = texcoord_node.outputs['Generated']
+        else:
+            texcoord = texcoord_node.outputs['UV']
+        node_tree.links.new(texcoord, texture_node.inputs['Vector'])
     texture_node.image = img
     return texture_node
 
@@ -483,10 +504,11 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
     r"""Sets up a simple (diffuse or glossy) node tree.
 
     Texture can be an bundled texture map, a path to an external texture map,
-    or simply a pure color.
-
-    If a path to an external image, it will be texture mapped carelessly. See
-    private function :func:`_make_texture_node` for how this is done.
+    or simply a pure color. If a path to an external image, and UV
+    coordinates are given (e.g., in the geometry .obj file), then they will be
+    used. If they are not given, texture mapping will be done carelessly,
+    with automatically generated UV coordinates. See private function
+    :func:`_make_texture_node` for how this is done.
 
     Args:
         obj (bpy_types.Object): Object, optionally bundled with texture map.

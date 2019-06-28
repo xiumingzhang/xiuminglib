@@ -522,7 +522,8 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
 
     # Preprocess input
     if isinstance(texmap, str):
-        texmap = cv2.imread(texmap, cv2.IMREAD_UNCHANGED)
+        texmap = cv2.imread(
+            texmap, cv2.IMREAD_UNCHANGED)[:, :, ::-1] # made RGB
     if len(texmap.shape) == 2:
         add_colorbar = True # for grayscale
     elif len(texmap.shape) == 3:

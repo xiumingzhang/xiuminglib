@@ -8,7 +8,7 @@ from .os import call
 logger, thisfile = create_logger(abspath(__file__))
 
 
-def colossus_accessible(somefunc):
+def colossus_local_interface(somefunc):
     """Wraps functions to read from and write to Google Colossus.
 
     This doesn't depend on Blaze, as it's using the ``fileutil`` CLI, rather
@@ -36,7 +36,8 @@ def colossus_accessible(somefunc):
           here is to consider any string containing ``'/'`` that doesn't start
           with ``'/cns/'`` as a local path. This could be wrong of course.
     """
-    logger_name = thisfile + '->@colossus_accessible(%s)' % somefunc.__name__
+    logger_name = thisfile + '->@colossus_local_interface(%s())' \
+        % somefunc.__name__
 
     def _is_cnspath(path):
         return isinstance(path, str) and path.startswith('/cns/')
@@ -119,8 +120,8 @@ def colossus_accessible(somefunc):
             else: # intact
                 kwargs_local[k] = v
         # For reading: copy CNS paths that exist to local
-        # TODO: what if some of those paths are not input, so copying them to
-        # local is a waste?
+        # TODO: what if some of those paths are not input? Copying them to
+        # local is a waste
         for cns_path, (cns_exists, cns_isdir, local_path) in cns_info.items():
             if cns_exists:
                 _cp(cns_path, local_path, isdir=cns_isdir)
@@ -139,17 +140,14 @@ def colossus_accessible(somefunc):
 
 def timeit(somefunc):
     """Outputs the time a function takes to execute."""
-    logger_name = thisfile + '->@timeit'
+    logger_name = thisfile + '->@timeit(%s())' % somefunc.__name__
 
     def wrapper(*arg, **kwargs):
-        funcname = somefunc.__name__
-        logger.name = logger_name
-        logger.info("Function %s started", funcname)
         t0 = time()
         results = somefunc(*arg, **kwargs)
         t = time() - t0
         logger.name = logger_name
-        logger.info("    ... and done in %.2f seconds", t)
+        logger.info("Time elapsed: %.2f seconds", t)
         return results
 
     return wrapper
@@ -160,7 +158,7 @@ def existok(makedirs_func):
     where one parallel worker checks the folder doesn't exist and wants to
     create it with another worker doing so faster.
     """
-    logger_name = thisfile + '->@existok'
+    logger_name = thisfile + '->@existok(%s())' % makedirs_func.__name__
 
     def wrapper(*args, **kwargs):
         try:
