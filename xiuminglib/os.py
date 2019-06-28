@@ -10,7 +10,7 @@ from .interact import format_print
 
 
 def sortglob(directory, filename='*', ext=None,
-             ext_ignore_case=False, google=False):
+             ext_ignore_case=False, blaze=False):
     """Globs and then sorts according to a pattern ending in multiple
     extensions.
 
@@ -19,15 +19,16 @@ def sortglob(directory, filename='*', ext=None,
         filename (str or tuple(str), optional): Filename pattern excluding
             extensions, e.g., ``'img*'``.
         ext (str or tuple(str), optional): Extensions of interest, e.g.,
-            ``('png', 'PNG')``. ``None`` means no extension, useful for folders
-            or files with no extension.
-        ext_ignore_case (bool, optional): Whether to ignore case for extensions.
-        google (bool, optional): Whether on Google's infra.
+            ``('png', 'PNG')``. ``None`` means no extension, useful for
+            folders or files with no extension.
+        ext_ignore_case (bool, optional): Whether to ignore case for
+            extensions.
+        blaze (bool, optional): Whether this is run with Google's Blaze.
 
     Returns:
         list(str): Sorted list of files globbed.
     """
-    if google:
+    if blaze:
         from google3.pyglib import gfile
         glob_func = gfile.Glob
     else:
@@ -62,7 +63,8 @@ def rmglob(path_pattern, exclude_dir=True):
 
     Args:
         path_pattern (str): Pattern to glob, e.g., ``'/path/to/img???.png'``.
-        exclude_dir (bool, optional): Whether to exclude directories from being             deleted.
+        exclude_dir (bool, optional): Whether to exclude directories from
+            being deleted.
     """
     for x in glob(path_pattern):
         if isdir(x):
@@ -72,19 +74,19 @@ def rmglob(path_pattern, exclude_dir=True):
             os.remove(x)
 
 
-def makedirs(directory, rm_if_exists=False, google=False):
-    """Wraps :func:`os.makedirs` to support removing the directory if it alread
-    exists.
+def makedirs(directory, rm_if_exists=False, blaze=False):
+    """Wraps :func:`os.makedirs` to support removing the directory if it
+    alread exists.
 
     Args:
         directory (str)
-        rm_if_exists (bool, optional): Whether to remove the directory (and its
-            contents) if it already exists.
-        google (bool, optional): Whether on Google's infra.
+        rm_if_exists (bool, optional): Whether to remove the directory (and
+            its contents) if it already exists.
+        blaze (bool, optional): Whether this is run with Google's Blaze.
     """
     logger_name = thisfile + '->makedirs()'
 
-    if google:
+    if blaze:
         from google3.pyglib import gfile
         exists_func = gfile.Exists
         delete_func = gfile.DeleteRecursively

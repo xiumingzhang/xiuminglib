@@ -1,3 +1,23 @@
+"""Decorators that wrap a function.
+
+If the function is defined in the file where you want to use the decorator,
+you can decorate the function at define time:
+
+.. code-block:: python
+
+    @decorator
+    def somefunc():
+        return
+
+If the function is defined somewhere else, do:
+
+.. code-block:: python
+
+    from numpy import mean
+
+    mean = decorator(mean)
+"""
+
 from time import time, sleep
 from os import makedirs, environ
 import os.path
@@ -9,32 +29,50 @@ logger, thisfile = create_logger(abspath(__file__))
 
 
 def colossus_local_interface(somefunc):
-    """Wraps functions to read from and write to Google Colossus.
+    """Wraps black-box functions to read from and write to Google Colossus.
 
-    This doesn't depend on Blaze, as it's using the ``fileutil`` CLI, rather
-    than ``google3.pyglib.gfile``. This is convenient in at least two cases:
+    Because it's hard (if possible at all) to figure out which path is
+    input, and which is output, when the input function is black-box, this is
+    a "best-effort" decorator with heuristics (see below for warnings).
+
+    Warning:
+        It's easy to identify a CNS path, but not so a local path. The
+        heuristic here is to consider any string containing ``'/'`` that
+        doesn't start with ``'/cns/'`` as a local path. This could be wrong
+        of course.
+
+    This decorator works by looping through all the positional and keyword
+    parameters, copying CNS paths that exist prior to ``somefunc`` execuation
+    to temporary local locations, running ``somefunc`` and writing its output
+    to local locations, and finally copying local paths that get modified by
+    ``somefunc`` to their corresponding CNS locations.
+
+    Warning:
+        Therefore, if ``somefunc``'s output already exists (e.g., you are
+        re-running the function to overwrite the old result), it will be
+        copied to local, overwritten by ``somefunc`` locally, and finally
+        copied back to CNS. This doesn't lead to wrong behaviors, but is
+        inefficient.
+
+    This decorator doesn't depend on Blaze, as it's using the ``fileutil``
+    CLI, rather than ``google3.pyglib.gfile``. This is convenient in at least
+    two cases:
 
     - You are too lazy to use Blaze, want to run tests quickly on your local
-      machine, and need access to CNS files.
+      machine, but need access to CNS files.
     - Your IO is more complex than what ``with gfile.Open(...) as h:`` can do
       (e.g., a Blender function importing an object from a path), in which
       case you have to copy the CNS file to local ("local" here could also
       mean a Borglet's local).
 
-    Warning:
-        Because it's hard (if possible at all) to figure out which path is
-        input, and which is output, there are two hacks, the first of which
-        is harmless but inefficient, and the second may lead to wrong
-        behaviors depending on what your input is:
+    This interface generally works with resolved paths (e.g.,
+    ``/path/to/file``), but not with wildcard paths (e.g., ``/path/to/???``),
+    sicne it's hard (if possible at all) to guess what your function tries to
+    do with such wildcard paths.
 
-        - CNS paths that exist before ``somefunc`` gets run will be copied to
-          local, and local paths that are modified by ``somefunc`` will be
-          copied to CNS. Consequently, if ``somefunc`` output already exists,
-          it will be copied to local, get overwritten by ``somefunc``, and
-          finally copied back to CNS. Harmless but inefficient.
-        - It's easy to identify a CNS path, but not so a local path. The hack
-          here is to consider any string containing ``'/'`` that doesn't start
-          with ``'/cns/'`` as a local path. This could be wrong of course.
+    Writes
+        - Input files copied from Colossus to ``$TMP/``.
+        - Output files generated to ``$TMP/``, to be copied to Colossus.
     """
     logger_name = thisfile + '->@colossus_local_interface(%s())' \
         % somefunc.__name__
@@ -97,6 +135,7 @@ def colossus_local_interface(somefunc):
         # Fetch info. for all CNS paths
         arg_local, kwargs_local = [], {}
         cns_info, local_info = {}, {}
+        # Positional arguments
         for x in arg:
             if _is_cnspath(x):
                 cns_path, cns_exists, cns_isdir, local_path = _get_cns_info(x)
@@ -108,6 +147,7 @@ def colossus_local_interface(somefunc):
                 arg_local.append(local_path)
             else: # intact
                 arg_local.append(x)
+        # Keyword arguments
         for k, v in kwargs.items():
             if _is_cnspath(v):
                 cns_path, cns_exists, cns_isdir, local_path = _get_cns_info(v)
@@ -129,7 +169,7 @@ def colossus_local_interface(somefunc):
         t0 = time()
         results = somefunc(*arg_local, **kwargs_local)
         # For writing: copy local paths that are just modified and correspond
-        # to CNS paths to CNS
+        # to CNS paths back to CNS
         for cns_path, (cns_exists, cns_isdir, local_path) in cns_info.items():
             if os.path.exists(local_path) and getmtime(local_path) > t0:
                 _cp(local_path, cns_path, isdir=cns_isdir)
