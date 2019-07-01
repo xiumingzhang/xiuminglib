@@ -87,8 +87,8 @@ def colossus_interface(somefunc):
 
     def _get_cns_info(cns_path):
         # Existence; file or directory
-        testf = call('fileutil test -f %s' % cns_path)
-        testd = call('fileutil test -d %s' % cns_path)
+        testf, _, _ = call('fileutil test -f %s' % cns_path)
+        testd, _, _ = call('fileutil test -d %s' % cns_path)
         if testf == 1 and testd == 1:
             exists = False
             isdir = False
@@ -125,7 +125,7 @@ def colossus_interface(somefunc):
         if isdir:
             cmd += '-R -parallel_copy=%d' % parallel_copy
         cmd += ' %s %s' % (src, dst)
-        assert call(cmd) == 0, "Copy failed"
+        assert call(cmd)[0] == 0, "Copy failed"
         logger.name = logger_name
         logger.info("\n%s\n\tcopied to\n%s", src, dst)
 

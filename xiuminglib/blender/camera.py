@@ -250,7 +250,7 @@ def get_camera_matrix(cam, keep_disparity=False):
     r"""Gets camera matrix, intrinsics, and extrinsics from a camera.
 
     You can ask for a 4-by-4 projection that projects :math:`(x, y, z, 1)` to
-    :math:`(u, v, 1, d)`, where :math:`d` is the disparity, reciprocal of depth.
+    :math:`(x, y, 1, d)`, where :math:`d` is the disparity, reciprocal of depth.
 
     ``cam_mat.dot(pts)`` gives you projections in the following convention:
 
@@ -500,26 +500,26 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     return zbuffer
 
 
-def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
+def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
     """Backprojects 2D coordinates to 3D.
 
-    Since a 2D point could be projected from any point on a 3D line,
+    Since a 2D point could have been projected from any point on a 3D line,
     this function will return the 3D point at which this line (ray)
     intersects with an object for the first time.
 
     Args:
-        uvs (array_like): UV coordinates of length 2 or shape N-by-2,
+        xys (array_like): XY coordinates of length 2 or shape N-by-2,
             in the following convention:
 
             .. code-block:: none
 
                 (0, 0)
                 +------------> (w, 0)
-                |           u
+                |           x
                 |
                 |
                 |
-                v v (0, h)
+                v y (0, h)
 
         cam (bpy_types.Object): Camera.
         obj_names (str or list(str), optional): Names of objects of interest.
@@ -535,10 +535,10 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
               object(s) responsible for intersections. ``None`` means no
               intersection.
     """
-    logger_name = thisfile + '->backproject_uv_to_3d()'
+    logger_name = thisfile + '->backproject_to_3d()'
 
     # Standardize inputs
-    uvs = np.array(uvs).reshape(-1, 2)
+    xys = np.array(xys).reshape(-1, 2)
     objs = bpy.data.objects
     if isinstance(obj_names, str):
         obj_names = [obj_names]
@@ -559,16 +559,16 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
         bm = get_bmesh(obj)
         trees[obj_name] = BVHTree.FromBMesh(bm)
 
-    xyzs = [None] * uvs.shape[0]
-    intersect_objnames = [None] * uvs.shape[0]
+    xyzs = [None] * xys.shape[0]
+    intersect_objnames = [None] * xys.shape[0]
 
-    for i in range(uvs.shape[0]):
+    for i in range(xys.shape[0]):
 
         # Compute the infinitely far point on the line passing camera center
-        # and projecting to uv
-        uv = uvs[i, :]
-        uv1d = np.append(uv, [1, 0])
-        xyzw = cam_mat.inverted() * Vector(uv1d) # w = 0; world
+        # and projecting to (x, y)
+        xy = xys[i, :]
+        xy1d = np.append(xy, [1, 0])
+        xyzw = cam_mat.inverted() * Vector(xy1d) # w = 0; world
 
         # Ray start and direction in world coordinates
         ray_from_world = cam.location
@@ -607,7 +607,7 @@ def backproject_uv_to_3d(uvs, cam, obj_names=None, world_coords=False):
     logger.info("Backprojection done with camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
-    if uvs.shape[0] == 1:
+    if xys.shape[0] == 1:
         return xyzs[0], intersect_objnames[0]
     return xyzs, intersect_objnames
 
@@ -679,10 +679,10 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
 
         # Check if its projection falls inside frame
         v_world = obj.matrix_world * bv.co # local to world
-        uv = np.array(cam_mat * v_world) # project to 2D
-        uv = uv[:-1] / uv[-1]
-        if uv[0] >= 0 and uv[0] < w * scale and \
-                uv[1] >= 0 and uv[1] < h * scale:
+        xy = np.array(cam_mat * v_world) # project to 2D
+        xy = xy[:-1] / xy[-1]
+        if xy[0] >= 0 and xy[0] < w * scale and \
+                xy[1] >= 0 and xy[1] < h * scale:
             # Falls into the camera view
 
             if ignore_occlusion:
@@ -701,7 +701,7 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
                     # ... by comparing against z-buffer
                     v_cv = ext_mat * v_world # world to camera to CV
                     z = v_cv[-1]
-                    z_min = zbuffer[int(uv[1]), int(uv[0])]
+                    z_min = zbuffer[int(xy[1]), int(xy[0])]
                     visible = are_close(z, z_min)
 
             if visible:
@@ -757,11 +757,11 @@ def get_2d_bounding_box(obj, cam):
 
             (0, 0)
             +------------> (w, 0)
-            |           u
+            |           x
             |
             |
             |
-            v v (0, h)
+            v y (0, h)
     """
     logger_name = thisfile + '->get_2d_bounding_box()'
 
@@ -776,8 +776,8 @@ def get_2d_bounding_box(obj, cam):
     pts = np.vstack([v.co.to_4d() for v in obj.data.vertices]).T # 4-by-N
     world_mat = np.array(obj.matrix_world) # 4-by-4
     cam_mat = np.array(cam_mat) # 3-by-4
-    uvw = cam_mat.dot(world_mat.dot(pts)) # 3-by-N
-    pts_2d = np.divide(uvw[:2, :], np.tile(uvw[2, :], (2, 1))) # 2-by-N
+    xyw = cam_mat.dot(world_mat.dot(pts)) # 3-by-N
+    pts_2d = np.divide(xyw[:2, :], np.tile(xyw[2, :], (2, 1))) # 2-by-N
 
     # Compute bounding box
     u_min, v_min = np.min(pts_2d, axis=1)

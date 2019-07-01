@@ -23,7 +23,7 @@ def sortglob(directory, filename='*', ext=None,
         filename (str or tuple(str), optional): Filename pattern excluding
             extensions, e.g., ``'img*'``.
         ext (str or tuple(str), optional): Extensions of interest, e.g.,
-            ``('png', 'PNG')``. ``None`` means no extension, useful for
+            ``('png', 'jpg')``. ``None`` means no extension, useful for
             folders or files with no extension.
         ext_ignore_case (bool, optional): Whether to ignore case for
             extensions.

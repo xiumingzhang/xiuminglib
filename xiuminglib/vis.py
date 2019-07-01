@@ -241,9 +241,9 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
 
     # Put on scatter points
     for i in range(pts.shape[0]):
-        uv = tuple(pts[i, ::-1].astype(int))
+        xy = tuple(pts[i, ::-1].astype(int))
         color = (int(bgr[i, 0]), int(bgr[i, 1]), int(bgr[i, 2]))
-        cv2.circle(im, uv, size[i], color, thickness)
+        cv2.circle(im, xy, size[i], color, thickness)
 
     # Make directory, if necessary
     outdir = dirname(outpath)
