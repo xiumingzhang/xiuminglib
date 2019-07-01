@@ -23,12 +23,13 @@ from os import makedirs, environ
 import os.path
 from os.path import abspath, join, dirname, basename, getmtime
 
+from .os import call, _is_cnspath
+
 from .config import create_logger
-from .os import call
 logger, thisfile = create_logger(abspath(__file__))
 
 
-def colossus_local_interface(somefunc):
+def colossus_interface(somefunc):
     """Wraps black-box functions to read from and write to Google Colossus.
 
     Because it's hard (if possible at all) to figure out which path is
@@ -74,11 +75,8 @@ def colossus_local_interface(somefunc):
         - Input files copied from Colossus to ``$TMP/``.
         - Output files generated to ``$TMP/``, to be copied to Colossus.
     """
-    logger_name = thisfile + '->@colossus_local_interface(%s())' \
+    logger_name = thisfile + '->@colossus_interface(%s())' \
         % somefunc.__name__
-
-    def _is_cnspath(path):
-        return isinstance(path, str) and path.startswith('/cns/')
 
     def _could_be_path(x):
         # FIXME: not-so-elegant heuristic

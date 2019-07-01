@@ -9,10 +9,14 @@ logger, thisfile = create_logger(abspath(__file__))
 from .interact import format_print
 
 
+def _is_cnspath(path):
+    return isinstance(path, str) and path.startswith('/cns/')
+
+
 def sortglob(directory, filename='*', ext=None,
-             ext_ignore_case=False, blaze=False):
-    """Globs and then sorts according to a pattern ending in multiple
-    extensions.
+             ext_ignore_case=False, colossus_heuristic=True):
+    """Globs and then sorts filenames, possibly ending with multiple
+    extensions, in a directory.
 
     Args:
         directory (str): Directory to glob, e.g., ``'/path/to/'``.
@@ -23,22 +27,37 @@ def sortglob(directory, filename='*', ext=None,
             folders or files with no extension.
         ext_ignore_case (bool, optional): Whether to ignore case for
             extensions.
-        blaze (bool, optional): Whether this is run with Google's Blaze.
+        colossus_heuristic (bool, optional): Whether to turn on the heuristic
+            that identifies and then works with Google Colossus (CNS)
+            directories.
 
     Returns:
         list(str): Sorted list of files globbed.
     """
-    if blaze:
-        from google3.pyglib import gfile
-        glob_func = gfile.Glob
+    def _glob_cns_cli(pattern):
+        cmd = 'fileutil ls -d %s' % pattern # -d to avoid recursively
+        retcode, stdout, _ = call(cmd, print_stdout_stderr=False)
+        assert retcode == 0, "`fileutil ls` failed"
+        return [x for x in stdout.split('\n') if x != '']
+
+    if colossus_heuristic and _is_cnspath(directory):
+        # Is a CNS path
+        try: # using Blaze
+            from google3.pyglib import gfile
+            glob_func = gfile.Glob
+        except ModuleNotFoundError: # not using Blaze
+            glob_func = _glob_cns_cli
     else:
+        # Is just a regular local path
         glob_func = glob
+
     if ext is None:
         ext = ()
     elif isinstance(ext, str):
         ext = (ext,)
     if isinstance(filename, str):
         filename = (filename,)
+
     ext_list = []
     for x in ext:
         if not x.startswith('.'):
@@ -47,6 +66,7 @@ def sortglob(directory, filename='*', ext=None,
             ext_list += [x.lower(), x.upper()]
         else:
             ext_list.append(x)
+
     files = []
     for f in filename:
         if ext_list:
@@ -54,6 +74,7 @@ def sortglob(directory, filename='*', ext=None,
                 files += glob_func(join(directory, f + e))
         else:
             files += glob_func(join(directory, f))
+
     files_sorted = sorted(files)
     return files_sorted
 
@@ -164,27 +185,35 @@ def fix_terminal():
     _, _ = child.communicate()
 
 
-def call(cmd, cwd=None):
+def call(cmd, cwd=None, print_stdout_stderr=True):
     """Executes a command in shell.
 
     Args:
         cmd (str): Command to be executed.
         cwd (str, optional): Directory to execute the command in. ``None``
             means current directory.
+        print_stdout_stderr (bool, optional): Whether to print out these
+            streams.
 
     Returns:
-        int: Command exit code. 0 means a successful call.
+        tuple:
+            - **retcode** (*int*) -- Command exit code. 0 means a successful
+              call.
+            - **stdout** (*str*) -- Standard output stream.
+            - **stderr** (*str*) -- Standard error stream.
     """
     from subprocess import Popen, PIPE
 
     process = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=cwd, shell=True)
-    output, error = process.communicate() # waits for completion
-    output, error = output.decode(), error.decode()
+    stdout, stderr = process.communicate() # waits for completion
+    stdout, stderr = stdout.decode(), stderr.decode()
 
-    if output != '':
-        format_print(output, 'O')
-    if process.returncode != 0:
-        if error != '':
-            format_print(error, 'E')
+    if print_stdout_stderr:
+        if stdout != '':
+            format_print(stdout, 'O')
+        if process.returncode != 0:
+            if stderr != '':
+                format_print(stderr, 'E')
 
-    return process.returncode
+    retcode = process.returncode
+    return retcode, stdout, stderr
