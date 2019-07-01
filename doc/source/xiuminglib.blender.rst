@@ -49,4 +49,12 @@ xiuminglib.blender.scene module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.blender.util module
+------------------------------
+
+.. automodule:: xiuminglib.blender.util
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
