@@ -432,16 +432,15 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     mat = mat.astype(float)
 
     # Figure
+    dpi = 96 # assumed
+    w_in = mat.shape[1] / dpi
+    h_in = mat.shape[0] / dpi
     if contents_only:
         # Output heatmap will have the exact same shape as input matrix
-        dpi = 96 # assumed
         fig = plt.figure(frameon=False)
-        w_in = mat.shape[1] / dpi
-        h_in = mat.shape[0] / dpi
         fig.set_size_inches(w_in, h_in)
     else:
-        figsize = 14
-        plt.figure(figsize=(figsize, figsize))
+        plt.figure(figsize=(w_in, h_in))
 
     # Axis
     if contents_only:
@@ -517,8 +516,10 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
     if outpath is None:
         outpath = join(constants.Dir.tmp, 'uv_on_texmap.png')
 
-    figsize = 50
-    fig = plt.figure(figsize=(figsize, figsize))
+    dpi = 96 # assumed
+    h, w = texmap.shape[:2]
+    w_in, h_in = w / dpi, h / dpi
+    fig = plt.figure(figsize=(w_in, h_in))
 
     # Preprocess input
     if isinstance(texmap, str):
@@ -533,7 +534,6 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
             ("texmap must be either H-by-W (grayscale) or H-by-W-by-3 "
              "(color), or a path to such images"))
 
-    h, w = texmap.shape[:2]
     x = u * w
     y = (1 - v) * h
     # (0, 0)

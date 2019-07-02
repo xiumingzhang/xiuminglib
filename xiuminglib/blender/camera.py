@@ -736,7 +736,8 @@ def raycast(obj_bvh_tree, ray_from_objspc, ray_to_objspc):
     """Casts a ray to an object.
 
     Args:
-        obj_bvh_tree (BVHTree): Constructed BVH tree of the object.
+        obj_bvh_tree (mathutils.bvhtree.BVHTree): Constructed BVH tree of the
+            object.
         ray_from_objspc (mathutils.Vector): Ray origin, in object's local
             coordinates.
         ray_to_objspc (mathutils.Vector): Ray goes through this point, also

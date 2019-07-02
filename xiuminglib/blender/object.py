@@ -852,6 +852,8 @@ def smart_uv_unwrap(obj):
                 +-----------> (1, 0)
             (0, 0)        u
     """
+    assert obj.type == 'MESH'
+
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.context.scene.objects.active = obj
     bpy.ops.object.mode_set(mode='EDIT')

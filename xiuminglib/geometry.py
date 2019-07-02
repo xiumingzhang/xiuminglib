@@ -352,14 +352,18 @@ def normalize(vecs, axis=0):
 
 
 def barycentric(pts, tvs):
-    """Computes barycentric coordinates of 3D point(s) w.r.t. a triangle.
+    r"""Computes barycentric coordinates of 3D point(s) w.r.t. a triangle.
 
     Args:
-        pts (array_like): 3-array for one point; N-by-3 array for multiple points.
-        tvs (array_like): 3-by-3 array with rows being the triangle's vertices.
+        pts (array_like): 3-array for one point; N-by-3 array for multiple
+            points.
+        tvs (array_like): 3-by-3 array with rows being the triangle's
+            vertices.
 
     Returns:
-        numpy.ndarray: Barycentric coordinates of the same shape as the input.
+        numpy.ndarray: Barycentric coordinates of the same shape as ``pts``.
+        If any array element :math:`\notin [0, 1]`, the input point doesn't
+        fall on the triangle.
     """
     pts = np.array(pts)
     tvs = np.array(tvs)
@@ -380,7 +384,9 @@ def barycentric(pts, tvs):
     w = (d00 * d21 - d01 * d20) / denom
     u = 1 - v - w
 
-    uvw = np.hstack((u.reshape((-1, 1)), v.reshape((-1, 1)), w.reshape((-1, 1))))
+    uvw = np.hstack((u.reshape((-1, 1)),
+                     v.reshape((-1, 1)),
+                     w.reshape((-1, 1))))
     return uvw.reshape(input_shape)
 
 
