@@ -522,18 +522,25 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
                 v y (0, h)
 
         cam (bpy_types.Object): Camera.
-        obj_names (str or list(str), optional): Names of objects of interest.
-            ``None`` means all objects.
-        world_coords (bool, optional): Whether to return world or local
-            coordinates.
+        obj_names (str or list(str), optional): Name(s) of object(s) of
+            interest. ``None`` means considering all objects.
+        world_coords (bool, optional): Whether to return world or the object's
+            local coordinates.
 
     Returns:
         tuple:
-            - **xyzs** (*mathutils.Vector or list(mathutils.Vector)*) -- 3D
-              local coordinates. Value being ``None`` means no intersections.
+            - **xyzs** (*mathutils.Vector or list(mathutils.Vector)*) --
+              Intersection coordinates specified in either the world or the
+              object's local coordinates, depending on ``world_coords``.
+              ``None`` means no intersection.
             - **intersect_objnames** (*str or list(str)*) -- Name(s) of
               object(s) responsible for intersections. ``None`` means no
               intersection.
+            - **intersect_facei** (*int or list(int)*) -- Index/indices of the
+              face(s), where the intersection happens.
+            - **intersect_normals** (*mathutils.Vector or
+              list(mathutils.Vector)*) -- Normal vector(s) at the
+              intersection(s) specified in the same space as ``xyzs``.
     """
     logger_name = thisfile + '->backproject_to_3d()'
 
@@ -561,7 +568,10 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
 
     xyzs = [None] * xys.shape[0]
     intersect_objnames = [None] * xys.shape[0]
+    intersect_facei = [None] * xys.shape[0]
+    intersect_normals = [None] * xys.shape[0]
 
+    # TODO: vectorize for performance
     for i in range(xys.shape[0]):
 
         # Compute the infinitely far point on the line passing camera center
@@ -576,6 +586,8 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
 
         first_intersect = None
         first_intersect_objname = None
+        first_intersect_facei = None
+        first_intersect_normal = None
         dist_min = np.inf
 
         # Test intersections with each object of interest
@@ -588,28 +600,34 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
             ray_to = world2obj * ray_to_world
 
             # Ray tracing
-            loc, dist = raycast(tree, ray_from, ray_to)
+            loc, normal, facei, dist = raycast(tree, ray_from, ray_to)
 
             # See if this intersection is closer to camera center than
             # previous intersections with other objects
             if (dist is not None) and (dist < dist_min):
-                if world_coords:
-                    first_intersect = obj2world * loc
-                else:
-                    first_intersect = loc
+                first_intersect = obj2world * loc if world_coords else loc
                 first_intersect_objname = obj_name
+                first_intersect_facei = facei
+                first_intersect_normal = \
+                    obj2world * normal if world_coords else normal
+                first_intersect_normal.normalize()
+                # Re-normalize in case transforming to world coordinates has
+                # ruined the unit length
                 dist_min = dist
 
         xyzs[i] = first_intersect
         intersect_objnames[i] = first_intersect_objname
+        intersect_facei[i] = first_intersect_facei
+        intersect_normals[i] = first_intersect_normal
 
     logger.name = logger_name
     logger.info("Backprojection done with camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
+    ret = (xyzs, intersect_objnames, intersect_facei, intersect_normals)
     if xys.shape[0] == 1:
-        return xyzs[0], intersect_objnames[0]
-    return xyzs, intersect_objnames
+        return tuple(x[0] for x in ret)
+    return ret
 
 
 def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
@@ -694,7 +712,7 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
                     # ... by raycasting
                     ray_to = bv.co # local coordinates
                     ray_dist_no_occlu = (ray_to - ray_from).length
-                    _, ray_dist = raycast(tree, ray_from, ray_to)
+                    _, _, _, ray_dist = raycast(tree, ray_from, ray_to)
                     visible = ray_dist is not None and \
                         are_close(ray_dist_no_occlu, ray_dist)
                 else:
@@ -719,25 +737,32 @@ def raycast(obj_bvh_tree, ray_from_objspc, ray_to_objspc):
 
     Args:
         obj_bvh_tree (BVHTree): Constructed BVH tree of the object.
-        ray_from_objspc (Vector): Ray origin, in object's local coordinates.
-        ray_to_objspc (Vector): Ray goes through this point, also specified
-            in the object's local coordinates. Note that the ray doesn't stop
-            at this point, and this is just for computing the ray direction.
+        ray_from_objspc (mathutils.Vector): Ray origin, in object's local
+            coordinates.
+        ray_to_objspc (mathutils.Vector): Ray goes through this point, also
+            specified in the object's local coordinates. Note that the ray
+            doesn't stop at this point, and this is just for computing the
+            ray direction.
 
     Returns:
         tuple:
-            - **hit_loc** (*Vector*) -- Hit location on the object, in the
-              object's local coordinates. ``None`` means no intersection.
+            - **hit_loc** (*mathutils.Vector*) -- Hit location on the object,
+              in the object's local coordinates. ``None`` means no
+              intersection.
+            - **hit_normal** (*mathutils.Vector*) -- Normal of the hit
+              location, also in the object's local coordinates.
+            - **hit_fi** (*int*) -- Index of the face where the hit happens.
             - **ray_dist** (*float*) -- Distance that the ray has traveled
-              before hitting the object. If ``ray_to_objspc`` is a vertex
-              on the object, then this return value is useful for checking
-              for self occlusion. ``None`` means no intersection.
+              before hitting the object. If ``ray_to_objspc`` is a point on
+              the object surface, then this return value is useful for
+              checking for self occlusion.
     """
     ray_dir = 1e10 * (ray_to_objspc - ray_from_objspc) # robustify
-    hit_loc, _, _, ray_dist = obj_bvh_tree.ray_cast(ray_from_objspc, ray_dir)
+    hit_loc, hit_normal, hit_fi, ray_dist = \
+        obj_bvh_tree.ray_cast(ray_from_objspc, ray_dir)
     if hit_loc is None:
-        assert ray_dist is None
-    return hit_loc, ray_dist
+        assert hit_normal is None and hit_fi is None and ray_dist is None
+    return hit_loc, hit_normal, hit_fi, ray_dist
 
 
 def get_2d_bounding_box(obj, cam):
