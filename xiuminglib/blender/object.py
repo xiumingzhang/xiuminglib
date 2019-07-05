@@ -206,15 +206,15 @@ def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
     logger.info("%s Exported to %s", exported, model_path)
 
 
-def add_cylinder_between(pt1, pt2, r, name=None):
+def add_cylinder_between(pt1, pt2, r=1e-3, name=None):
     """Adds a cylinder specified by two end points and radius.
 
     Super useful for visualizing rays in ray tracing while debugging.
 
     Args:
-        pt1 (array_like): Global coordinates of point 1.
-        pt2 (array_like): Global coordinates of point 2.
-        r (float): Cylinder radius.
+        pt1 (array_like): World coordinates of point 1.
+        pt2 (array_like): World coordinates of point 2.
+        r (float, optional): Cylinder radius.
         name (str, optional): Cylinder name.
 
     Returns:
@@ -286,13 +286,14 @@ def add_rectangular_plane(center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2),
     return plane_obj
 
 
-def create_mesh(verts, faces, name):
+def create_mesh(verts, faces, name='new-mesh'):
     """Creates a mesh from vertices and faces.
 
     Args:
-        verts (array_like): Local coordinates of the vertices. Of shape N-by-3.
+        verts (array_like): Local coordinates of the vertices, of shape
+            N-by-3.
         faces (list(tuple)): Faces specified by ordered vertex indices.
-        name (str): Mesh name.
+        name (str, optional): Mesh name.
 
     Returns:
         bpy_types.Mesh: Mesh data created.
@@ -312,12 +313,14 @@ def create_mesh(verts, faces, name):
     return mesh_data
 
 
-def create_object_from_mesh(mesh_data, obj_name, location=(0, 0, 0), rotation_euler=(0, 0, 0), scale=(1, 1, 1)):
+def create_object_from_mesh(mesh_data, obj_name='new-obj',
+                            location=(0, 0, 0), rotation_euler=(0, 0, 0),
+                            scale=(1, 1, 1)):
     """Creates object from mesh data.
 
     Args:
         mesh_data (bpy_types.Mesh): Mesh data.
-        obj_name (str): Object name.
+        obj_name (str, optional): Object name.
         location (tuple, optional): Object location in world coordinates.
         rotation_euler (tuple, optional): Object rotation in radians.
         scale (tuple, optional): Object scale.

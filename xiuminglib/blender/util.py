@@ -31,3 +31,15 @@ def get(otype, any_ok=False):
         return objs[0]
     raise RuntimeError(("When `any_ok` is `False`, there must be exactly "
                         "one object matching the given type"))
+
+
+def cursor_to(loc):
+    """Moves the cursor to the given 3D location.
+
+    Useful for inspecting where a 3D point is in the scene, to do which you
+    first use this function, save the scene, and open the scene in GUI.
+
+    Args:
+        loc (array_like): 3D coordinates, of length 3.
+    """
+    bpy.context.scene.cursor_location = loc

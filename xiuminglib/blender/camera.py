@@ -16,6 +16,8 @@ from .object import get_bmesh
 from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
+from ..geometry import from_homo
+
 
 def add_camera(xyz=(0, 0, 0),
                rot_vec_rad=(0, 0, 0),
@@ -250,7 +252,8 @@ def get_camera_matrix(cam, keep_disparity=False):
     r"""Gets camera matrix, intrinsics, and extrinsics from a camera.
 
     You can ask for a 4-by-4 projection that projects :math:`(x, y, z, 1)` to
-    :math:`(x, y, 1, d)`, where :math:`d` is the disparity, reciprocal of depth.
+    :math:`(x, y, 1, d)`, where :math:`d` is the disparity, reciprocal of
+    depth.
 
     ``cam_mat.dot(pts)`` gives you projections in the following convention:
 
@@ -264,7 +267,8 @@ def get_camera_matrix(cam, keep_disparity=False):
 
     Args:
         cam (bpy_types.Object): Camera.
-        keep_disparity (bool, optional): Whether matrices keep disparity or not.
+        keep_disparity (bool, optional): Whether or not the matrices keep
+            disparity.
 
     Raises:
         ValueError: If render settings and camera intrinsics mismatch. Run
@@ -272,8 +276,9 @@ def get_camera_matrix(cam, keep_disparity=False):
 
     Returns:
         tuple:
-            - **cam_mat** (*mathutils.Matrix*) -- Camera matrix, product of intrinsics and
-              extrinsics. 4-by-4 if ``keep_disparity``; else, 3-by-4.
+            - **cam_mat** (*mathutils.Matrix*) -- Camera matrix, product of
+              intrinsics and extrinsics. 4-by-4 if ``keep_disparity``; else,
+              3-by-4.
             - **int_mat** (*mathutils.Matrix*) -- Camera intrinsics. 4-by-4 if
               ``keep_disparity``; else, 3-by-3.
             - **ext_mat** (*mathutils.Matrix*) -- Camera extrinsics. 4-by-4 if
@@ -289,8 +294,9 @@ def get_camera_matrix(cam, keep_disparity=False):
     if not intrinsics_compatible_with_scene(cam):
         raise ValueError(
             ("Render settings and camera intrinsic parameters mismatch. "
-             "Such computed matrices will not make sense. Make them consistent first. "
-             "See error message from 'intrinsics_compatible_with_scene()' above for advice"))
+             "Such computed matrices will not make sense. Make them "
+             "consistent first. See error message from "
+             "intrinsics_compatible_with_scene() above for advice"))
 
     # Intrinsics
 
@@ -300,45 +306,47 @@ def get_camera_matrix(cam, keep_disparity=False):
     w = scene.render.resolution_x
     h = scene.render.resolution_y
     scale = scene.render.resolution_percentage / 100.
-    pixel_aspect_ratio = scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
+    pixel_aspect_ratio = \
+        scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
 
     if cam.data.sensor_fit == 'VERTICAL':
         # h times pixel height must fit into sensor_height_mm
-        # w / pixel_aspect_ratio times pixel width will then fit into sensor_width_mm
-        s_v = h * scale / sensor_height_mm
-        s_u = w * scale / pixel_aspect_ratio / sensor_width_mm
+        # w / pixel_aspect_ratio times pixel width will then fit into
+        # sensor_width_mm
+        s_y = h * scale / sensor_height_mm
+        s_x = w * scale / pixel_aspect_ratio / sensor_width_mm
     else: # 'HORIZONTAL' or 'AUTO'
         # w times pixel width must fit into sensor_width_mm
-        # h * pixel_aspect_ratio times pixel height will then fit into sensor_height_mm
-        pixel_aspect_ratio = scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
-        s_u = w * scale / sensor_width_mm
-        s_v = h * scale * pixel_aspect_ratio / sensor_height_mm
+        # h * pixel_aspect_ratio times pixel height will then fit into
+        # sensor_height_mm
+        s_x = w * scale / sensor_width_mm
+        s_y = h * scale * pixel_aspect_ratio / sensor_height_mm
 
     skew = 0 # only use rectangular pixels
 
     if keep_disparity:
         # 4-by-4
         int_mat = Matrix((
-            (s_u * f_mm, skew, w * scale / 2, 0),
-            (0, s_v * f_mm, h * scale / 2, 0),
+            (s_x * f_mm, skew, w * scale / 2, 0),
+            (0, s_y * f_mm, h * scale / 2, 0),
             (0, 0, 1, 0),
             (0, 0, 0, 1)))
     else:
         # 3-by-3
         int_mat = Matrix((
-            (s_u * f_mm, skew, w * scale / 2),
-            (0, s_v * f_mm, h * scale / 2),
+            (s_x * f_mm, skew, w * scale / 2),
+            (0, s_y * f_mm, h * scale / 2),
             (0, 0, 1)))
 
     # Extrinsics
 
     # Three coordinate systems involved:
-    #   1. World coordinates: "world"
-    #   2. Blender camera coordinates: "cam"
+    #   1. World coordinates "world"
+    #   2. Blender camera coordinates "cam":
     #        - x is horizontal
     #        - y is up
     #        - right-handed: negative z is look-at direction
-    #   3. Desired computer vision camera coordinates: "cv"
+    #   3. Desired computer vision camera coordinates "cv":
     #        - x is horizontal
     #        - y is down (to align to the actual pixel coordinates)
     #        - right-handed: positive z is look-at direction
@@ -353,7 +361,7 @@ def get_camera_matrix(cam, keep_disparity=False):
     t, rot_euler = cam.matrix_world.decompose()[0:2]
 
     # World to Blender camera
-    rotmat_world2cam = rot_euler.to_matrix().transposed() # equivalent to inverse
+    rotmat_world2cam = rot_euler.to_matrix().transposed() # same as inverse
     t_world2cam = rotmat_world2cam * -t
 
     # World to computer vision camera
@@ -551,6 +559,7 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         obj_names = [obj_names]
     elif obj_names is None:
         obj_names = [o.name for o in objs if o.type == 'MESH']
+    z_c = 1 # any depth in the camera space, so long as not infinity
 
     scene = bpy.context.scene
     w, h = scene.render.resolution_x, scene.render.resolution_y
@@ -558,6 +567,7 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
 
     # Get 4-by-4 invertible camera matrix
     cam_mat, _, _ = get_camera_matrix(cam, keep_disparity=True)
+    cam_mat_inv = cam_mat.inverted() # pixel space to world
 
     # Construct BVH trees for objects of interest
     trees = {}
@@ -574,15 +584,15 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
     # TODO: vectorize for performance
     for i in range(xys.shape[0]):
 
-        # Compute the infinitely far point on the line passing camera center
-        # and projecting to (x, y)
+        # Compute any point on the line passing camera center and
+        # projecting to (x, y)
         xy = xys[i, :]
-        xy1d = np.append(xy, [1, 0])
-        xyzw = cam_mat.inverted() * Vector(xy1d) # w = 0; world
+        xy1d = np.append(xy, [1, 1 / z_c]) # with disparity
+        xyzw = cam_mat_inv * Vector(xy1d) # world
 
         # Ray start and direction in world coordinates
         ray_from_world = cam.location
-        ray_to_world = Vector(xyzw[:3])
+        ray_to_world = from_homo(xyzw)
 
         first_intersect = None
         first_intersect_objname = None
@@ -600,7 +610,10 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
             ray_to = world2obj * ray_to_world
 
             # Ray tracing
-            loc, normal, facei, dist = raycast(tree, ray_from, ray_to)
+            loc, normal, facei, _ = raycast(tree, ray_from, ray_to)
+            # Not using the returned ray distance as that's local
+            dist = None if loc is None else (
+                obj2world * loc - ray_from_world).length
 
             # See if this intersection is closer to camera center than
             # previous intersections with other objects
@@ -732,11 +745,11 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
     return visible_vert_ind
 
 
-def raycast(obj_bvh_tree, ray_from_objspc, ray_to_objspc):
+def raycast(obj_bvhtree, ray_from_objspc, ray_to_objspc):
     """Casts a ray to an object.
 
     Args:
-        obj_bvh_tree (mathutils.bvhtree.BVHTree): Constructed BVH tree of the
+        obj_bvhtree (mathutils.bvhtree.BVHTree): Constructed BVH tree of the
             object.
         ray_from_objspc (mathutils.Vector): Ray origin, in object's local
             coordinates.
@@ -758,9 +771,9 @@ def raycast(obj_bvh_tree, ray_from_objspc, ray_to_objspc):
               the object surface, then this return value is useful for
               checking for self occlusion.
     """
-    ray_dir = 1e10 * (ray_to_objspc - ray_from_objspc) # robustify
+    ray_dir = (ray_to_objspc - ray_from_objspc).normalized()
     hit_loc, hit_normal, hit_fi, ray_dist = \
-        obj_bvh_tree.ray_cast(ray_from_objspc, ray_dir)
+        obj_bvhtree.ray_cast(ray_from_objspc, ray_dir)
     if hit_loc is None:
         assert hit_normal is None and hit_fi is None and ray_dist is None
     return hit_loc, hit_normal, hit_fi, ray_dist
