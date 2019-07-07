@@ -483,9 +483,9 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     plt.close('all')
 
 
-def uv_colors_on_canvas(uvs, rgbs,
-                        canvas_rgb=(0, 0, 0), canvas_res=(256, 256),
-                        max_l1_interp=None, outpath=None):
+def rgb_on_uv_canvas(uvs, rgbs,
+                     canvas_rgb=(0, 0, 0), canvas_res=(256, 256),
+                     max_l1_interp=None, outpath=None):
     r"""Paints colors on a canvas according to their UV locations.
 
     Args:
@@ -509,7 +509,7 @@ def uv_colors_on_canvas(uvs, rgbs,
             interpolations.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means
-            ``os.path.join(constants.Dir.tmp, 'uv_colors_on_canvas.png')``.
+            ``os.path.join(constants.Dir.tmp, 'rgb_on_uv_canvas.png')``.
 
     Writes
         - An interpolated image of the UV-indexed colors.
@@ -521,7 +521,7 @@ def uv_colors_on_canvas(uvs, rgbs,
     dtype_max = np.iinfo(dtype).max
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'uv_colors_on_canvas.png')
+        outpath = join(constants.Dir.tmp, 'rgb_on_uv_canvas.png')
 
     if max_l1_interp is None:
         max_l1_interp = np.inf # trust everything

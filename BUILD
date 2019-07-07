@@ -6,6 +6,7 @@ py_library(
     data = glob(["data/**/*"]),
     srcs_version = "PY3",
     deps = [
+        "//pyglib:gfile",
         "//third_party/py/cvx2",
         "//third_party/py/matplotlib",
         "//third_party/py/mpl_toolkits/axes_grid1",

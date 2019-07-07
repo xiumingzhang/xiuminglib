@@ -185,7 +185,7 @@ def fix_terminal():
     _, _ = child.communicate()
 
 
-def call(cmd, cwd=None, print_stdout_stderr=True):
+def call(cmd, cwd=None, print_stdout_stderr=True, wait=True):
     """Executes a command in shell.
 
     Args:
@@ -194,17 +194,24 @@ def call(cmd, cwd=None, print_stdout_stderr=True):
             means current directory.
         print_stdout_stderr (bool, optional): Whether to print out these
             streams.
+        wait (bool, optional): Whether to block until the call finishes.
 
     Returns:
         tuple:
             - **retcode** (*int*) -- Command exit code. 0 means a successful
-              call.
-            - **stdout** (*str*) -- Standard output stream.
-            - **stderr** (*str*) -- Standard error stream.
+              call. ``None`` if not waiting for the command to finish.
+            - **stdout** (*str*) -- Standard output stream. ``None`` if not
+              waiting.
+            - **stderr** (*str*) -- Standard error stream. ``None`` if not
+              waiting.
     """
     from subprocess import Popen, PIPE
 
     process = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=cwd, shell=True)
+
+    if not wait:
+        return None, None, None
+
     stdout, stderr = process.communicate() # waits for completion
     stdout, stderr = stdout.decode(), stderr.decode()
 
