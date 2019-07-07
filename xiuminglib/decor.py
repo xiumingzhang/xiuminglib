@@ -121,13 +121,18 @@ def colossus_interface(somefunc):
 
     def _cp(src, dst, isdir=False):
         parallel_copy = 10
-        cmd = 'fileutil cp -f'
+        cmd = 'fileutil cp -f -colossus_parallel_copy'
         if isdir:
-            cmd += '-R -parallel_copy=%d' % parallel_copy
-        cmd += ' %s %s' % (src, dst)
-        assert call(cmd)[0] == 0, "Copy failed"
+            cmd += ' -R -parallel_copy=%d %s' % \
+                (parallel_copy, join(src, '*'))
+        else:
+            cmd += ' %s' % src
+        cmd += ' %s' % dst
         logger.name = logger_name
-        logger.info("\n%s\n\tcopied to\n%s", src, dst)
+        if call(cmd)[0] == 0:
+            logger.info("\n%s\n\tcopied to\n%s", src, dst)
+        else:
+            logger.warning("\n%s\n\tfailed to be copied to\n%s", src, dst)
 
     def wrapper(*arg, **kwargs):
         # Fetch info. for all CNS paths
@@ -136,7 +141,8 @@ def colossus_interface(somefunc):
         # Positional arguments
         for x in arg:
             if _is_cnspath(x):
-                cns_path, cns_exists, cns_isdir, local_path = _get_cns_info(x)
+                cns_path, cns_exists, cns_isdir, local_path = \
+                    _get_cns_info(x)
                 cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
                 arg_local.append(local_path)
             elif _could_be_path(x): # don't touch non-CNS files
@@ -148,7 +154,8 @@ def colossus_interface(somefunc):
         # Keyword arguments
         for k, v in kwargs.items():
             if _is_cnspath(v):
-                cns_path, cns_exists, cns_isdir, local_path = _get_cns_info(v)
+                cns_path, cns_exists, cns_isdir, local_path = \
+                    _get_cns_info(v)
                 cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
                 kwargs_local[k] = local_path
             elif _could_be_path(v): # don't touch non-CNS files
@@ -160,7 +167,8 @@ def colossus_interface(somefunc):
         # For reading: copy CNS paths that exist to local
         # TODO: what if some of those paths are not input? Copying them to
         # local is a waste
-        for cns_path, (cns_exists, cns_isdir, local_path) in cns_info.items():
+        for cns_path, (cns_exists, cns_isdir, local_path) in \
+                cns_info.items():
             if cns_exists:
                 _cp(cns_path, local_path, isdir=cns_isdir)
         # Run the real function
@@ -168,7 +176,8 @@ def colossus_interface(somefunc):
         results = somefunc(*arg_local, **kwargs_local)
         # For writing: copy local paths that are just modified and correspond
         # to CNS paths back to CNS
-        for cns_path, (cns_exists, cns_isdir, local_path) in cns_info.items():
+        for cns_path, (cns_exists, cns_isdir, local_path) in \
+                cns_info.items():
             if os.path.exists(local_path) and getmtime(local_path) > t0:
                 _cp(local_path, cns_path, isdir=cns_isdir)
         return results
