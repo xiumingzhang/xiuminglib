@@ -538,15 +538,14 @@ def uv_colors_on_canvas(uvs, rgbs,
     cv2.imwrite(outpath, img[:, :, ::-1])
 
 
-def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
+def uv_on_texmap(uvs, texmap, ft=None, outpath=None,
                  dotsize=4, dotcolor='r', linewidth=1, linecolor='b'):
     """Visualizes which points on texture map the vertices map to.
 
     Args:
-        u (numpy.ndarray): The :math:`u` component of UV coordinates of the
-            vertices. See :func:`xiuminglib.blender.object.smart_uv_unwrap`
-            for the UV coordinate convention.
-        v
+        uvs (numpy.ndarray): N-by-2 array of UV coordinates. See
+            :func:`xiuminglib.blender.object.smart_uv_unwrap` for the UV
+            coordinate convention.
         texmap (numpy.ndarray or str): Loaded texture map or its path. If
             *numpy.ndarray*, can be H-by-W (grayscale) or H-by-W-by-3 (color).
         ft (list(list(int)), optional): Texture faces used to connect the
@@ -576,11 +575,6 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
     if outpath is None:
         outpath = join(constants.Dir.tmp, 'uv_on_texmap.png')
 
-    dpi = 96 # assumed
-    h, w = texmap.shape[:2]
-    w_in, h_in = w / dpi, h / dpi
-    fig = plt.figure(figsize=(w_in, h_in))
-
     # Preprocess input
     if isinstance(texmap, str):
         texmap = cv2.imread(
@@ -594,12 +588,17 @@ def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
             ("texmap must be either H-by-W (grayscale) or H-by-W-by-3 "
              "(color), or a path to such images"))
 
-    x = u * w
-    y = (1 - v) * h
-    # (0, 0)
-    #   +----------->
-    #   |          x
-    #   |
+    dpi = 96 # assumed
+    h, w = texmap.shape[:2]
+    w_in, h_in = w / dpi, h / dpi
+    fig = plt.figure(figsize=(w_in, h_in))
+
+    u, v = uvs[:, 0], uvs[:, 1]
+    # ^ v
+    # |
+    # +---> u
+    x, y = u * w, (1 - v) * h
+    #   +---> x
     #   |
     #   v y
 
