@@ -4,9 +4,10 @@ from os.path import dirname, abspath, join
 from pickle import dump
 import numpy as np
 
-from . import config, constants, geometry, imgproc, os as xm_os
-
+from . import config
 logger, thisfile = config.create_logger(abspath(__file__))
+
+from . import constants, geometry, imgproc, os as xm_os
 
 
 def pyplot_wrapper(*args,
@@ -256,12 +257,14 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
 def matrix_as_image(arr, outpath=None, gamma=None):
     """Visualizes an array into an image.
 
-    By putting minimum (across all channels) at 0 and maximum at ``dtype_max``.
+    By putting minimum (across all channels) at 0 and maximum at
+    ``dtype_max``.
 
     Args:
-        arr (numpy.ndarray): Array to be transformed into an image. Can be H-by-W or H-by-W-by-3.
-        outpath (str, optional): Where to visualize the result to. ``None`` means
-            ``os.path.join(constants.Dir.tmp, 'matrix_as_image.png')``.
+        arr (numpy.ndarray): Array to be transformed into an image. Can be
+            H-by-W (grayscale) or H-by-W-by-3 (RGB or RGBA).
+        outpath (str, optional): Where to visualize the result to. ``None``
+            means ``os.path.join(constants.Dir.tmp, 'matrix_as_image.png')``.
         gamma (float, optional): For gamma correction.
 
     Raises:
@@ -303,8 +306,9 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         im = (arr * dtype_max).astype(dtype)
         logger.name = logger_name
         logger.warning(
-            ("RGB channels contain only a single value: %f, so only operations "
-             "performed: multiplied by dtype_max and cast to integer"), maxv)
+            ("RGB channels contain only a single value: %f, so only "
+             "operations performed: multiplied by dtype_max and cast to "
+             "integer"), maxv)
     else:
         im = (dtype_max * (arr - minv) / (maxv - minv)).astype(dtype)
         # astype() safe only because we know it's [0, dtype_max]
@@ -478,12 +482,68 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     plt.close('all')
 
 
+def uv_colors_on_canvas(uvs, rgbs,
+                        canvas_rgb=(0, 0, 0), canvas_res=(256, 256),
+                        outpath=None):
+    r"""Paints colors on a canvas according to their UV locations.
+
+    Args:
+        uvs (numpy.ndarray): N-by-2 array of UV coordinates where we have
+            values (i.e., colors). See
+            :func:`xiuminglib.blender.object.smart_uv_unwrap` for the UV
+            coordinate convention.
+        rgbs (numpy.ndarray): N-by-3 array of RGB values :math:`\in [0, 1]`.
+        canvas_rgb (array_like, optional): Color of the base canvas. Will be
+            used to fill in locations outside the convex hulls formed by the
+            UV locations, at which we have values.
+        canvas_size (array_like, optional): Resolution (height first; then
+            width) of the visualization. Essentially controls how dense the
+            query grid is.
+        outpath (str, optional): Path to which the visualization is saved to.
+            ``None`` means
+            ``os.path.join(constants.Dir.tmp, 'uv_colors_on_canvas.png')``.
+
+    Writes
+        - An interpolated image of the UV-indexed colors.
+    """
+    from scipy.interpolate import griddata
+    cv2 = config.import_cv2()
+
+    dtype = np.uint8
+    dtype_max = np.iinfo(dtype).max
+
+    if outpath is None:
+        outpath = join(constants.Dir.tmp, 'uv_colors_on_canvas.png')
+
+    # Generate query coordinates
+    grid_x, grid_y = np.meshgrid(np.linspace(0, 1, canvas_res[1]),
+                                 np.linspace(0, 1, canvas_res[0]))
+    # +---> x
+    # |
+    # v y
+    grid_u, grid_v = grid_x, 1 - grid_y
+    # ^ v
+    # |
+    # +---> u
+
+    # Do each color channel separately
+    interps = []
+    for ch_i in range(3):
+        interp = griddata(uvs, rgbs[:, ch_i], (grid_u, grid_v),
+                          fill_value=canvas_rgb[ch_i])
+        interps.append(interp)
+    rgb = np.dstack(interps) # [0, 1]
+
+    img = (rgb * dtype_max).astype(dtype)
+    cv2.imwrite(outpath, img[:, :, ::-1])
+
+
 def uv_on_texmap(u, v, texmap, ft=None, outpath=None,
                  dotsize=4, dotcolor='r', linewidth=1, linecolor='b'):
     """Visualizes which points on texture map the vertices map to.
 
     Args:
-        u (numpy.array): The :math:`u` component of UV coordinates of the
+        u (numpy.ndarray): The :math:`u` component of UV coordinates of the
             vertices. See :func:`xiuminglib.blender.object.smart_uv_unwrap`
             for the UV coordinate convention.
         v

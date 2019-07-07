@@ -185,7 +185,7 @@ def timeit(somefunc):
         results = somefunc(*arg, **kwargs)
         t = time() - t0
         logger.name = logger_name
-        logger.info("Time elapsed: %.2f seconds", t)
+        logger.info("Time elapsed: %f seconds", t)
         return results
 
     return wrapper
