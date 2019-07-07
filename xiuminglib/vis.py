@@ -7,7 +7,7 @@ import numpy as np
 from . import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
-from . import constants, geometry, imgproc, os as xm_os
+from . import constants, os as xm_os
 
 
 def pyplot_wrapper(*args,
@@ -273,6 +273,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     Writes
         - An image of the matrix.
     """
+    from .imgproc import gamma_correct
     cv2 = config.import_cv2()
 
     logger_name = thisfile + '->matrix_as_image()'
@@ -317,7 +318,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         im = np.dstack((im, im_a))
 
     if gamma is not None:
-        im = imgproc.gamma_correct(im, gamma)
+        im = gamma_correct(im, gamma)
 
     outdir = dirname(outpath)
     xm_os.makedirs(outdir)
@@ -484,7 +485,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
 def uv_colors_on_canvas(uvs, rgbs,
                         canvas_rgb=(0, 0, 0), canvas_res=(256, 256),
-                        outpath=None):
+                        max_l1_interp=None, outpath=None):
     r"""Paints colors on a canvas according to their UV locations.
 
     Args:
@@ -494,11 +495,18 @@ def uv_colors_on_canvas(uvs, rgbs,
             coordinate convention.
         rgbs (numpy.ndarray): N-by-3 array of RGB values :math:`\in [0, 1]`.
         canvas_rgb (array_like, optional): Color of the base canvas. Will be
-            used to fill in locations outside the convex hulls formed by the
-            UV locations, at which we have values.
+            used to fill in pixels outside the convex hulls formed by the UV
+            locations, and if ``max_l1_interp`` is provided, also the
+            pixels whose interpolation is too much of a stretch to be
+            trusted.
         canvas_size (array_like, optional): Resolution (height first; then
             width) of the visualization. Essentially controls how dense the
             query grid is.
+        max_l1_interp (int, optional): Maximum :math:`\ell_1` distance, which
+            we can trust in interpolation, to pixels who have values.
+            Interpolation over a larger range will not be trusted and hence
+            not be painted. ``None`` means trusting (and hence showing) all
+            interpolations.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means
             ``os.path.join(constants.Dir.tmp, 'uv_colors_on_canvas.png')``.
@@ -515,9 +523,12 @@ def uv_colors_on_canvas(uvs, rgbs,
     if outpath is None:
         outpath = join(constants.Dir.tmp, 'uv_colors_on_canvas.png')
 
+    if max_l1_interp is None:
+        max_l1_interp = np.inf # trust everything
+
+    h, w = canvas_res
     # Generate query coordinates
-    grid_x, grid_y = np.meshgrid(np.linspace(0, 1, canvas_res[1]),
-                                 np.linspace(0, 1, canvas_res[0]))
+    grid_x, grid_y = np.meshgrid(np.linspace(0, 1, w), np.linspace(0, 1, h))
     # +---> x
     # |
     # v y
@@ -526,11 +537,21 @@ def uv_colors_on_canvas(uvs, rgbs,
     # |
     # +---> u
 
-    # Do each color channel separately
+    # Figure out which pixels can be trusted
+    has_value = np.zeros((h, w), dtype=np.uint8)
+    ri = ((1 - uvs[:, 1]) * h).astype(int).ravel()
+    ci = (uvs[:, 0] * w).astype(int).ravel()
+    has_value[ri, ci] = 1
+    dist2val = cv2.distanceTransform(1 - has_value, cv2.DIST_L1, 3)
+    trusted = dist2val <= max_l1_interp
+
+    # Process each color channel separately
     interps = []
     for ch_i in range(3):
-        interp = griddata(uvs, rgbs[:, ch_i], (grid_u, grid_v),
-                          fill_value=canvas_rgb[ch_i])
+        v_fill = canvas_rgb[ch_i]
+        v = rgbs[:, ch_i]
+        interp = griddata(uvs, v, (grid_u, grid_v), fill_value=v_fill)
+        interp[~trusted] = v_fill
         interps.append(interp)
     rgb = np.dstack(interps) # [0, 1]
 
@@ -850,9 +871,10 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
     from skimage.measure import marching_cubes_lewiner
     from trimesh import Trimesh
     from trimesh.io.export import export_mesh
+    from .geometry import ptcld2tdf
 
     # Point cloud to TDF
-    tdf = geometry.ptcld2tdf(pts, res=res, center=center)
+    tdf = ptcld2tdf(pts, res=res, center=center)
 
     # Isosurface of TDF
     vs, fs, ns, _ = marching_cubes_lewiner(
