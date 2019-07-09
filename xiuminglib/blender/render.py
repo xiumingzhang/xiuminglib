@@ -306,12 +306,25 @@ def render(outpath, cam=None, obj_names=None, text=None):
         "Node trees and renderability of these objects have changed")
 
 
+def _disable_cycles_mat_nodes_for_bi():
+    """Disables Cycles material's nodes for Blender Internal.
+
+    Cycles use_nodes being True leads to 0 alpha in Blender Internal.
+    """
+    if bpy.context.scene.render.engine == 'BLENDER_RENDER':
+        for o in bpy.data.objects:
+            mat = o.active_material
+            if mat is not None and mat.use_nodes:
+                mat.use_nodes = False
+
+
 def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
-    """Renders raw depth map in .exr of the specified object(s) from the
+    r"""Renders raw depth map in .exr of the specified object(s) from the
     specified camera.
 
-    The EXR data contain an aliased z map and an anti-aliased alpha map. See
-    :func:`xiuminglib.io.exr.EXR.extract_depth` for how to extract data.
+    The EXR data contain an aliased :math:`z` map and an anti-aliased alpha
+    map. See :func:`xiuminglib.io.exr.EXR.extract_depth` for how to extract
+    data.
 
     Args:
         outprefix (str): Where to save the .exr maps to, e.g., ``'~/depth'``.
@@ -342,6 +355,7 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
     # which needs >1 samples to figure out object boundary
     scene.render.engine = 'BLENDER_RENDER'
     scene.render.alpha_mode = 'TRANSPARENT'
+    _disable_cycles_mat_nodes_for_bi()
 
     node_tree = scene.node_tree
     nodes = node_tree.nodes
@@ -483,6 +497,7 @@ def render_normal(outpath, cam=None, obj_names=None,
     if camera_space:
         scene.render.engine = 'BLENDER_RENDER'
         scene.render.alpha_mode = 'TRANSPARENT'
+        _disable_cycles_mat_nodes_for_bi()
     else:
         scene.render.engine = 'CYCLES'
         scene.cycles.film_transparent = True
@@ -497,14 +512,9 @@ def render_normal(outpath, cam=None, obj_names=None,
             o.hide_render = o.name != sphere.name
         outpath_refball = _render(
             scene, outnode, result_socket, outpath_refball)
+        # Restore hide_render
         for k, v in mesh_hide_render.items():
-            # Restore hide_render
             objs[k].hide_render = v
-            # Cycles use_nodes being True leads to 0 alpha in BI
-            mat = objs[k].active_material
-            if scene.render.engine == 'BLENDER_RENDER' \
-                    and mat is not None and mat.use_nodes:
-                mat.use_nodes = False
         sphere.hide_render = True
     outpath = _render(scene, outnode, result_socket, outpath)
 
