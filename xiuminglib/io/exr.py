@@ -71,7 +71,7 @@ class EXR():
             - If ``vis``, a .png image of anti-aliased depth.
         """
         logger_name = thisfile + '->EXR:extract_depth()'
-        cv2 = config.import_cv2()
+        cv2 = config.import_from_google3('cv2')
         dtype = 'uint8'
         dtype_max = np.iinfo(dtype).max
 
@@ -122,7 +122,7 @@ class EXR():
             - If ``vis``, a .png visualization of anti-aliased normals.
         """
         logger_name = thisfile + '->extract_normal()'
-        cv2 = config.import_cv2()
+        cv2 = config.import_from_google3('cv2')
         dtype = 'uint8'
         dtype_max = np.iinfo(dtype).max
         # Load RGBA .exr

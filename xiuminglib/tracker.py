@@ -3,7 +3,7 @@ import numpy as np
 
 from . import config, vis as xm_vis
 try:
-    cv2 = config.import_cv2()
+    cv2 = config.import_from_google3('cv2')
 except ModuleNotFoundError:
     pass
 

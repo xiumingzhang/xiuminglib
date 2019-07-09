@@ -5,7 +5,7 @@ import numpy as np
 from . import config
 logger, thisfile = config.create_logger(abspath(__file__))
 try:
-    cv2 = config.import_cv2()
+    cv2 = config.import_from_google3('cv2')
 except ModuleNotFoundError:
     pass
 

@@ -207,7 +207,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
     Writes
         - The scatter plot overlaid over the image.
     """
-    cv2 = config.import_cv2()
+    cv2 = config.import_from_google3('cv2')
 
     logger_name = thisfile + '->scatter_on_image()'
 
@@ -274,7 +274,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         - An image of the matrix.
     """
     from .imgproc import gamma_correct
-    cv2 = config.import_cv2()
+    cv2 = config.import_from_google3('cv2')
 
     logger_name = thisfile + '->matrix_as_image()'
 
@@ -515,7 +515,7 @@ def rgb_on_uv_canvas(uvs, rgbs,
         - An interpolated image of the UV-indexed colors.
     """
     from scipy.interpolate import griddata
-    cv2 = config.import_cv2()
+    cv2 = config.import_from_google3('cv2')
 
     dtype = np.uint8
     dtype_max = np.iinfo(dtype).max
@@ -591,7 +591,7 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None,
     import matplotlib.pyplot as plt
     from matplotlib.collections import LineCollection
     from mpl_toolkits.axes_grid1 import make_axes_locatable
-    cv2 = config.import_cv2()
+    cv2 = config.import_from_google3('cv2')
 
     if outpath is None:
         outpath = join(constants.Dir.tmp, 'uv_on_texmap.png')

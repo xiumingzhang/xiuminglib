@@ -1,4 +1,4 @@
-# For blaze on Google's infra.
+# For blaze on Google's infrastructure.
 
 py_library(
     name = "xiuminglib",
@@ -13,5 +13,7 @@ py_library(
         "//third_party/py/mpl_toolkits/mplot3d",
         "//third_party/py/numpy",
         "//third_party/py/scipy",
+        "//third_party/py/OpenEXR",
+        "//third_party/py/Imath",
     ],
 )

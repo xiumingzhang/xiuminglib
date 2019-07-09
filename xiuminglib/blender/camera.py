@@ -416,7 +416,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     Returns:
         numpy.ndarray: Camera :math:`z`-buffer.
     """
-    cv2 = config.import_cv2()
+    cv2 = config.import_from_google3('cv2')
 
     logger_name = thisfile + '->get_camera_zbuffer()'
 

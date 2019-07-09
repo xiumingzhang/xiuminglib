@@ -52,27 +52,34 @@ def to_import_at_init(lib_dir, incl_subpkg=True):
                 all_list.append(base)
             else:
                 assert isdir(f), \
-                    "Neither a module (.py) nor a subpackage (folder): %s" % f
+                    "Neither a module (.py) nor a subpackage (folder): %s" \
+                    % f
                 # Subpackages are to be imported only if asked
                 if incl_subpkg:
                     all_list.append(base)
     return all_list
 
 
-def import_cv2():
-    """Handles Google's infra."""
-    try:
-        import cv2
-    except ModuleNotFoundError:
-        from google3.third_party.OpenCVX import cvx2 as cv2
-    return cv2
+def import_from_google3(module_name):
+    """Imports a module from google3."""
+    if module_name == 'cv2':
+        try:
+            # //third_party/py/cvx2
+            import cvx2 as cv2
+            # from google3.third_party.OpenCVX import cvx2 as cv2
+            # also works
+        except ModuleNotFoundError:
+            import cv2
+        return cv2
+
+    raise NotImplementedError(module_name)
 
 
 # ---------------------------- Logging Colors
 
 
 def _add_coloring_to_emit_windows(fn):
-    # add methods we need to the class
+    # Add methods we need to the class
     def _out_handle(self):
         return windll.kernel32.GetStdHandle(self.STD_OUTPUT_HANDLE)
     # out_handle = property(_out_handle)
@@ -90,7 +97,8 @@ def _add_coloring_to_emit_windows(fn):
         FOREGROUND_GREEN = 0x0002 # text color contains green
         FOREGROUND_RED = 0x0004 # text color contains red
         FOREGROUND_INTENSITY = 0x0008 # text color is intensified
-        FOREGROUND_WHITE = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
+        FOREGROUND_WHITE = FOREGROUND_BLUE | FOREGROUND_GREEN | \
+            FOREGROUND_RED
         # winbase.h
         STD_INPUT_HANDLE = -10
         STD_OUTPUT_HANDLE = -11
@@ -116,7 +124,8 @@ def _add_coloring_to_emit_windows(fn):
         BACKGROUND_INTENSITY = 0x0080 # background color is intensified
         levelno = args[1].levelno
         if levelno >= 50:
-            color = BACKGROUND_YELLOW | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY
+            color = BACKGROUND_YELLOW | FOREGROUND_RED | \
+                FOREGROUND_INTENSITY | BACKGROUND_INTENSITY
         elif levelno >= 40:
             color = FOREGROUND_RED | FOREGROUND_INTENSITY
         elif levelno >= 30:
@@ -157,7 +166,8 @@ def _add_coloring_to_emit_ansi(fn):
 
 
 if system() == 'Windows':
-    # Windows does not support ANSI escapes and we are using API calls to set the console color
+    # Windows does not support ANSI escapes and we are using API calls to set
+    # the console color
     from ctypes import windll
     logging.StreamHandler.emit = _add_coloring_to_emit_windows(
         logging.StreamHandler.emit)

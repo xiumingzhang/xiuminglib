@@ -514,7 +514,7 @@ def main(test_id):
         from copy import deepcopy
         from scipy.fftpack import dct, idct
         from . import config, constants, os as xm_os, vis as xm_vis
-        cv2 = config.import_cv2()
+        cv2 = config.import_from_google3('cv2')
         outdir = join(constants.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(constants.Path.cameraman, cv2.IMREAD_GRAYSCALE)
@@ -579,7 +579,7 @@ def main(test_id):
     elif test_id == 'dft_cameraman':
         from os.path import join
         from . import config, vis as xm_vis, os as xm_os
-        cv2 = config.import_cv2()
+        cv2 = config.import_from_google3('cv2')
         outdir = join(constants.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(constants.Path.cameraman, cv2.IMREAD_GRAYSCALE)
