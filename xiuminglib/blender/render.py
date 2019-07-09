@@ -391,18 +391,21 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
 
 
 def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
-    """Renders raw normal map in .exr of the specified object(s) from the specified camera.
+    """Renders raw normal map in .exr of the specified object(s) from the
+    specified camera.
 
     RGB at each pixel is the (almost unit) normal vector at that location.
     See :func:`xiuminglib.io.exr.EXR.extract_normal` for how to extract data.
 
     Args:
         outpath (str): Where to save the .exr (i.e., raw) normal map to.
-        cam (bpy_types.Object, optional): Camera through which scene is rendered.
-            If ``None``, there must be only one camera in scene.
-        obj_names (str or list(str), optional): Name(s) of object(s) of interest.
-            Use ``'ref-ball'`` for the reference normal ball. ``None`` means all objects.
-        camera_space (bool, optional): Whether to render normal in the camera or world space.
+        cam (bpy_types.Object, optional): Camera through which scene is
+            rendered. If ``None``, there must be only one camera in scene.
+        obj_names (str or list(str), optional): Name(s) of object(s) of
+            interest. Use ``'ref-ball'`` for the reference normal ball.
+            ``None`` means all objects.
+        camera_space (bool, optional): Whether to render normal in the camera
+            or world space.
 
     Writes
         - A 32-bit .exr normal map.
@@ -413,6 +416,7 @@ def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
     logger_name = thisfile + '->render_normal()'
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
+    cam = bpy.data.objects[cam_name]
 
     # # Make normals consistent
     # for obj_name in obj_names:
@@ -426,8 +430,8 @@ def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
     if 'ref-ball' in obj_names:
         world_origin = (0, 0, 0)
         sphere = add_sphere(location=world_origin)
-        point_camera_to(cam, world_origin, up=(0, 0, 1)) # point camera to there
-        # Decide scale of the ball so that it, when projected, fits into the frame
+        point_camera_to(cam, world_origin, up=(0, 0, 1)) # point camera
+        # Scale the ball so that it, when projected, fits into the frame
         bbox = get_2d_bounding_box(sphere, cam)
         s = max((bbox[1, 0] - bbox[0, 0]) / scene.render.resolution_x,
                 (bbox[3, 1] - bbox[0, 1]) / scene.render.resolution_y) * 1.2
@@ -444,7 +448,7 @@ def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
                         set_alpha_node.inputs['Image'])
     result_socket = set_alpha_node.outputs['Image']
 
-    # Select rendering engine based on whether camera or object space is desired
+    # Select rendering engine based on whether camera or object space
     if camera_space:
         scene.render.engine = 'BLENDER_RENDER'
         scene.render.alpha_mode = 'TRANSPARENT'
@@ -457,7 +461,8 @@ def render_normal(outpath, cam=None, obj_names=None, camera_space=True):
     outpath = _render(scene, outnode, result_socket, outpath)
 
     logger.name = logger_name
-    logger.info("Normal map of %s rendered through '%s' to %s", obj_names, cam_name, outpath)
+    logger.info("Normal map of %s rendered through '%s' to %s",
+                obj_names, cam_name, outpath)
     logger.warning("The scene node tree has changed")
 
 

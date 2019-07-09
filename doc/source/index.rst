@@ -80,6 +80,9 @@ Depending on what functions you want to use, you may also need to install:
     Trimesh
         See `their installation guide <https://github.com/mikedh/trimesh/blob/master/docs/install.rst>`_.
 
+    OpenEXR
+        ``pip install OpenEXR`` worked for me, but ``conda install -c conda-forge openexr`` didn't.
+
 The library uses "on-demand" imports whenever possible, so that it won't fail on imports that you don't need.
 
 

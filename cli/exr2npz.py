@@ -1,6 +1,7 @@
 """A commandline tool to convert an EXR image to a .npz dictionary.
 
-Requires Python 2 for now, so writes to disk for compatibility with Python 3.
+Useful when you have problems installing OpenEXR for Python 3. This uses
+Python 2 and writes to disk, so that you can later load it with Python 3.
 
 Xiuming Zhang, MIT CSAIL.
 
@@ -16,10 +17,14 @@ import Imath
 
 
 # Parse variables
-parser = ArgumentParser(description="Load OpenEXR image as dictionary of numpy arrays")
-parser.add_argument('input', metavar='i', type=str, help="input .exr file")
-parser.add_argument('outpath', metavar='o', type=str, help="output .npz file")
+parser = ArgumentParser(
+    description="Load OpenEXR image as dictionary of NumPy arrays")
+parser.add_argument('input', metavar='i', type=str,
+                    help="input .exr file")
+parser.add_argument('outpath', metavar='o', type=str,
+                    help="output .npz file")
 args = parser.parse_args()
+
 inpath = args.input
 outpath = abspath(args.outpath)
 

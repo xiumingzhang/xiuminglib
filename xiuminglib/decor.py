@@ -78,14 +78,14 @@ def colossus_interface(somefunc):
     logger_name = thisfile + '->@colossus_interface(%s())' \
         % somefunc.__name__
 
-    def _could_be_path(x):
+    def could_be_path(x):
         # FIXME: not-so-elegant heuristic
         return isinstance(x, str) and '/' in x
 
     # $TMP set by Borg or yourself (e.g., with .bashrc)
     tmp_dir = environ.get('TMP', '/tmp/')
 
-    def _get_cns_info(cns_path):
+    def get_cns_info(cns_path):
         # Existence; file or directory
         testf, _, _ = call('fileutil test -f %s' % cns_path)
         testd, _, _ = call('fileutil test -d %s' % cns_path)
@@ -109,7 +109,7 @@ def colossus_interface(somefunc):
         local_path = join(tmp_dir, '%f_%s' % (time(), basename(cns_path)))
         return cns_path, exists, isdir, local_path
 
-    def _get_local_info(local_path):
+    def get_local_info(local_path):
         exists = os.path.exists(local_path)
         isdir = os.path.isdir(local_path)
         # Deal with '/'-ending paths
@@ -119,7 +119,7 @@ def colossus_interface(somefunc):
             assert not local_path.endswith('/')
         return local_path, exists, isdir
 
-    def _cp(src, dst, isdir=False):
+    def cp(src, dst, isdir=False):
         parallel_copy = 10
         cmd = 'fileutil cp -f -colossus_parallel_copy'
         if isdir:
@@ -142,11 +142,11 @@ def colossus_interface(somefunc):
         for x in arg:
             if _is_cnspath(x):
                 cns_path, cns_exists, cns_isdir, local_path = \
-                    _get_cns_info(x)
+                    get_cns_info(x)
                 cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
                 arg_local.append(local_path)
-            elif _could_be_path(x): # don't touch non-CNS files
-                local_path, local_exists, local_isdir = _get_local_info(x)
+            elif could_be_path(x): # don't touch non-CNS files
+                local_path, local_exists, local_isdir = get_local_info(x)
                 local_info[local_path] = (local_exists, local_isdir)
                 arg_local.append(local_path)
             else: # intact
@@ -155,11 +155,11 @@ def colossus_interface(somefunc):
         for k, v in kwargs.items():
             if _is_cnspath(v):
                 cns_path, cns_exists, cns_isdir, local_path = \
-                    _get_cns_info(v)
+                    get_cns_info(v)
                 cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
                 kwargs_local[k] = local_path
-            elif _could_be_path(v): # don't touch non-CNS files
-                local_path, local_exists, local_isdir = _get_local_info(v)
+            elif could_be_path(v): # don't touch non-CNS files
+                local_path, local_exists, local_isdir = get_local_info(v)
                 local_info[local_path] = (local_exists, local_isdir)
                 kwargs_local[k] = local_path
             else: # intact
@@ -170,7 +170,7 @@ def colossus_interface(somefunc):
         for cns_path, (cns_exists, cns_isdir, local_path) in \
                 cns_info.items():
             if cns_exists:
-                _cp(cns_path, local_path, isdir=cns_isdir)
+                cp(cns_path, local_path, isdir=cns_isdir)
         # Run the real function
         t0 = time()
         results = somefunc(*arg_local, **kwargs_local)
@@ -179,7 +179,7 @@ def colossus_interface(somefunc):
         for cns_path, (cns_exists, cns_isdir, local_path) in \
                 cns_info.items():
             if os.path.exists(local_path) and getmtime(local_path) > t0:
-                _cp(local_path, cns_path, isdir=cns_isdir)
+                cp(local_path, cns_path, isdir=cns_isdir)
         return results
 
     return wrapper
