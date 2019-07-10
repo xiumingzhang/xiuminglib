@@ -1,7 +1,11 @@
 from os.path import abspath, join
 import numpy as np
-import OpenEXR
-import Imath
+
+try:
+    import OpenEXR
+    import Imath
+except ModuleNotFoundError:
+    pass
 
 from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
