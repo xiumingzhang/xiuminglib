@@ -828,7 +828,8 @@ def get_2d_bounding_box(obj, cam):
         np.array([u_min, v_max])))
 
     logger.name = logger_name
-    logger.info("Got 2D bounding box of '%s' in camera '%s'", obj.name, cam.name)
+    logger.info("Got 2D bounding box of '%s' in camera '%s'",
+                obj.name, cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
     return corners

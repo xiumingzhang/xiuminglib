@@ -28,7 +28,9 @@ class EXR():
     """
     def __init__(self, exr_path=None):
         self.exr_f = exr_path
-        if self.exr_f is not None:
+        if self.exr_f is None:
+            self.data = None
+        else:
             self.data = self.load()
 
     def load(self):
@@ -74,8 +76,8 @@ class EXR():
             - A .npy file containing an aliased depth map and its alpha map.
             - If ``vis``, a .png image of anti-aliased depth.
         """
-        logger_name = thisfile + '->EXR:extract_depth()'
         cv2 = config.import_from_google3('cv2')
+        logger_name = thisfile + '->EXR:extract_depth()'
         dtype = 'uint8'
         dtype_max = np.iinfo(dtype).max
 
@@ -110,6 +112,42 @@ class EXR():
         logger.name = logger_name
         logger.info("Depth image extractd to %s", outpath)
 
+    @staticmethod
+    def normalize_normal(normal_map):
+        """Normalizes the normal vector at each pixel of the normal map.
+
+        The normal maps rendered by Blender are *almost* normalized, so this
+        function is called by :func:`xiuminglib.io.exr.EXR.extract_normal`.
+
+        Args:
+            normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
+
+        Returns:
+            numpy.ndarray: Normalized normal map.
+        """
+        norm = np.linalg.norm(normal_map, axis=-1)
+        valid = norm > 0.5
+        normal_map[valid] = normal_map[valid] / norm[valid][..., None]
+        return normal_map
+
+    @staticmethod
+    def vis_normal(normal_map):
+        """Visualizes the normal map by converting vectors to pixel values.
+
+        The normal maps rendered by Blender are *almost* normalized, so this
+        function is called by :func:`xiuminglib.io.exr.EXR.extract_normal`.
+
+        Args:
+            normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
+
+        Returns:
+            numpy.ndarray: Normalized normal map.
+        """
+        norm = np.linalg.norm(normal_map, axis=-1)
+        valid = norm > 0.5
+        normal_map[valid] = normal_map[valid] / norm[valid][..., None]
+        return normal_map
+
     def extract_normal(self, outpath, vis=False):
         """Converts an RGBA EXR normal map to a .npy normal map.
 
@@ -125,13 +163,14 @@ class EXR():
             - A .npy file containing an aliased normal map and its alpha map.
             - If ``vis``, a .png visualization of anti-aliased normals.
         """
-        logger_name = thisfile + '->extract_normal()'
         cv2 = config.import_from_google3('cv2')
+        logger_name = thisfile + '->extract_normal()'
         dtype = 'uint8'
         dtype_max = np.iinfo(dtype).max
         # Load RGBA .exr
         data = self.data
         arr = np.dstack((data['R'], data['G'], data['B']))
+        arr = self.normalize_normal(arr)
         alpha = data['A']
         if not outpath.endswith('.npy'):
             outpath += '.npy'
@@ -164,9 +203,9 @@ class EXR():
               and specularity.
             - composite.npy (ditto): composite by Blender.
         """
+        from .. import vis as xm_vis, os as xm_os
         logger_name = thisfile + \
             '->extract_intrinsic_images_from_lighting_passes()'
-        from .. import vis as xm_vis, os as xm_os
         xm_os.makedirs(outdir)
         data = self.data
 

@@ -426,7 +426,7 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
 
 
 def render_normal(outpath, cam=None, obj_names=None,
-                  outpath_refball=None, camera_space=True):
+                  outpath_refball=None, world_coords=False):
     """Renders raw normal map in .exr of the specified object(s) from the
     specified camera.
 
@@ -443,8 +443,8 @@ def render_normal(outpath, cam=None, obj_names=None,
         outpath_refball (str, optional): The .exr path to save the reference
             ball's normals to. ``None`` means not rendering the reference
             ball.
-        camera_space (bool, optional): Whether to render normal in the camera
-            or world space.
+        world_coords (bool, optional): Whether to render normals in the world
+            or camera space.
 
     Writes
         - A 32-bit .exr normal map of the object(s) of interest.
@@ -475,8 +475,11 @@ def render_normal(outpath, cam=None, obj_names=None,
         point_camera_to(cam, world_origin, up=(0, 0, 1)) # point camera
         # Scale the ball so that it, when projected, fits into the frame
         bbox = get_2d_bounding_box(sphere, cam)
-        s = max((bbox[1, 0] - bbox[0, 0]) / scene.render.resolution_x,
-                (bbox[3, 1] - bbox[0, 1]) / scene.render.resolution_y) * 1.2
+        res_x = scene.render.resolution_x
+        res_y = scene.render.resolution_y
+        res_perc = scene.render.resolution_percentage / 100.
+        s = max((bbox[1, 0] - bbox[0, 0]) / (res_x * res_perc),
+                (bbox[3, 1] - bbox[0, 1]) / (res_y * res_perc)) * 1.2
         sphere.scale = (1 / s, 1 / s, 1 / s)
         # Achieve smooth normals with low polycount
         for f in sphere.data.polygons:
@@ -493,15 +496,15 @@ def render_normal(outpath, cam=None, obj_names=None,
                         set_alpha_node.inputs['Image'])
     result_socket = set_alpha_node.outputs['Image']
 
-    # Select rendering engine based on whether camera or object space
-    if camera_space:
-        scene.render.engine = 'BLENDER_RENDER'
-        scene.render.alpha_mode = 'TRANSPARENT'
-        _disable_cycles_mat_nodes_for_bi()
-    else:
+    # Select rendering engine based on whether camera or world space
+    if world_coords:
         scene.render.engine = 'CYCLES'
         scene.cycles.film_transparent = True
         scene.cycles.samples = 16 # for anti-aliased edges
+    else: # camera space
+        scene.render.engine = 'BLENDER_RENDER'
+        scene.render.alpha_mode = 'TRANSPARENT'
+        _disable_cycles_mat_nodes_for_bi()
 
     # Render
     if outpath_refball is not None:
