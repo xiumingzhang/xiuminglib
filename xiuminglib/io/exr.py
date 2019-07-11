@@ -131,24 +131,48 @@ class EXR():
         return normal_map
 
     @staticmethod
-    def vis_normal(normal_map):
+    def vis_normal(normal_map, alpha_map, outpath):
         """Visualizes the normal map by converting vectors to pixel values.
-
-        The normal maps rendered by Blender are *almost* normalized, so this
-        function is called by :func:`xiuminglib.io.exr.EXR.extract_normal`.
 
         Args:
             normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
+            alpha_map (numpy.ndarray): H-by-W array of alpha values.
+            outpath (str): Where to save the visualization to.
+
+        Writes
+            - Normal image.
+        """
+        cv2 = config.import_from_google3('cv2')
+        dtype = 'uint8'
+        dtype_max = np.iinfo(dtype).max
+        # [-1, 1]
+        im = (normal_map / 2 + 0.5) * dtype_max
+        # [0, dtype_max]
+        bg = np.zeros(im.shape)
+        alpha = np.dstack([alpha_map] * 3)
+        im = np.multiply(alpha, im) + np.multiply(1 - alpha, bg)
+        cv2.imwrite(outpath, im.astype(dtype)[..., ::-1])
+
+    @staticmethod
+    def transform_normal(normal_map, rotmat):
+        """Transforms the normal vectors from one space to another.
+
+        Args:
+            normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
+            rotmat (numpy.ndarray or mathutils.Matrix): 3-by-3 rotation
+                matrix.
 
         Returns:
-            numpy.ndarray: Normalized normal map.
+            numpy.ndarray: Transformed normal map.
         """
-        norm = np.linalg.norm(normal_map, axis=-1)
-        valid = norm > 0.5
-        normal_map[valid] = normal_map[valid] / norm[valid][..., None]
-        return normal_map
+        rotmat = np.array(rotmat)
+        orig_shape = normal_map.shape
+        normal = normal_map.reshape(-1, 3).T # 3-by-N
+        normal_trans = rotmat.dot(normal)
+        normal_map_trans = normal_trans.T.reshape(orig_shape)
+        return normal_map_trans
 
-    def extract_normal(self, outpath, vis=False):
+    def extract_normal(self, outpath, negate=False, vis=False):
         """Converts an RGBA EXR normal map to a .npy normal map.
 
         The background is black, complying with industry standards (e.g.,
@@ -156,6 +180,11 @@ class EXR():
 
         Args:
             outpath (str): Path to the result .npy file.
+            negate (bool, optional): Whether to negate the normals. If the
+                loaded data are from a non-world-space (i.e., "camera-space")
+                .exr, then you need to set this to ``True`` to get the normals
+                really in the camera space. See the warning in
+                :func:`xiuminglib.blender.render.render_normal`.
             vis (bool, optional): Whether to visualize the normal vectors as
                 an image.
 
@@ -163,26 +192,19 @@ class EXR():
             - A .npy file containing an aliased normal map and its alpha map.
             - If ``vis``, a .png visualization of anti-aliased normals.
         """
-        cv2 = config.import_from_google3('cv2')
         logger_name = thisfile + '->extract_normal()'
-        dtype = 'uint8'
-        dtype_max = np.iinfo(dtype).max
         # Load RGBA .exr
         data = self.data
         arr = np.dstack((data['R'], data['G'], data['B']))
+        if negate:
+            arr = -arr
         arr = self.normalize_normal(arr)
         alpha = data['A']
         if not outpath.endswith('.npy'):
             outpath += '.npy'
         np.save(outpath, np.dstack((arr, alpha)))
         if vis:
-            # [-1, 1]
-            im = (1 - (arr / 2 + 0.5)) * dtype_max
-            # [0, dtype_max]
-            bg = np.zeros(im.shape)
-            alpha = np.dstack((alpha, alpha, alpha))
-            im = np.multiply(alpha, im) + np.multiply(1 - alpha, bg)
-            cv2.imwrite(outpath[:-4] + '.png', im.astype(dtype)[..., ::-1])
+            self.vis_normal(arr, alpha, outpath[:-4] + '.png')
         logger.name = logger_name
         logger.info("Normal image extractd to %s", outpath)
 

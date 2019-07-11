@@ -427,7 +427,7 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
 
 def render_normal(outpath, cam=None, obj_names=None,
                   outpath_refball=None, world_coords=False):
-    """Renders raw normal map in .exr of the specified object(s) from the
+    r"""Renders raw normal map in .exr of the specified object(s) from the
     specified camera.
 
     RGB at each pixel is the (almost unit) normal vector at that location.
@@ -444,7 +444,58 @@ def render_normal(outpath, cam=None, obj_names=None,
             ball's normals to. ``None`` means not rendering the reference
             ball.
         world_coords (bool, optional): Whether to render normals in the world
-            or camera space.
+            or *negated* camera space.
+
+    Warning:
+        **TL;DR**
+
+        If you want camera-space normal maps, you need to negate
+        the normal map after loading it from the .exr file this function
+        writes. Otherwise, those normals live in a space that has all three
+        axes flipped w.r.t. the camera's local space.
+
+        **The Details**
+
+        If you want world-space normals, then easy; I'll just use
+        Cycles, and the normals are automatically in the world space. If
+        camera-space normals are what you want, I'll use Blender Internal
+        (BI), but there's some complication taken care of under the hood.
+
+        BI renders normals "in the camera space." I verified this by keeping
+        my scene intact, but having my camera rotating a bit; indeed, the
+        normal vectors of a cube went from "round values", such as
+        :math:`(0, 0, 1)`, to "non-round values", such as
+        :math:`(0.02, 0.03, 0.99)`.
+
+        But what precisely is this "camera space" (denoted by :math:`S`)? Is
+        it really just the camera's local space? How do we go from :math:`S`
+        to the world coordinate system, and possibly to another space
+        therefrom? Here's my exploration.
+
+        I put a camera at the scene center, and had it pointing, head-on, to
+        one face of a default cube (so the camera saw just that face -- no
+        other faces). I rendered the normals with BI: the raw RGB value is
+        :math:`(0, 0, −1)`. OK, so the normal vector pointing out of the
+        screen to my eyes is :math:`S`'s :math:`−z`. Hence, :math:`S`'s
+        :math:`+z` points into the screen.
+
+        Then I rotated the cube by just a little, so my camera got to see a
+        little bit of the side faces it couldn't see before. The normal vector
+        pointing to the left is :math:`(1, 0, 0)`; so the :math:`+x` of
+        :math:`S` points to the left, tangent to the screen. Similarly, I
+        found out the :math:`+y` points downwards, also tangent to the screen.
+
+        But wait, the three axes don't even form a right-handed system; they
+        form a left-handed one! This is so strange. Oh, if we negate all the
+        axes, then we get a right-handed system. Would this negated system be
+        the camera's local space (as in an object's local coordinate system)?
+
+        It is! After eyeballing the camera's local space axes, I found they
+        are exactly the flipped axes of :math:`S`. Therefore, when
+        camera-space normals are asked for, I first render them out using BI,
+        and then have to flip the signs to give the camera-space normals,
+        which you can then transform to other spaces correctly with
+        transformation matrices.
 
     Writes
         - A 32-bit .exr normal map of the object(s) of interest.
