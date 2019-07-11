@@ -450,7 +450,7 @@ def render_normal(outpath, cam=None, obj_names=None,
         - A 32-bit .exr normal map of the object(s) of interest.
         - Another 32-bit .exr normal map of the reference ball, if asked for.
     """
-    from .object import add_sphere
+    from .object import add_sphere, remove_objects
     from .camera import point_camera_to, get_2d_bounding_box
 
     logger_name = thisfile + '->render_normal()'
@@ -528,6 +528,9 @@ def render_normal(outpath, cam=None, obj_names=None,
         logger.info("Renference ball rendered through the same camera to %s",
                     outpath_refball)
     logger.warning("The scene node tree has changed")
+
+    if outpath_refball is not None:
+        remove_objects(sphere.name)
 
 
 def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
