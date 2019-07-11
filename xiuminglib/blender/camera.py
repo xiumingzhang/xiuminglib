@@ -16,7 +16,7 @@ from .object import get_bmesh
 from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
-from ..geometry import from_homo
+from ..geometry.proj import from_homo
 
 
 def add_camera(xyz=(0, 0, 0),

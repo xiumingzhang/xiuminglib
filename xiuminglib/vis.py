@@ -871,7 +871,7 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
     from skimage.measure import marching_cubes_lewiner
     from trimesh import Trimesh
     from trimesh.io.export import export_mesh
-    from .geometry import ptcld2tdf
+    from .geometry.ptcld import ptcld2tdf
 
     # Point cloud to TDF
     tdf = ptcld2tdf(pts, res=res, center=center)
