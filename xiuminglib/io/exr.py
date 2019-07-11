@@ -57,13 +57,44 @@ class EXR():
         logger.info("Loaded %s", self.exr_f)
         return data
 
-    def extract_depth(self, alpha_exr, outpath, vis=False):
-        """Combines a raw (aliased) depth map and its alpha map into
-        anti-aliased depth.
+    @staticmethod
+    def vis_depth(depth_map, alpha_map, outpath):
+        """Visualizes a(n) (aliased) depth map and an (anti-aliased) alpha map
+        as a single depth image.
 
         Output has black background, with bright values for closeness to the
         camera. If the alpha map is anti-aliased, the result depth map will
         be nicely anti-aliased.
+
+        Args:
+            depth_map (numpy.ndarray): 2D array of (aliased) raw depth values.
+            alpha_map (numpy.ndarray): 2D array of (anti-aliased) alpha
+                values.
+            outpath (str): Path to the result .png file.
+
+        Writes
+            - The (anti-aliased) depth image.
+        """
+        cv2 = config.import_from_google3('cv2')
+        dtype = 'uint8'
+        dtype_max = np.iinfo(dtype).max
+        is_fg = depth_map < depth_map.max()
+        max_val = depth_map[is_fg].max()
+        depth_map[depth_map > max_val] = max_val # cap background depth at the
+        # object maximum depth
+        min_val = depth_map.min()
+        im = dtype_max * (max_val - depth_map) / (max_val - min_val)
+        # Now [0, dtype_max]
+        # Anti-aliasing
+        bg = np.zeros(im.shape)
+        im = np.multiply(alpha_map, im) + np.multiply(1 - alpha_map, bg)
+        cv2.imwrite(outpath, im.astype(dtype))
+
+    def extract_depth(self, alpha_exr, outpath, vis=False):
+        """Combines an aliased .exr depth map and an anti-aliased .exr alpha
+        map into a single RGBA .npy depth map.
+
+        All values remain raw in the conversion from .exr to .npy.
 
         Args:
             alpha_exr (str): Path to the EXR file of the anti-aliased alpha
@@ -78,8 +109,6 @@ class EXR():
         """
         cv2 = config.import_from_google3('cv2')
         logger_name = thisfile + '->EXR:extract_depth()'
-        dtype = 'uint8'
-        dtype_max = np.iinfo(dtype).max
 
         def assert_all_channels_same(arr):
             for i in range(1, arr.shape[-1]):
@@ -98,17 +127,7 @@ class EXR():
             outpath += '.npy'
         np.save(outpath, np.dstack((arr, alpha)))
         if vis:
-            is_fg = depth < depth.max()
-            max_val = depth[is_fg].max()
-            depth[depth > max_val] = max_val # cap background depth at the
-            # object maximum depth
-            min_val = depth.min()
-            im = dtype_max * (max_val - depth) / (max_val - min_val) # now
-            # [0, dtype_max]
-            # Anti-aliasing
-            bg = np.zeros(im.shape)
-            im = np.multiply(alpha, im) + np.multiply(1 - alpha, bg)
-            cv2.imwrite(outpath[:-4] + '.png', im.astype(dtype))
+            self.vis_depth(depth, alpha, outpath[:-4] + '.png')
         logger.name = logger_name
         logger.info("Depth image extractd to %s", outpath)
 
@@ -134,13 +153,16 @@ class EXR():
     def vis_normal(normal_map, alpha_map, outpath):
         """Visualizes the normal map by converting vectors to pixel values.
 
+        The background is black, complying with industry standards (e.g.,
+        Adobe AE).
+
         Args:
             normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
             alpha_map (numpy.ndarray): H-by-W array of alpha values.
             outpath (str): Where to save the visualization to.
 
         Writes
-            - Normal image.
+            - The normal image.
         """
         cv2 = config.import_from_google3('cv2')
         dtype = 'uint8'
@@ -173,10 +195,7 @@ class EXR():
         return normal_map_trans
 
     def extract_normal(self, outpath, negate=False, vis=False):
-        """Converts an RGBA EXR normal map to a .npy normal map.
-
-        The background is black, complying with industry standards (e.g.,
-        Adobe AE).
+        """Converts an RGBA EXR normal map to an RGBA .npy normal map.
 
         Args:
             outpath (str): Path to the result .npy file.
