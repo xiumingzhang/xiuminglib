@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
 
     xiuminglib.blender
+    xiuminglib.geometry
     xiuminglib.io
 
 Submodules
@@ -45,14 +46,6 @@ xiuminglib.decor module
 -----------------------
 
 .. automodule:: xiuminglib.decor
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-xiuminglib.geometry module
---------------------------
-
-.. automodule:: xiuminglib.geometry
     :members:
     :undoc-members:
     :show-inheritance:
