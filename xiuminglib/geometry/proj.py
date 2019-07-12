@@ -1,5 +1,3 @@
-"""Projective"""
-
 import numpy as np
 
 try:

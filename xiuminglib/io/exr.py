@@ -10,6 +10,9 @@ except ModuleNotFoundError:
 from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
+from ..vis.geometry import depth_as_image, normal_as_image
+from ..geometry.normal import normalize
+
 
 class EXR():
     """Reads EXR files.
@@ -57,39 +60,6 @@ class EXR():
         logger.info("Loaded %s", self.exr_f)
         return data
 
-    @staticmethod
-    def vis_depth(depth_map, alpha_map, outpath):
-        """Visualizes a(n) (aliased) depth map and an (anti-aliased) alpha map
-        as a single depth image.
-
-        Output has black background, with bright values for closeness to the
-        camera. If the alpha map is anti-aliased, the result depth map will
-        be nicely anti-aliased.
-
-        Args:
-            depth_map (numpy.ndarray): 2D array of (aliased) raw depth values.
-            alpha_map (numpy.ndarray): 2D array of (anti-aliased) alpha
-                values.
-            outpath (str): Path to the result .png file.
-
-        Writes
-            - The (anti-aliased) depth image.
-        """
-        cv2 = config.import_from_google3('cv2')
-        dtype = 'uint8'
-        dtype_max = np.iinfo(dtype).max
-        is_fg = depth_map < depth_map.max()
-        max_val = depth_map[is_fg].max()
-        depth_map[depth_map > max_val] = max_val # cap background depth at the
-        # object maximum depth
-        min_val = depth_map.min()
-        im = dtype_max * (max_val - depth_map) / (max_val - min_val)
-        # Now [0, dtype_max]
-        # Anti-aliasing
-        bg = np.zeros(im.shape)
-        im = np.multiply(alpha_map, im) + np.multiply(1 - alpha_map, bg)
-        cv2.imwrite(outpath, im.astype(dtype))
-
     def extract_depth(self, alpha_exr, outpath, vis=False):
         """Combines an aliased .exr depth map and an anti-aliased .exr alpha
         map into a single RGBA .npy depth map.
@@ -127,72 +97,9 @@ class EXR():
             outpath += '.npy'
         np.save(outpath, np.dstack((arr, alpha)))
         if vis:
-            self.vis_depth(depth, alpha, outpath[:-4] + '.png')
+            depth_as_image(depth, alpha, outpath[:-4] + '.png')
         logger.name = logger_name
         logger.info("Depth image extractd to %s", outpath)
-
-    @staticmethod
-    def normalize_normal(normal_map):
-        """Normalizes the normal vector at each pixel of the normal map.
-
-        The normal maps rendered by Blender are *almost* normalized, so this
-        function is called by :func:`xiuminglib.io.exr.EXR.extract_normal`.
-
-        Args:
-            normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
-
-        Returns:
-            numpy.ndarray: Normalized normal map.
-        """
-        norm = np.linalg.norm(normal_map, axis=-1)
-        valid = norm > 0.5
-        normal_map[valid] = normal_map[valid] / norm[valid][..., None]
-        return normal_map
-
-    @staticmethod
-    def vis_normal(normal_map, alpha_map, outpath):
-        """Visualizes the normal map by converting vectors to pixel values.
-
-        The background is black, complying with industry standards (e.g.,
-        Adobe AE).
-
-        Args:
-            normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
-            alpha_map (numpy.ndarray): H-by-W array of alpha values.
-            outpath (str): Where to save the visualization to.
-
-        Writes
-            - The normal image.
-        """
-        cv2 = config.import_from_google3('cv2')
-        dtype = 'uint8'
-        dtype_max = np.iinfo(dtype).max
-        # [-1, 1]
-        im = (normal_map / 2 + 0.5) * dtype_max
-        # [0, dtype_max]
-        bg = np.zeros(im.shape)
-        alpha = np.dstack([alpha_map] * 3)
-        im = np.multiply(alpha, im) + np.multiply(1 - alpha, bg)
-        cv2.imwrite(outpath, im.astype(dtype)[..., ::-1])
-
-    @staticmethod
-    def transform_normal(normal_map, rotmat):
-        """Transforms the normal vectors from one space to another.
-
-        Args:
-            normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
-            rotmat (numpy.ndarray or mathutils.Matrix): 3-by-3 rotation
-                matrix.
-
-        Returns:
-            numpy.ndarray: Transformed normal map.
-        """
-        rotmat = np.array(rotmat)
-        orig_shape = normal_map.shape
-        normal = normal_map.reshape(-1, 3).T # 3-by-N
-        normal_trans = rotmat.dot(normal)
-        normal_map_trans = normal_trans.T.reshape(orig_shape)
-        return normal_map_trans
 
     def extract_normal(self, outpath, negate=False, vis=False):
         """Converts an RGBA EXR normal map to an RGBA .npy normal map.
@@ -217,13 +124,13 @@ class EXR():
         arr = np.dstack((data['R'], data['G'], data['B']))
         if negate:
             arr = -arr
-        arr = self.normalize_normal(arr)
+        arr = normalize(arr)
         alpha = data['A']
         if not outpath.endswith('.npy'):
             outpath += '.npy'
         np.save(outpath, np.dstack((arr, alpha)))
         if vis:
-            self.vis_normal(arr, alpha, outpath[:-4] + '.png')
+            normal_as_image(arr, alpha, outpath[:-4] + '.png')
         logger.name = logger_name
         logger.info("Normal image extractd to %s", outpath)
 
@@ -244,7 +151,7 @@ class EXR():
               and specularity.
             - composite.npy (ditto): composite by Blender.
         """
-        from .. import vis as xm_vis, os as xm_os
+        from ..vis.matrix import matrix_as_image, os as xm_os
         logger_name = thisfile + \
             '->extract_intrinsic_images_from_lighting_passes()'
         xm_os.makedirs(outdir)
@@ -270,32 +177,29 @@ class EXR():
         albedo = collapse_passes(['diffuse_color', 'glossy_color'])
         np.save(join(outdir, 'albedo.npy'), albedo)
         if vis:
-            xm_vis.matrix_as_image(albedo,
-                                   outpath=join(outdir, 'albedo.png'))
+            matrix_as_image(albedo, outpath=join(outdir, 'albedo.png'))
         # Shading
         shading = collapse_passes(['diffuse_indirect', 'diffuse_direct'])
         np.save(join(outdir, 'shading.npy'), shading)
         if vis:
-            xm_vis.matrix_as_image(shading,
-                                   outpath=join(outdir, 'shading.png'))
+            matrix_as_image(shading, outpath=join(outdir, 'shading.png'))
         # Specularity
         specularity = collapse_passes(['glossy_indirect', 'glossy_direct'])
         np.save(join(outdir, 'specularity.npy'), specularity)
         if vis:
-            xm_vis.matrix_as_image(specularity,
-                                   outpath=join(outdir, 'specularity.png'))
+            matrix_as_image(
+                specularity, outpath=join(outdir, 'specularity.png'))
         # Reconstruction vs. ...
         recon = np.multiply(albedo, shading) + specularity
         recon[:, :, 3] = albedo[:, :, 3] # can't add up alpha channels
         np.save(join(outdir, 'recon.npy'), recon)
         if vis:
-            xm_vis.matrix_as_image(recon, outpath=join(outdir, 'recon.png'))
+            matrix_as_image(recon, outpath=join(outdir, 'recon.png'))
         # ... composite from Blender, just for sanity check
         composite = collapse_passes(['composite'])
         np.save(join(outdir, 'composite.npy'), composite)
         if vis:
-            xm_vis.matrix_as_image(composite,
-                                   outpath=join(outdir, 'composite.png'))
+            matrix_as_image(composite, outpath=join(outdir, 'composite.png'))
         logger.name = logger_name
         logger.info("Intrinsic images extracted to %s", outdir)
 

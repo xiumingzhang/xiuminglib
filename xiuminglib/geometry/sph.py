@@ -1,5 +1,3 @@
-""""Spherical"""
-
 from os.path import abspath
 import numpy as np
 

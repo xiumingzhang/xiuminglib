@@ -1,5 +1,3 @@
-"""Triangle"""
-
 import numpy as np
 
 

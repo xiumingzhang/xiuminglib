@@ -9,6 +9,22 @@ xiuminglib.geometry package
 Submodules
 ----------
 
+xiuminglib.geometry.depth module
+--------------------------------
+
+.. automodule:: xiuminglib.geometry.depth
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.geometry.normal module
+---------------------------------
+
+.. automodule:: xiuminglib.geometry.normal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.geometry.proj module
 -------------------------------
 

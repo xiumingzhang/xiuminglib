@@ -14,6 +14,7 @@ Subpackages
     xiuminglib.blender
     xiuminglib.geometry
     xiuminglib.io
+    xiuminglib.vis
 
 Submodules
 ----------
@@ -94,14 +95,6 @@ xiuminglib.tracker module
 -------------------------
 
 .. automodule:: xiuminglib.tracker
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-xiuminglib.vis module
----------------------
-
-.. automodule:: xiuminglib.vis
     :members:
     :undoc-members:
     :show-inheritance:

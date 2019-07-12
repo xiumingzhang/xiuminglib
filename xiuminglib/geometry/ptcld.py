@@ -1,5 +1,3 @@
-"""Point Cloud"""
-
 import numpy as np
 
 
