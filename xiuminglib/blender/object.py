@@ -385,7 +385,8 @@ def create_object_from_mesh(mesh_data, obj_name='new-obj',
 def _clear_nodetree_for_active_material(obj):
     """Internal helper function clears the node tree of active material.
 
-    So that desired node tree can be cleanly set up. If no active material, one will be created.
+    So that desired node tree can be cleanly set up. If no active material, one
+    will be created.
     """
     # Create material if none
     if obj.active_material is None:

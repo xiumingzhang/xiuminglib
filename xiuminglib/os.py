@@ -29,14 +29,16 @@ def sortglob(directory, filename='*', ext=None,
             extensions.
         colossus_heuristic (bool, optional): Whether to turn on the heuristic
             that identifies and then works with Google Colossus (CNS)
-            directories.
+            directories. When ``True``, the function first tries ``gfile``,
+            which will fail if not using Blaze. It then falls back to external
+            ``fileutil`` calls.
 
     Returns:
         list(str): Sorted list of files globbed.
     """
-    def _glob_cns_cli(pattern):
+    def glob_cns_cli(pattern):
         cmd = 'fileutil ls -d %s' % pattern # -d to avoid recursively
-        retcode, stdout, _ = call(cmd, print_stdout_stderr=False)
+        retcode, stdout, _ = call(cmd, quiet=True)
         assert retcode == 0, "`fileutil ls` failed"
         return [x for x in stdout.split('\n') if x != '']
 
@@ -46,7 +48,7 @@ def sortglob(directory, filename='*', ext=None,
             from google3.pyglib import gfile
             glob_func = gfile.Glob
         except ModuleNotFoundError: # not using Blaze
-            glob_func = _glob_cns_cli
+            glob_func = glob_cns_cli
     else:
         # Is just a regular local path
         glob_func = glob
@@ -95,7 +97,7 @@ def rmglob(path_pattern, exclude_dir=True):
             os.remove(x)
 
 
-def makedirs(directory, rm_if_exists=False, blaze=False):
+def makedirs(directory, rm_if_exists=False, colossus_heuristic=True):
     """Wraps :func:`os.makedirs` to support removing the directory if it
     alread exists.
 
@@ -103,20 +105,47 @@ def makedirs(directory, rm_if_exists=False, blaze=False):
         directory (str)
         rm_if_exists (bool, optional): Whether to remove the directory (and
             its contents) if it already exists.
-        blaze (bool, optional): Whether this is run with Google's Blaze.
+        colossus_heuristic (bool, optional): Whether to turn on the heuristic
+            that identifies and then works with Google Colossus (CNS)
+            directories. When ``True``, the function first tries ``gfile``,
+            which will fail if not using Blaze. It then falls back to external
+            ``fileutil`` calls.
     """
     logger_name = thisfile + '->makedirs()'
 
-    if blaze:
-        from google3.pyglib import gfile
-        exists_func = gfile.Exists
-        delete_func = gfile.DeleteRecursively
-        mkdir_func = gfile.MakeDirs
+    def exists_cns_cli(directory):
+        cmd = 'fileutil test -d %s' % directory
+        retcode, _, _ = call(cmd, quiet=True)
+        return retcode == 0
+
+    def delete_cns_cli(directory):
+        cmd = 'fileutil rm -R -f %s' % directory
+        retcode, _, _ = call(cmd, quiet=True)
+        assert retcode == 0, "`fileutil rm` failed"
+
+    def mkdir_cns_cli(directory):
+        cmd = 'fileutil mkdir -p %s' % directory
+        retcode, _, _ = call(cmd, quiet=True)
+        assert retcode == 0, "`fileutil mkdir` failed"
+
+    if colossus_heuristic and _is_cnspath(directory):
+        # Is a CNS path
+        try: # using Blaze
+            from google3.pyglib import gfile
+            exists_func = gfile.Exists
+            delete_func = gfile.DeleteRecursively
+            mkdir_func = gfile.MakeDirs
+        except ModuleNotFoundError: # not using Blaze
+            exists_func = exists_cns_cli
+            delete_func = delete_cns_cli
+            mkdir_func = mkdir_cns_cli
     else:
+        # Is just a regular local path
         exists_func = exists
         delete_func = rmtree
         mkdir_func = os.makedirs
 
+    # Do the job
     if exists_func(directory):
         if rm_if_exists:
             delete_func(directory)
@@ -185,16 +214,15 @@ def fix_terminal():
     _, _ = child.communicate()
 
 
-def call(cmd, cwd=None, print_stdout_stderr=True, wait=True):
+def call(cmd, cwd=None, wait=True, quiet=False):
     """Executes a command in shell.
 
     Args:
         cmd (str): Command to be executed.
         cwd (str, optional): Directory to execute the command in. ``None``
             means current directory.
-        print_stdout_stderr (bool, optional): Whether to print out these
-            streams.
         wait (bool, optional): Whether to block until the call finishes.
+        quiet (bool, optional): Whether to print out these streams.
 
     Returns:
         tuple:
@@ -215,7 +243,7 @@ def call(cmd, cwd=None, print_stdout_stderr=True, wait=True):
     stdout, stderr = process.communicate() # waits for completion
     stdout, stderr = stdout.decode(), stderr.decode()
 
-    if print_stdout_stderr:
+    if not quiet:
         if stdout != '':
             format_print(stdout, 'O')
         if process.returncode != 0:
