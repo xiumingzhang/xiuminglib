@@ -2,8 +2,11 @@ from os.path import abspath, basename, dirname, join
 from shutil import copy
 import numpy as np
 
-from .. import config, os as xm_os
-logger, thisfile = config.create_logger(abspath(__file__))
+from ..config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
+
+from .. import os as xm_os
+from ..imprt import import_from_google3
 
 
 class Obj(object):
@@ -411,7 +414,7 @@ class Mtl(object):
         Writes
             - Output .mtl file.
         """
-        cv2 = config.import_from_google3('cv2')
+        cv2 = import_from_google3('cv2')
         logger_name = thisfile + '->Mtl:write_file()'
         # Validate inputs
         assert (self.mtlfile is not None and self.newmtl is not None), \

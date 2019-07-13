@@ -1,11 +1,12 @@
 from os.path import join, dirname
 import numpy as np
 
-from .. import constants, config, os as xm_os
+from .. import const, os as xm_os
+from ..imprt import import_from_google3
 from .general import _savefig
 
 try:
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 except ModuleNotFoundError:
     pass
 
@@ -36,7 +37,7 @@ def rgb_on_uv_canvas(uvs, rgbs,
             interpolations.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means
-            ``os.path.join(constants.Dir.tmp, 'rgb_on_uv_canvas.png')``.
+            ``os.path.join(const.Dir.tmp, 'rgb_on_uv_canvas.png')``.
 
     Writes
         - An interpolated image of the UV-indexed colors.
@@ -47,7 +48,7 @@ def rgb_on_uv_canvas(uvs, rgbs,
     dtype_max = np.iinfo(dtype).max
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'rgb_on_uv_canvas.png')
+        outpath = join(const.Dir.tmp, 'rgb_on_uv_canvas.png')
 
     if max_l1_interp is None:
         max_l1_interp = np.inf # trust everything
@@ -100,7 +101,7 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None,
             [2, 3, 4, 5], ...]'``.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means
-            ``os.path.join(constants.Dir.tmp, 'uv_on_texmap.png')``.
+            ``os.path.join(const.Dir.tmp, 'uv_on_texmap.png')``.
         dotsize (int or list(int), optional): Size(s) of the UV dots.
         dotcolor (str or list(str), optional): Their color(s).
         linewidth (float, optional): Width of the lines connecting the dots.
@@ -119,7 +120,7 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None,
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'uv_on_texmap.png')
+        outpath = join(const.Dir.tmp, 'uv_on_texmap.png')
 
     # Preprocess input
     if isinstance(texmap, str):

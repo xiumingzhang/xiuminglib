@@ -10,6 +10,7 @@ except ModuleNotFoundError:
 from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
+from ..imprt import import_from_google3
 from ..vis.geometry import depth_as_image, normal_as_image
 from ..vis.matrix import matrix_as_image
 from ..geometry.normal import normalize
@@ -76,7 +77,6 @@ class EXR():
             - A .npy file containing the raw RGB(A) values.
             - If ``vis``, a .png image, naively tonemapped from the raw values.
         """
-        cv2 = config.import_from_google3('cv2')
         logger_name = thisfile + '->EXR:extract_rgb()'
         data = [self.data['R'], self.data['G'], self.data['B']]
         if 'A' in self.data.keys():
@@ -106,7 +106,7 @@ class EXR():
             - A .npy file containing an aliased depth map and its alpha map.
             - If ``vis``, a .png image of anti-aliased depth.
         """
-        cv2 = config.import_from_google3('cv2')
+        cv2 = import_from_google3('cv2')
         logger_name = thisfile + '->EXR:extract_depth()'
 
         def assert_all_channels_same(arr):

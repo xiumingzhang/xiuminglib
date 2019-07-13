@@ -535,12 +535,13 @@ def main(test_id):
         from os.path import join
         from copy import deepcopy
         from scipy.fftpack import dct, idct
-        from . import config, constants, os as xm_os
+        from . import const, os as xm_os
+        from .imprt import import_from_google3
         from .vis.matrix import matrix_as_heatmap, matrix_as_heatmap_complex
-        cv2 = config.import_from_google3('cv2')
-        outdir = join(constants.Dir.tmp, test_id)
+        cv2 = import_from_google3('cv2')
+        outdir = join(const.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(constants.Path.cameraman, cv2.IMREAD_GRAYSCALE)
+        im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)
         # Transform by my DCT (2-step)
@@ -613,12 +614,13 @@ def main(test_id):
 
     elif test_id == 'dft_cameraman':
         from os.path import join
-        from . import config, os as xm_os
+        from . import os as xm_os
+        from .imprt import import_from_google3
         from .vis.matrix import matrix_as_heatmap_complex
-        cv2 = config.import_from_google3('cv2')
-        outdir = join(constants.Dir.tmp, test_id)
+        cv2 = import_from_google3('cv2')
+        outdir = join(const.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(constants.Path.cameraman, cv2.IMREAD_GRAYSCALE)
+        im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE)
         im = cv2.resize(im, (64, 64))
         cv2.imwrite(join(outdir, 'orig.png'), im)
         # My two-step DFT
@@ -681,7 +683,7 @@ def main(test_id):
             sph_func = sph_func_1d.reshape((n_steps_theta, 2 * n_steps_theta))
             sph_func_ravel = sph_func.ravel()
             assert (sph_func_1d == sph_func_ravel).all()
-            tmp_dir = constants.Dir.tmp
+            tmp_dir = const.Dir.tmp
             matrix_as_heatmap(sph_func, outpath=join(tmp_dir, 'sph_orig.png'))
             # Analysis
             coeffs = ymat.dot(np.multiply(weights, sph_func_ravel))

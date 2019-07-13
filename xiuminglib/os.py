@@ -1,11 +1,12 @@
 import os
 from os.path import abspath, join, exists, isdir, dirname
-from shutil import rmtree
+from shutil import rmtree, copy2, copytree
 from glob import glob
 
 from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
+from .imprt import import_from_google3
 from .interact import format_print
 
 
@@ -16,6 +17,10 @@ def _is_cnspath(path):
 def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     """Globs and then sorts filenames, possibly ending with multiple
     extensions, in a directory.
+
+    Supports Google Colossus, by using ``gfile`` (preferred for speed)
+    or the ``fileutil`` CLI when Blaze is not used (hence, ``gfile``
+    unavailable).
 
     Args:
         directory (str): Directory to glob, e.g., ``'/path/to/'``.
@@ -38,11 +43,11 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
 
     if _is_cnspath(directory):
         # Is a CNS path
-        try: # using Blaze
-            from google3.pyglib import gfile
-            glob_func = gfile.Glob
-        except ModuleNotFoundError: # not using Blaze
+        gfile = import_from_google3('gfile')
+        if gfile is None:
             glob_func = glob_cns_cli
+        else:
+            glob_func = gfile.Glob
     else:
         # Is just a regular local path
         glob_func = glob
@@ -78,6 +83,9 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
 def rmglob(path_pattern, exclude_dir=True):
     """Globs a pattern and then deletes the matches.
 
+    Todo:
+        Support for Google Colossus.
+
     Args:
         path_pattern (str): Pattern to glob, e.g., ``'/path/to/img???.png'``.
         exclude_dir (bool, optional): Whether to exclude directories from
@@ -95,7 +103,8 @@ def exists_isdir(path):
     """Determines whether a path exists, and if so, whether it is a file
     or directory.
 
-    Supports Google Colossus (CNS) paths.
+    Supports Google Colossus (CNS) paths by using ``gfile`` (preferred for
+    speed) or the ``fileutil`` CLI.
 
     Args:
         path (str): A path.
@@ -108,17 +117,16 @@ def exists_isdir(path):
     """
     path = _no_trailing_slash(path)
 
+    # If local path, do the job quickly and return
     if not _is_cnspath(path):
         path_exists = exists(path)
         path_isdir = isdir(path) if path_exists else None
         return path_exists, path_isdir
 
-    try: # using Blaze
-        from google3.pyglib import gfile
-    except ModuleNotFoundError: # not using Blaze
-        gfile = None
+    gfile = import_from_google3('gfile')
 
-    if gfile is None: # fileutil CLI
+    # Using fileutil CLI
+    if gfile is None:
         testf, _, _ = call('fileutil test -f %s' % path)
         testd, _, _ = call('fileutil test -d %s' % path)
         if testf == 1 and testd == 1:
@@ -133,7 +141,8 @@ def exists_isdir(path):
         else:
             raise NotImplementedError("What does this even mean?")
 
-    else: # gfile
+    # Using gfile
+    else:
         path_exists = gfile.Exists(path)
         if path_exists:
             path_isdir = gfile.IsDirectory(path)
@@ -153,9 +162,14 @@ def _no_trailing_slash(path):
 
 
 def _select_gfs_user(writeto):
-    """As whom we perform fileutil operations."""
+    """As whom we perform fileutil operations.
+
+    Used to set ``--gfs_user`` for ``fileutil``; useful for operations on a
+    folder whose owner is a Ganpati group (e.g., ``gcam-gpu``).
+    """
     assert _is_cnspath(writeto)
     writeto = _no_trailing_slash(writeto)
+
     writeto_exists, writeto_isdir = exists_isdir(writeto)
     if writeto_exists and writeto_isdir:
         # OK as long as we can write to it
@@ -163,19 +177,24 @@ def _select_gfs_user(writeto):
     else:
         # Doesn't exist yet or is a file, so we need to write to its parent
         writeto_folder = dirname(writeto)
-    retcode, stdout, _ = call(
-        'fileutil ls -l -d %s' % writeto_folder, quiet=True)
-    assert retcode == 0
-    owner = stdout.strip().split(' ')[2]
+
+    gfile = import_from_google3('gfile')
+
+    if gfile is None:
+        retcode, stdout, _ = call(
+            'fileutil ls -l -d %s' % writeto_folder, quiet=True)
+        assert retcode == 0
+        assert stdout.count('\n') == 1, \
+            "`fileuti ls` results should have one line only"
+        owner = stdout.strip().split(' ')[2]
+    else:
+        owner = gfile.Stat(writeto_folder).owner
+
     return owner
 
 
 def cp(src, dst, cns_parallel_copy=10):
     """Copies files, possibly from/to the Google Colossus Filesystem.
-
-    Todo:
-        Both the source and destination are non-Colossus, local files.
-        Interacting with Colossus, but with ``gfile``, not ``fileutil``.
 
     Args:
         src (str): Source file or directory.
@@ -190,32 +209,54 @@ def cp(src, dst, cns_parallel_copy=10):
     src = _no_trailing_slash(src)
     dst = _no_trailing_slash(dst)
 
-    if not _is_cnspath(src) and not _is_cnspath(dst):
-        raise NotImplementedError("Both paths are local")
-
     srcexists, srcisdir = exists_isdir(src)
     if not srcexists:
         raise FileNotFoundError("Source must exist")
 
-    cmd = 'fileutil cp -f -colossus_parallel_copy '
-    if srcisdir:
-        cmd += '-R -parallel_copy=%d %s ' % \
-            (cns_parallel_copy, join(src, '*'))
+    # When no CNS paths involved, quickly do the job and return
+    if not _is_cnspath(src) and not _is_cnspath(dst):
+        if srcisdir:
+            for x in os.listdir(src):
+                s = join(src, x)
+                d = join(dst, x)
+                if isdir(s):
+                    copytree(s, d)
+                else:
+                    copy2(s, d)
+        else:
+            copy2(src, dst)
+        return
+
+    gfile = import_from_google3('gfile')
+
+    if gfile is None:
+        cmd = 'fileutil cp -f -colossus_parallel_copy '
+        if srcisdir:
+            cmd += '-R -parallel_copy=%d %s ' % \
+                (cns_parallel_copy, join(src, '*'))
+        else:
+            cmd += '%s ' % src
+        cmd += '%s' % dst
+        # Destination directory may be owned by a Ganpati group
+        if _is_cnspath(dst):
+            cmd += ' --gfs_user %s' % _select_gfs_user(dst)
+        retcode, _, _ = call(cmd)
+        assert retcode == 0, "`fileutil cp` failed"
+
     else:
-        cmd += '%s ' % src
-    cmd += '%s' % dst
-
-    # Destination directory may be owned by a Ganpati group
-    if _is_cnspath(dst):
-        cmd += ' --gfs_user %s' % _select_gfs_user(dst)
-
-    retcode, _, _ = call(cmd)
-    assert retcode == 0, "Copy has failed"
+        if srcisdir:
+            gfile.RecursivelyCopyDir(src, dst)
+        else:
+            gfile.Copy(src, dst)
 
 
 def makedirs(directory, rm_if_exists=False):
     """Wraps :func:`os.makedirs` to support removing the directory if it
     alread exists.
+
+    Google Colossus-compatible: it tries to use ``gfile`` first for speed. This
+    will fail if Blaze is not used, in which case it then falls back to using
+    ``fileutil`` as external process calls.
 
     Args:
         directory (str)
@@ -241,15 +282,15 @@ def makedirs(directory, rm_if_exists=False):
 
     if _is_cnspath(directory):
         # Is a CNS path
-        try: # using Blaze
-            from google3.pyglib import gfile
-            exists_func = gfile.Exists
-            delete_func = gfile.DeleteRecursively
-            mkdir_func = gfile.MakeDirs
-        except ModuleNotFoundError: # not using Blaze
+        gfile = import_from_google3('gfile')
+        if gfile is None:
             exists_func = exists_cns_cli
             delete_func = delete_cns_cli
             mkdir_func = mkdir_cns_cli
+        else:
+            exists_func = gfile.Exists
+            delete_func = gfile.DeleteRecursively
+            mkdir_func = gfile.MakeDirs
     else:
         # Is just a regular local path
         exists_func = exists

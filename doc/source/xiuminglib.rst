@@ -35,10 +35,10 @@ xiuminglib.config module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.constants module
----------------------------
+xiuminglib.const module
+-----------------------
 
-.. automodule:: xiuminglib.constants
+.. automodule:: xiuminglib.const
     :members:
     :undoc-members:
     :show-inheritance:
@@ -55,6 +55,14 @@ xiuminglib.imgproc module
 -------------------------
 
 .. automodule:: xiuminglib.imgproc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.imprt module
+-----------------------
+
+.. automodule:: xiuminglib.imprt
     :members:
     :undoc-members:
     :show-inheritance:

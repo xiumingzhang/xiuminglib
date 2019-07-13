@@ -1,10 +1,11 @@
 from os.path import dirname, abspath, join
 import numpy as np
 
-from .. import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from ..config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
-from .. import constants, os as xm_os
+from .. import const, os as xm_os
+from ..imprt import import_from_google3
 from .general import _savefig
 
 
@@ -18,7 +19,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         arr (numpy.ndarray): Array to be transformed into an image. Can be
             H-by-W (grayscale) or H-by-W-by-3 (RGB or RGBA).
         outpath (str, optional): Where to visualize the result to. ``None``
-            means ``os.path.join(constants.Dir.tmp, 'matrix_as_image.png')``.
+            means ``os.path.join(const.Dir.tmp, 'matrix_as_image.png')``.
         gamma (float, optional): For gamma correction.
 
     Raises:
@@ -28,12 +29,12 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         - An image of the matrix.
     """
     from ..imgproc import gamma_correct
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 
     logger_name = thisfile + '->matrix_as_image()'
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'matrix_as_image.png')
+        outpath = join(const.Dir.tmp, 'matrix_as_image.png')
 
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max
@@ -99,7 +100,7 @@ def matrix_as_heatmap_complex(*args, **kwargs):
     """
     outpath = kwargs.get('outpath', None)
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'matrix_as_heatmap_complex.png')
+        outpath = join(const.Dir.tmp, 'matrix_as_heatmap_complex.png')
     for suffix in ('mag', 'phase'):
         l = outpath.split('.')
         l[-2] += '_' + suffix
@@ -130,7 +131,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
             consists of both positive and negative values, and 0 means
             "nothing". ``None`` means default colormap and auto range.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.Dir.tmp,
+            ``None`` means ``os.path.join(const.Dir.tmp,
             'matrix_as_heatmap.png')``.
         contents_only (bool, optional): Whether to plot only the contents
             (i.e., no borders, axes, etc.). If ``True``, the heatmap will be
@@ -160,7 +161,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
             ok_version, matplotlib.__version__)
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'matrix_as_heatmap.png')
+        outpath = join(const.Dir.tmp, 'matrix_as_heatmap.png')
 
     if mat.ndim != 2:
         raise ValueError(

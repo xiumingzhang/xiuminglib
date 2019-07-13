@@ -81,7 +81,7 @@ def colossus_interface(somefunc):
         # local_path guaranteed to not end with '/'
         return local_path
 
-    def cp_wrapper(src, dst):
+    def cp_verbose(src, dst):
         logger.name = logger_name
         try:
             cp(src, dst)
@@ -114,7 +114,7 @@ def colossus_interface(somefunc):
         # TODO: what if some of those paths are not input? Copying them to
         # local is a waste (but harmless)
         for cns_path, local_path in cns2local.items():
-            cp_wrapper(cns_path, local_path)
+            cp_verbose(cns_path, local_path)
         # Run the real function
         t0 = time()
         sleep(t_eps)
@@ -123,7 +123,7 @@ def colossus_interface(somefunc):
         # to CNS paths back to CNS
         for cns_path, local_path in cns2local.items():
             if os.path.exists(local_path) and getmtime(local_path) > t0:
-                cp_wrapper(local_path, cns_path)
+                cp_verbose(local_path, cns_path)
         return results
 
     return wrapper

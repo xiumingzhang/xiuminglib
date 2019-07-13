@@ -13,10 +13,11 @@ except ModuleNotFoundError:
 
 from .object import get_bmesh
 
-from .. import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from ..config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
 from ..geometry.proj import from_homo
+from ..imprt import import_from_google3
 
 
 def add_camera(xyz=(0, 0, 0),
@@ -36,11 +37,12 @@ def add_camera(xyz=(0, 0, 0),
         rot_vec_rad (tuple, optional): Rotations in radians around x, y and z.
             Defaults to ``(0, 0, 0)``.
         name (str, optional): Camera object name.
-        proj_model (str, optional): Camera projection model. Must be ``'PERSP'``,
-            ``'ORTHO'``, or ``'PANO'``. Defaults to ``'PERSP'``.
+        proj_model (str, optional): Camera projection model. Must be
+            ``'PERSP'``, ``'ORTHO'``, or ``'PANO'``. Defaults to ``'PERSP'``.
         f (float, optional): Focal length in mm. Defaults to 35.
-        sensor_fit (str, optional): Sensor fit. Must be ``'HORIZONTAL'`` or ``'VERTICAL'``.
-            See also :func:`get_camera_matrix`. Defaults to ``'HORIZONTAL'``.
+        sensor_fit (str, optional): Sensor fit. Must be ``'HORIZONTAL'`` or
+            ``'VERTICAL'``. See also :func:`get_camera_matrix`. Defaults to
+            ``'HORIZONTAL'``.
         sensor_width (float, optional): Sensor width in mm. Defaults to 32.
         sensor_height (float, optional): Sensor height in mm. Defaults to 18.
         clip_start (float, optional): Near clipping distance. Defaults to 0.1.
@@ -129,15 +131,16 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
     direction = xyz_target - cam.location
 
     # Rotate camera with quaternion so that `track` aligns with `direction`, and
-    # world +z, when projected, aligns with camera +y (i.e., points up in image plane)
+    # world +z, when projected, aligns with camera +y (i.e., points up in image
+    # plane)
     track = '-Z'
     rot_quat = direction.to_track_quat(track, 'Y')
     cam.rotation_euler = (0, 0, 0)
     cam.rotation_euler.rotate(rot_quat)
 
-    # Further rotate camera so that world `up`, when projected, points up on image plane
-    # We know right now world +z, when projected, points up, so we just need to rotate
-    # the camera around the lookat direction by an angle
+    # Further rotate camera so that world `up`, when projected, points up on
+    # image plane. We know right now world +z, when projected, points up, so
+    # we just need to rotate the camera around the lookat direction by an angle
     cam_mat, _, _ = get_camera_matrix(cam)
     up_proj = cam_mat * up.to_4d()
     orig_proj = cam_mat * Vector((0, 0, 0)).to_4d()
@@ -149,10 +152,10 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
         logger.error(
             ("w in homogeneous coordinates is 0; "
              "camera coincides with the point to project? "
-             "So can't rotate camera to ensure up vector")
-        )
-        logger.info("Camera '%s' pointed to %s, but with no guarantee on up vector",
-                    cam.name, tuple(xyz_target))
+             "So can't rotate camera to ensure up vector"))
+        logger.info(
+            "Camera '%s' pointed to %s, but with no guarantee on up vector",
+            cam.name, tuple(xyz_target))
         return cam
     # +------->
     # |
@@ -174,7 +177,8 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
 
 
 def intrinsics_compatible_with_scene(cam, eps=1e-6):
-    r"""Checks if camera intrinsic parameters are comptible with the current scene.
+    r"""Checks if camera intrinsic parameters are comptible with the current
+    scene.
 
     Intrinsic parameters include sensor size and pixel aspect ratio, and scene
     parameters refer to render resolutions and their scale. The entire sensor is
@@ -182,8 +186,8 @@ def intrinsics_compatible_with_scene(cam, eps=1e-6):
 
     Args:
         cam (bpy_types.Object): Camera object
-        eps (float, optional): :math:`\epsilon` for numerical comparison. Considered
-            equal if :math:`\frac{|a - b|}{b} < \epsilon`.
+        eps (float, optional): :math:`\epsilon` for numerical comparison.
+            Considered equal if :math:`\frac{|a - b|}{b} < \epsilon`.
 
     Returns:
         bool: Check result.
@@ -199,7 +203,8 @@ def intrinsics_compatible_with_scene(cam, eps=1e-6):
     w = scene.render.resolution_x
     h = scene.render.resolution_y
     scale = scene.render.resolution_percentage / 100.
-    pixel_aspect_ratio = scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
+    pixel_aspect_ratio = \
+        scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
 
     # Do these parameters make sense together?
     mm_per_pix_horizontal = sensor_width_mm / (w * scale)
@@ -211,20 +216,22 @@ def intrinsics_compatible_with_scene(cam, eps=1e-6):
         return True
 
     logger.error((
-        "Render resolutions (w_pix = %d; h_pix = %d), active sensor size (w_mm = %f; "
-        "h_mm = %f), and pixel aspect ratio (r = %f) don't make sense together. "
-        "This could cause unexpected behaviors later. "
+        "Render resolutions (w_pix = %d; h_pix = %d), active sensor size "
+        "(w_mm = %f; h_mm = %f), and pixel aspect ratio (r = %f) don't make "
+        "sense together. This could cause unexpected behaviors later. "
         "Consider running correct_sensor_height()"
     ), w, h, sensor_width_mm, sensor_height_mm, pixel_aspect_ratio)
     return False
 
 
 def correct_sensor_height(cam):
-    r"""To make render resolutions, sensor size, and pixel aspect ratio comptible.
+    r"""To make render resolutions, sensor size, and pixel aspect ratio
+    comptible.
 
     If render resolutions are :math:`(w_\text{pix}, h_\text{pix})`, sensor sizes
     are :math:`(w_\text{mm}, h_\text{mm})`, and pixel aspect ratio is :math:`r`,
-    then :math:`h_\text{mm}\leftarrow\frac{h_\text{pix}}{w_\text{pix}r}w_\text{mm}`.
+    then
+    :math:`h_\text{mm}\leftarrow\frac{h_\text{pix}}{w_\text{pix}r}w_\text{mm}`.
 
     Args:
         cam (bpy_types.Object): Camera.
@@ -238,7 +245,8 @@ def correct_sensor_height(cam):
     scene = bpy.context.scene
     w = scene.render.resolution_x
     h = scene.render.resolution_y
-    pixel_aspect_ratio = scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
+    pixel_aspect_ratio = \
+        scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
 
     # Change sensor height
     sensor_height_mm = sensor_width_mm * h / w / pixel_aspect_ratio
@@ -416,7 +424,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     Returns:
         numpy.ndarray: Camera :math:`z`-buffer.
     """
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 
     logger_name = thisfile + '->get_camera_zbuffer()'
 

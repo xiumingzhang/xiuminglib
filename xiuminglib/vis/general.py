@@ -4,10 +4,11 @@ from os.path import dirname, abspath, join
 from pickle import dump
 import numpy as np
 
-from .. import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from ..config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
-from .. import constants, os as xm_os
+from .. import const, os as xm_os
+from ..imprt import import_from_google3
 
 
 def pyplot_wrapper(*args,
@@ -74,7 +75,7 @@ def pyplot_wrapper(*args,
         grid (bool, optional): Whether to draw grid.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means
-            ``os.path.join(constants.Dir.tmp, 'pyplot_wrapper.png')``.
+            ``os.path.join(const.Dir.tmp, 'pyplot_wrapper.png')``.
 
     Raises:
         NotImplementedError: If ``func`` is not implemented.
@@ -91,7 +92,7 @@ def pyplot_wrapper(*args,
         assert func == 'plot', "CI makes sense only for `plot`"
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'pyplot_wrapper.png')
+        outpath = join(const.Dir.tmp, 'pyplot_wrapper.png')
 
     plt.figure(figsize=figsize)
     ax = plt.gca()
@@ -217,18 +218,18 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
             points. Each element :math:`\in [0, 255]`. If *array_like*, must
             be of shape N-by-3.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.Dir.tmp,
+            ``None`` means ``os.path.join(const.Dir.tmp,
             'scatter_on_image.png')``.
 
     Writes
         - The scatter plot overlaid over the image.
     """
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 
     logger_name = thisfile + '->scatter_on_image()'
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'scatter_on_image.png')
+        outpath = join(const.Dir.tmp, 'scatter_on_image.png')
 
     thickness = -1 # for filled circles
 
@@ -382,7 +383,7 @@ def axes3d_wrapper(
             axes.
         outpath (str, optional): Path to which the visualization is saved to.
             Should end with ``'.png'`` or ``'.pkl'`` (for offline interactive
-            viewing). ``None`` means ``os.path.join(constants.Dir.tmp,
+            viewing). ``None`` means ``os.path.join(const.Dir.tmp,
             'axes3d_wrapper.png')``.
 
     Raises:
@@ -400,7 +401,7 @@ def axes3d_wrapper(
     logger_name = thisfile + '->axes3d_wrapper()'
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'axes3d_wrapper.png')
+        outpath = join(const.Dir.tmp, 'axes3d_wrapper.png')
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')

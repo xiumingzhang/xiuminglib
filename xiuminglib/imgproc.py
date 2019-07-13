@@ -2,10 +2,12 @@ from os.path import abspath
 from copy import deepcopy
 import numpy as np
 
-from . import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from .config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
+
+from .imprt import import_from_google3
 try:
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 except ModuleNotFoundError:
     pass
 

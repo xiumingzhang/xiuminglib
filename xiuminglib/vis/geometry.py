@@ -1,7 +1,8 @@
 from os.path import join
 import numpy as np
 
-from .. import config, constants
+from .. import const
+from ..imprt import import_from_google3
 
 
 def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
@@ -44,16 +45,16 @@ def normal_as_image(normal_map, alpha_map, outpath=None):
         normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
         alpha_map (numpy.ndarray): H-by-W array of alpha values.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.Dir.tmp,
+            ``None`` means ``os.path.join(const.Dir.tmp,
             'normal_as_image.png')``.
 
     Writes
         - The normal image.
     """
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'normal_as_image.png')
+        outpath = join(const.Dir.tmp, 'normal_as_image.png')
 
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max
@@ -82,16 +83,16 @@ def depth_as_image(depth_map, alpha_map, outpath=None):
         alpha_map (numpy.ndarray): 2D array of (anti-aliased) alpha
             values.
         outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(constants.Dir.tmp,
+            ``None`` means ``os.path.join(const.Dir.tmp,
             'depth_as_image.png')``.
 
     Writes
         - The (anti-aliased) depth image.
     """
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 
     if outpath is None:
-        outpath = join(constants.Dir.tmp, 'depth_as_image.png')
+        outpath = join(const.Dir.tmp, 'depth_as_image.png')
 
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max

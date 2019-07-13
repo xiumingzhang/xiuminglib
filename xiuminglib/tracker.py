@@ -1,9 +1,9 @@
 from os.path import join
 import numpy as np
 
-from . import config
+from .imprt import import_from_google3
 try:
-    cv2 = config.import_from_google3('cv2')
+    cv2 = import_from_google3('cv2')
 except ModuleNotFoundError:
     pass
 
