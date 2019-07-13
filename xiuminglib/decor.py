@@ -23,7 +23,7 @@ from os import makedirs, environ
 import os.path
 from os.path import abspath, join, dirname, basename, getmtime
 
-from .os import call, _is_cnspath
+from .os import _is_cnspath, _no_trailing_slash, cp
 
 from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
@@ -75,85 +75,55 @@ def colossus_interface(somefunc):
     # $TMP set by Borg or yourself (e.g., with .bashrc)
     tmp_dir = environ.get('TMP', '/tmp/')
 
-    def get_cns_info(cns_path):
-        # Existence; file or directory
-        testf, _, _ = call('fileutil test -f %s' % cns_path)
-        testd, _, _ = call('fileutil test -d %s' % cns_path)
-        if testf == 1 and testd == 1:
-            exists = False
-            isdir = False
-        elif testf == 1 and testd == 0:
-            exists = True
-            isdir = True
-        elif testf == 0 and testd == 1:
-            exists = True
-            isdir = False
-        else:
-            raise NotImplementedError("What does this even mean?")
-        # Deal with '/'-ending paths
-        if cns_path.endswith('/'):
-            assert isdir, "Not a directory, but ends with '/'?"
-            cns_path = cns_path[:-1]
-            assert not cns_path.endswith('/'), "Path shouldn't end with '//'"
-        # Path guaranteed not to end with '/', so that basename is not ''
+    def gen_local_path(cns_path):
+        cns_path = _no_trailing_slash(cns_path)
         local_path = join(tmp_dir, '%f_%s' % (time(), basename(cns_path)))
-        return cns_path, exists, isdir, local_path
+        # local_path guaranteed to not end with '/'
+        return local_path
 
-    def cp(src, dst, isdir=False):
-        parallel_copy = 10
-        cmd = 'fileutil cp -f -colossus_parallel_copy'
-        if isdir:
-            cmd += ' -R -parallel_copy=%d %s' % \
-                (parallel_copy, join(src, '*'))
-        else:
-            cmd += ' %s' % src
-        cmd += ' %s' % dst
+    def cp_wrapper(src, dst):
         logger.name = logger_name
-        if call(cmd)[0] == 0:
+        try:
+            cp(src, dst)
             logger.info("\n%s\n\tcopied to\n%s", src, dst)
-        else:
-            logger.warning("\n%s\n\tfailed to be copied to\n%s", src, dst)
+        except FileNotFoundError:
+            logger.warning("Doesn't exist yet: %s", src)
 
     def wrapper(*arg, **kwargs):
         t_eps = 0.05 # seconds buffer for super fast somefunc
         # Fetch info. for all CNS paths
         arg_local, kwargs_local = [], {}
-        cns_info = {}
+        cns2local = {}
         # Positional arguments
         for x in arg:
             if _is_cnspath(x):
-                cns_path, cns_exists, cns_isdir, local_path = \
-                    get_cns_info(x)
-                cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
+                local_path = gen_local_path(x)
+                cns2local[x] = local_path
                 arg_local.append(local_path)
             else: # intact
                 arg_local.append(x)
         # Keyword arguments
         for k, v in kwargs.items():
             if _is_cnspath(v):
-                cns_path, cns_exists, cns_isdir, local_path = \
-                    get_cns_info(v)
-                cns_info[cns_path] = (cns_exists, cns_isdir, local_path)
+                local_path = gen_local_path(v)
+                cns2local[v] = local_path
                 kwargs_local[k] = local_path
             else: # intact
                 kwargs_local[k] = v
         # For reading: copy CNS paths that exist to local
         # TODO: what if some of those paths are not input? Copying them to
-        # local is a waste
-        for cns_path, (cns_exists, cns_isdir, local_path) in \
-                cns_info.items():
-            if cns_exists:
-                cp(cns_path, local_path, isdir=cns_isdir)
+        # local is a waste (but harmless)
+        for cns_path, local_path in cns2local.items():
+            cp_wrapper(cns_path, local_path)
         # Run the real function
         t0 = time()
         sleep(t_eps)
         results = somefunc(*arg_local, **kwargs_local)
         # For writing: copy local paths that are just modified and correspond
         # to CNS paths back to CNS
-        for cns_path, (cns_exists, cns_isdir, local_path) in \
-                cns_info.items():
+        for cns_path, local_path in cns2local.items():
             if os.path.exists(local_path) and getmtime(local_path) > t0:
-                cp(local_path, cns_path, isdir=cns_isdir)
+                cp_wrapper(local_path, cns_path)
         return results
 
     return wrapper

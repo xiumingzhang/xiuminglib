@@ -11,6 +11,7 @@ from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 from ..vis.geometry import depth_as_image, normal_as_image
+from ..vis.matrix import matrix_as_image
 from ..geometry.normal import normalize
 
 
@@ -60,6 +61,35 @@ class EXR():
         logger.info("Loaded %s", self.exr_f)
         return data
 
+    def extract_rgb(self, outpath, vis=False):
+        """Extracts a RGB(A) array to .npy from .exr.
+
+        All values remain raw in the conversion from .exr to .npy.
+        Tonemapping and then visualizing it as an image is a separate issue.
+
+        Args:
+            outpath (str): Path to the result .npy file.
+            vis (bool, optional): Whether to tonemap and visualize it as an
+                image.
+
+        Writes
+            - A .npy file containing the raw RGB(A) values.
+            - If ``vis``, a .png image, naively tonemapped from the raw values.
+        """
+        cv2 = config.import_from_google3('cv2')
+        logger_name = thisfile + '->EXR:extract_rgb()'
+        data = [self.data['R'], self.data['G'], self.data['B']]
+        if 'A' in self.data.keys():
+            data.append(self.data['A'])
+        data = np.dstack(data)
+        if not outpath.endswith('.npy'):
+            outpath += '.npy'
+        np.save(outpath, data)
+        if vis:
+            matrix_as_image(data, outpath[:-4] + '.png')
+        logger.name = logger_name
+        logger.info("RGB image extractd to %s", outpath)
+
     def extract_depth(self, alpha_exr, outpath, vis=False):
         """Combines an aliased .exr depth map and an anti-aliased .exr alpha
         map into a single RGBA .npy depth map.
@@ -70,8 +100,7 @@ class EXR():
             alpha_exr (str): Path to the EXR file of the anti-aliased alpha
                 map.
             outpath (str): Path to the result .npy file.
-            vis (bool, optional): Whether to visualize the raw values as an
-                image.
+            vis (bool, optional): Whether to visualize it as an image.
 
         Writes
             - A .npy file containing an aliased depth map and its alpha map.
@@ -111,8 +140,7 @@ class EXR():
                 .exr, then you need to set this to ``True`` to get the normals
                 really in the camera space. See the warning in
                 :func:`xiuminglib.blender.render.render_normal`.
-            vis (bool, optional): Whether to visualize the normal vectors as
-                an image.
+            vis (bool, optional): Whether to visualize it as an image.
 
         Writes
             - A .npy file containing an aliased normal map and its alpha map.

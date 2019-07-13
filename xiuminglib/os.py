@@ -1,5 +1,5 @@
 import os
-from os.path import abspath, join, exists, isdir
+from os.path import abspath, join, exists, isdir, dirname
 from shutil import rmtree
 from glob import glob
 
@@ -13,8 +13,7 @@ def _is_cnspath(path):
     return isinstance(path, str) and path.startswith('/cns/')
 
 
-def sortglob(directory, filename='*', ext=None,
-             ext_ignore_case=False, colossus_heuristic=True):
+def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     """Globs and then sorts filenames, possibly ending with multiple
     extensions, in a directory.
 
@@ -27,11 +26,6 @@ def sortglob(directory, filename='*', ext=None,
             folders or files with no extension.
         ext_ignore_case (bool, optional): Whether to ignore case for
             extensions.
-        colossus_heuristic (bool, optional): Whether to turn on the heuristic
-            that identifies and then works with Google Colossus (CNS)
-            directories. When ``True``, the function first tries ``gfile``,
-            which will fail if not using Blaze. It then falls back to external
-            ``fileutil`` calls.
 
     Returns:
         list(str): Sorted list of files globbed.
@@ -42,7 +36,7 @@ def sortglob(directory, filename='*', ext=None,
         assert retcode == 0, "`fileutil ls` failed"
         return [x for x in stdout.split('\n') if x != '']
 
-    if colossus_heuristic and _is_cnspath(directory):
+    if _is_cnspath(directory):
         # Is a CNS path
         try: # using Blaze
             from google3.pyglib import gfile
@@ -97,7 +91,129 @@ def rmglob(path_pattern, exclude_dir=True):
             os.remove(x)
 
 
-def makedirs(directory, rm_if_exists=False, colossus_heuristic=True):
+def exists_isdir(path):
+    """Determines whether a path exists, and if so, whether it is a file
+    or directory.
+
+    Supports Google Colossus (CNS) paths.
+
+    Args:
+        path (str): A path.
+
+    Returns:
+        tuple:
+            - **exists** (*bool*) -- Whether the path exists.
+            - **isdir** (*bool*) -- Whether the path is a file or directory.
+              ``None`` if the path doesn't exist.
+    """
+    path = _no_trailing_slash(path)
+
+    if not _is_cnspath(path):
+        path_exists = exists(path)
+        path_isdir = isdir(path) if path_exists else None
+        return path_exists, path_isdir
+
+    try: # using Blaze
+        from google3.pyglib import gfile
+    except ModuleNotFoundError: # not using Blaze
+        gfile = None
+
+    if gfile is None: # fileutil CLI
+        testf, _, _ = call('fileutil test -f %s' % path)
+        testd, _, _ = call('fileutil test -d %s' % path)
+        if testf == 1 and testd == 1:
+            path_exists = False
+            path_isdir = None
+        elif testf == 1 and testd == 0:
+            path_exists = True
+            path_isdir = True
+        elif testf == 0 and testd == 1:
+            path_exists = True
+            path_isdir = False
+        else:
+            raise NotImplementedError("What does this even mean?")
+
+    else: # gfile
+        path_exists = gfile.Exists(path)
+        if path_exists:
+            path_isdir = gfile.IsDirectory(path)
+        else:
+            path_isdir = None
+
+    return path_exists, path_isdir
+
+
+def _no_trailing_slash(path):
+    if path.endswith('/'):
+        path = path[:-1]
+    assert not path.endswith('/'), "path shouldn't end with '//'"
+    # Guaranteed to not end with '/', so basename() or dirname()
+    # will give the correct results
+    return path
+
+
+def _select_gfs_user(writeto):
+    """As whom we perform fileutil operations."""
+    assert _is_cnspath(writeto)
+    writeto = _no_trailing_slash(writeto)
+    writeto_exists, writeto_isdir = exists_isdir(writeto)
+    if writeto_exists and writeto_isdir:
+        # OK as long as we can write to it
+        writeto_folder = writeto
+    else:
+        # Doesn't exist yet or is a file, so we need to write to its parent
+        writeto_folder = dirname(writeto)
+    retcode, stdout, _ = call(
+        'fileutil ls -l -d %s' % writeto_folder, quiet=True)
+    assert retcode == 0
+    owner = stdout.strip().split(' ')[2]
+    return owner
+
+
+def cp(src, dst, cns_parallel_copy=10):
+    """Copies files, possibly from/to the Google Colossus Filesystem.
+
+    Todo:
+        Both the source and destination are non-Colossus, local files.
+        Interacting with Colossus, but with ``gfile``, not ``fileutil``.
+
+    Args:
+        src (str): Source file or directory.
+        dst (str): Destination file or directory.
+        cns_parallel_copy (int): The number of files to be copied in
+            parallel. Only effective when copying a directory from/to
+            Colossus.
+
+    Raises:
+        FileNotFoundError: If the source doesn't exist.
+    """
+    src = _no_trailing_slash(src)
+    dst = _no_trailing_slash(dst)
+
+    if not _is_cnspath(src) and not _is_cnspath(dst):
+        raise NotImplementedError("Both paths are local")
+
+    srcexists, srcisdir = exists_isdir(src)
+    if not srcexists:
+        raise FileNotFoundError("Source must exist")
+
+    cmd = 'fileutil cp -f -colossus_parallel_copy '
+    if srcisdir:
+        cmd += '-R -parallel_copy=%d %s ' % \
+            (cns_parallel_copy, join(src, '*'))
+    else:
+        cmd += '%s ' % src
+    cmd += '%s' % dst
+
+    # Destination directory may be owned by a Ganpati group
+    if _is_cnspath(dst):
+        cmd += ' --gfs_user %s' % _select_gfs_user(dst)
+
+    retcode, _, _ = call(cmd)
+    assert retcode == 0, "Copy has failed"
+
+
+def makedirs(directory, rm_if_exists=False):
     """Wraps :func:`os.makedirs` to support removing the directory if it
     alread exists.
 
@@ -105,11 +221,6 @@ def makedirs(directory, rm_if_exists=False, colossus_heuristic=True):
         directory (str)
         rm_if_exists (bool, optional): Whether to remove the directory (and
             its contents) if it already exists.
-        colossus_heuristic (bool, optional): Whether to turn on the heuristic
-            that identifies and then works with Google Colossus (CNS)
-            directories. When ``True``, the function first tries ``gfile``,
-            which will fail if not using Blaze. It then falls back to external
-            ``fileutil`` calls.
     """
     logger_name = thisfile + '->makedirs()'
 
@@ -128,7 +239,7 @@ def makedirs(directory, rm_if_exists=False, colossus_heuristic=True):
         retcode, _, _ = call(cmd, quiet=True)
         assert retcode == 0, "`fileutil mkdir` failed"
 
-    if colossus_heuristic and _is_cnspath(directory):
+    if _is_cnspath(directory):
         # Is a CNS path
         try: # using Blaze
             from google3.pyglib import gfile
