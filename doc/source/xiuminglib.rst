@@ -19,6 +19,14 @@ Subpackages
 Submodules
 ----------
 
+xiuminglib.borg module
+----------------------
+
+.. automodule:: xiuminglib.borg
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.camera module
 ------------------------
 

@@ -87,7 +87,8 @@ def colossus_interface(somefunc):
             cp(src, dst)
             logger.info("\n%s\n\tcopied to\n%s", src, dst)
         except FileNotFoundError:
-            logger.warning("Doesn't exist yet: %s", src)
+            logger.warning(
+                "Doesn't exist yet: %s\nOK if this will be the output", src)
 
     def wrapper(*arg, **kwargs):
         t_eps = 0.05 # seconds buffer for super fast somefunc
