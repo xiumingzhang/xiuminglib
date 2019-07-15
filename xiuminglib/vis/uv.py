@@ -2,13 +2,10 @@ from os.path import join, dirname
 import numpy as np
 
 from .. import const, os as xm_os
-from ..imprt import import_from_google3
 from .general import _savefig
 
-try:
-    cv2 = import_from_google3('cv2')
-except ModuleNotFoundError:
-    pass
+from ..imprt import preset_import
+cv2 = preset_import('cv2')
 
 
 def rgb_on_uv_canvas(uvs, rgbs,

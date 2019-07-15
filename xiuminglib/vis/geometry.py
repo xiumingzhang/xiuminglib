@@ -2,7 +2,7 @@ from os.path import join
 import numpy as np
 
 from .. import const
-from ..imprt import import_from_google3
+from ..imprt import preset_import
 
 
 def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
@@ -51,7 +51,7 @@ def normal_as_image(normal_map, alpha_map, outpath=None):
     Writes
         - The normal image.
     """
-    cv2 = import_from_google3('cv2')
+    cv2 = preset_import('cv2')
 
     if outpath is None:
         outpath = join(const.Dir.tmp, 'normal_as_image.png')
@@ -89,7 +89,7 @@ def depth_as_image(depth_map, alpha_map, outpath=None):
     Writes
         - The (anti-aliased) depth image.
     """
-    cv2 = import_from_google3('cv2')
+    cv2 = preset_import('cv2')
 
     if outpath is None:
         outpath = join(const.Dir.tmp, 'depth_as_image.png')

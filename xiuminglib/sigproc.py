@@ -536,9 +536,9 @@ def main(test_id):
         from copy import deepcopy
         from scipy.fftpack import dct, idct
         from . import const, os as xm_os
-        from .imprt import import_from_google3
+        from .imprt import preset_import
         from .vis.matrix import matrix_as_heatmap, matrix_as_heatmap_complex
-        cv2 = import_from_google3('cv2')
+        cv2 = preset_import('cv2')
         outdir = join(const.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE)
@@ -615,9 +615,9 @@ def main(test_id):
     elif test_id == 'dft_cameraman':
         from os.path import join
         from . import os as xm_os
-        from .imprt import import_from_google3
+        from .imprt import preset_import
         from .vis.matrix import matrix_as_heatmap_complex
-        cv2 = import_from_google3('cv2')
+        cv2 = preset_import('cv2')
         outdir = join(const.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
         im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE)

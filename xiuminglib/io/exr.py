@@ -1,18 +1,15 @@
 from os.path import abspath, join
 import numpy as np
 
-try:
-    import OpenEXR
-    import Imath
-except ModuleNotFoundError:
-    pass
-
 from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
-from ..imprt import import_from_google3
-from ..vis.geometry import depth_as_image, normal_as_image
+from ..imprt import preset_import
+OpenEXR = preset_import('OpenEXR')
+Imath = preset_import('Imath')
+
 from ..vis.matrix import matrix_as_image
+from ..vis.geometry import depth_as_image, normal_as_image
 from ..geometry.normal import normalize
 
 
@@ -106,7 +103,7 @@ class EXR():
             - A .npy file containing an aliased depth map and its alpha map.
             - If ``vis``, a .png image of anti-aliased depth.
         """
-        cv2 = import_from_google3('cv2')
+        cv2 = preset_import('cv2')
         logger_name = thisfile + '->EXR:extract_depth()'
 
         def assert_all_channels_same(arr):
@@ -179,7 +176,7 @@ class EXR():
               and specularity.
             - composite.npy (ditto): composite by Blender.
         """
-        from ..vis.matrix import matrix_as_image, os as xm_os
+        from .. import os as xm_os
         logger_name = thisfile + \
             '->extract_intrinsic_images_from_lighting_passes()'
         xm_os.makedirs(outdir)

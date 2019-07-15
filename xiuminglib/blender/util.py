@@ -1,7 +1,5 @@
-try:
-    import bpy
-except ModuleNotFoundError:
-    pass
+from ..imprt import preset_import
+bpy = preset_import('bpy')
 
 
 def cursor_to(loc):

@@ -5,11 +5,8 @@ import numpy as np
 from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
-from .imprt import import_from_google3
-try:
-    cv2 = import_from_google3('cv2')
-except ModuleNotFoundError:
-    pass
+from .imprt import preset_import
+cv2 = preset_import('cv2')
 
 
 def binarize(im, threshold=None):

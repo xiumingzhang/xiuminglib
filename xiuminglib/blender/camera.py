@@ -3,13 +3,13 @@ from os.path import abspath, dirname, basename
 from time import time
 import numpy as np
 
-try:
-    import bpy
-    import bmesh
-    from mathutils import Vector, Matrix, Quaternion
-    from mathutils.bvhtree import BVHTree
-except ModuleNotFoundError:
-    pass
+from ..imprt import preset_import
+bpy = preset_import('bpy')
+bmesh = preset_import('bmesh')
+Vector = preset_import('Vector')
+Matrix = preset_import('Matrix')
+Quaternion = preset_import('Quaternion')
+BVHTree = preset_import('BVHTree')
 
 from .object import get_bmesh
 
@@ -17,7 +17,6 @@ from ..config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from ..geometry.proj import from_homo
-from ..imprt import import_from_google3
 
 
 def add_camera(xyz=(0, 0, 0),
@@ -424,7 +423,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     Returns:
         numpy.ndarray: Camera :math:`z`-buffer.
     """
-    cv2 = import_from_google3('cv2')
+    cv2 = preset_import('cv2')
 
     logger_name = thisfile + '->get_camera_zbuffer()'
 

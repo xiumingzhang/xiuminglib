@@ -6,7 +6,7 @@ from glob import glob
 from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
-from .imprt import import_from_google3
+from .imprt import preset_import
 from .interact import format_print
 
 
@@ -43,7 +43,7 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
 
     if _is_cnspath(directory):
         # Is a CNS path
-        gfile = import_from_google3('gfile')
+        gfile = preset_import('gfile')
         if gfile is None:
             glob_func = glob_cns_cli
         else:
@@ -123,7 +123,7 @@ def exists_isdir(path):
         path_isdir = isdir(path) if path_exists else None
         return path_exists, path_isdir
 
-    gfile = import_from_google3('gfile')
+    gfile = preset_import('gfile')
 
     # Using fileutil CLI
     if gfile is None:
@@ -178,7 +178,7 @@ def _select_gfs_user(writeto):
         # Doesn't exist yet or is a file, so we need to write to its parent
         writeto_folder = dirname(writeto)
 
-    gfile = import_from_google3('gfile')
+    gfile = preset_import('gfile')
 
     if gfile is None:
         retcode, stdout, _ = call(
@@ -227,7 +227,7 @@ def cp(src, dst, cns_parallel_copy=10):
             copy2(src, dst)
         return
 
-    gfile = import_from_google3('gfile')
+    gfile = preset_import('gfile')
 
     if gfile is None:
         cmd = 'fileutil cp -f -colossus_parallel_copy '
@@ -282,7 +282,7 @@ def makedirs(directory, rm_if_exists=False):
 
     if _is_cnspath(directory):
         # Is a CNS path
-        gfile = import_from_google3('gfile')
+        gfile = preset_import('gfile')
         if gfile is None:
             exists_func = exists_cns_cli
             delete_func = delete_cns_cli

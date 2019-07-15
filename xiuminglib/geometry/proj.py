@@ -1,9 +1,7 @@
 import numpy as np
 
-try:
-    from mathutils import Vector
-except ModuleNotFoundError:
-    pass
+from ..imprt import preset_import
+Vector = preset_import('Vector')
 
 
 def to_homo(pts):

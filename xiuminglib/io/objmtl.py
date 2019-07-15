@@ -6,7 +6,7 @@ from ..config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .. import os as xm_os
-from ..imprt import import_from_google3
+from ..imprt import preset_import
 
 
 class Obj(object):
@@ -414,7 +414,7 @@ class Mtl(object):
         Writes
             - Output .mtl file.
         """
-        cv2 = import_from_google3('cv2')
+        cv2 = preset_import('cv2')
         logger_name = thisfile + '->Mtl:write_file()'
         # Validate inputs
         assert (self.mtlfile is not None and self.newmtl is not None), \

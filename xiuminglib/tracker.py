@@ -1,11 +1,8 @@
 from os.path import join
 import numpy as np
 
-from .imprt import import_from_google3
-try:
-    cv2 = import_from_google3('cv2')
-except ModuleNotFoundError:
-    pass
+from .imprt import preset_import
+cv2 = preset_import('cv2')
 
 from .vis.general import scatter_on_image
 

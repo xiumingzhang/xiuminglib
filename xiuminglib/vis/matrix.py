@@ -5,7 +5,7 @@ from ..config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .. import const, os as xm_os
-from ..imprt import import_from_google3
+from ..imprt import preset_import
 from .general import _savefig
 
 
@@ -29,7 +29,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         - An image of the matrix.
     """
     from ..imgproc import gamma_correct
-    cv2 = import_from_google3('cv2')
+    cv2 = preset_import('cv2')
 
     logger_name = thisfile + '->matrix_as_image()'
 

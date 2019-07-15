@@ -2,12 +2,11 @@ import re
 from os.path import abspath, basename, dirname
 import numpy as np
 
-try:
-    import bpy
-    import bmesh
-    from mathutils import Matrix, Vector
-except ModuleNotFoundError:
-    pass
+from ..imprt import preset_import
+bpy = preset_import('bpy')
+bmesh = preset_import('bmesh')
+Matrix = preset_import('Matrix')
+Vector = preset_import('Vector')
 
 from .. import config, os as xm_os
 logger, thisfile = config.create_logger(abspath(__file__))

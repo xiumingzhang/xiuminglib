@@ -2,16 +2,13 @@ from os.path import abspath, dirname, join
 from shutil import move
 from time import time
 
-try:
-    import bpy
-except ModuleNotFoundError:
-    pass
-
 from ..config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .. import os as xm_os
-from ..imprt import import_from_google3
+
+from ..imprt import preset_import
+bpy = preset_import('bpy')
 
 
 def set_cycles(w=None, h=None,
@@ -296,7 +293,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
 
     # Optionally overlay text
     if text is not None:
-        cv2 = import_from_google3('cv2')
+        cv2 = preset_import('cv2')
         im = cv2.imread(outpath, cv2.IMREAD_UNCHANGED)
         cv2.putText(im, text['contents'], text['bottom_left_corner'],
                     cv2.FONT_HERSHEY_SIMPLEX, text['font_scale'],

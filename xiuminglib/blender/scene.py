@@ -1,10 +1,8 @@
 from os import remove
 from os.path import abspath, dirname, exists
 
-try:
-    import bpy
-except ModuleNotFoundError:
-    pass
+from ..imprt import preset_import
+bpy = preset_import('bpy')
 
 from .. import config, os as xm_os
 logger, thisfile = config.create_logger(abspath(__file__))

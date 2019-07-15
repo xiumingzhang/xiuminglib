@@ -7,11 +7,9 @@ because one usually implicitly sets the rotation by pointing the light to an obj
 from os.path import abspath, basename
 import numpy as np
 
-try:
-    import bpy
-    from mathutils import Vector
-except ModuleNotFoundError:
-    pass
+from ..imprt import preset_import
+bpy = preset_import('bpy')
+Vector = preset_import('Vector')
 
 from ..config import create_logger
 logger, thisfile = create_logger(abspath(__file__))

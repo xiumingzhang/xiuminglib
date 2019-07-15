@@ -8,7 +8,7 @@ from ..config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .. import const, os as xm_os
-from ..imprt import import_from_google3
+from ..imprt import preset_import
 
 
 def pyplot_wrapper(*args,
@@ -224,7 +224,7 @@ def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
     Writes
         - The scatter plot overlaid over the image.
     """
-    cv2 = import_from_google3('cv2')
+    cv2 = preset_import('cv2')
 
     logger_name = thisfile + '->scatter_on_image()'
 
