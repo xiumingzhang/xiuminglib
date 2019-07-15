@@ -16,8 +16,8 @@ py_library(
         "//third_party/py/numpy",
         "//third_party/py/scipy",
         # FIXME: Listing OpenEXR and Imath as deps here segfaults bpy on Borg
-        # "//third_party/py/OpenEXR",
-        # "//third_party/py/Imath",
+        "//third_party/py/OpenEXR",
+        "//third_party/py/Imath",
         "//third_party/py/tqdm",
     ],
 )

@@ -164,24 +164,6 @@ def existok(makedirs_func):
     return wrapper
 
 
-def mod404ok(import_module_func):
-    """Returns ``None`` (instead of failing) in the case of
-    ``ModuleNotFoundError``.
-    """
-    logger_name = thisfile + '->@mod404ok(%s())' % import_module_func.__name__
-
-    def wrapper(*args, **kwargs):
-        try:
-            mod = import_module_func(*args, **kwargs)
-        except ModuleNotFoundError as e:
-            mod = None
-            logger.name = logger_name
-            logger.warning("Ignored:\n%s", repr(e))
-        return mod
-
-    return wrapper
-
-
 def main():
     """Unit tests that can also serve as example usage."""
     # timeit
