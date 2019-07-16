@@ -10,11 +10,15 @@ def preset_import(module_name):
     to specified presets/profiles (e.g., ignoring ``ModuleNotFoundError``).
     """
     if module_name == 'cv2':
-        # Try first assuming Blaze
         # "//third_party/py/cvx2",
-        mod = import_module_404ok('cvx2')
-        if mod is None:
-            mod = import_module_404ok('cv2')
+        try:
+            from cvx2 import latest as mod
+        except ModuleNotFoundError:
+            try:
+                import cv2 as mod
+            except ModuleNotFoundError:
+                mod = None
+        # TODO: use import_module_404ok()
 
     elif module_name == 'gfile':
         # "//pyglib:gfile",
@@ -48,5 +52,5 @@ def import_module_404ok(*args, **kwargs):
     except ModuleNotFoundError as e:
         mod = None
         logger.name = logger_name
-        logger.warning("Ignored: %s", str(e))
+        logger.debug("Ignored: %s", str(e))
     return mod
