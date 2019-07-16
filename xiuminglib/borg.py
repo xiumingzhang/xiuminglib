@@ -3,7 +3,6 @@
 from os.path import join
 from getpass import getuser
 from time import time
-from tqdm import tqdm
 
 from .os import call
 from . import const
@@ -51,6 +50,7 @@ class JobSubmitter():
         else:
             # Submit all using a pool of workers
             from multiprocessing import Pool
+            from tqdm import tqdm
             pool = Pool(self.workers)
             list(tqdm(pool.imap_unordered(
                 self._submit,
