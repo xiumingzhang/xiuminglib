@@ -82,11 +82,12 @@ def colossus_interface(somefunc):
         return local_path
 
     def cp_verbose(src, dst):
-        logger.name = logger_name
         try:
             cp(src, dst)
+            logger.name = logger_name
             logger.info("\n%s\n\tcopied to\n%s", src, dst)
         except FileNotFoundError:
+            logger.name = logger_name
             logger.warning(
                 "Doesn't exist yet: %s\nOK if this will be the output", src)
 

@@ -5,41 +5,48 @@ from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 
-def preset_import(module_name):
+def preset_import(name):
     """A unified importer for both regular and ``google3`` modules, according
     to specified presets/profiles (e.g., ignoring ``ModuleNotFoundError``).
     """
-    if module_name == 'cv2':
+    if name == 'cv2':
+        # BUILD dep:
         # "//third_party/py/cvx2",
         try:
             from cvx2 import latest as mod
         except ModuleNotFoundError:
-            try:
-                import cv2 as mod
-            except ModuleNotFoundError:
-                mod = None
-        # TODO: use import_module_404ok()
+            mod = import_module_404ok('cv2')
+        # TODO: Below is cleaner, but doesn't work
+        # mod = import_module_404ok('cvx2.latest')
+        # if mod is None:
+        #    mod = import_module_404ok('cv2')
+        return mod
 
-    elif module_name == 'gfile':
+    if name == 'gfile':
+        # BUILD deps:
         # "//pyglib:gfile",
         # "//file/colossus/cns",
-        mod = import_module_404ok('gfile', package='google3.pyglib')
+        mod = import_module_404ok('google3.pyglib.gfile')
+        return mod
 
-    elif module_name in ('bpy', 'bmesh', 'OpenEXR', 'Imath'):
+    if name in ('bpy', 'bmesh', 'OpenEXR', 'Imath'):
+        # BUILD deps:
         # "//third_party/py/Imath",
         # "//third_party/py/OpenEXR",
-        mod = import_module_404ok(module_name)
+        mod = import_module_404ok(name)
+        return mod
 
-    elif module_name in ('Vector', 'Matrix', 'Quaternion'):
-        mod = import_module_404ok(module_name, package='mathutils')
+    if name in ('Vector', 'Matrix', 'Quaternion'):
+        mod = import_module_404ok('mathutils')
+        cls = get_class(mod, name)
+        return cls
 
-    elif module_name == 'BVHTree':
-        mod = import_module_404ok(module_name, package='mathutils.bvhtree')
+    if name == 'BVHTree':
+        mod = import_module_404ok('mathutils.bvhtree')
+        cls = get_class(mod, name)
+        return cls
 
-    else:
-        raise NotImplementedError(module_name)
-
-    return mod
+    raise NotImplementedError(name)
 
 
 def import_module_404ok(*args, **kwargs):
@@ -52,5 +59,11 @@ def import_module_404ok(*args, **kwargs):
     except ModuleNotFoundError as e:
         mod = None
         logger.name = logger_name
-        logger.debug("Ignored: %s", str(e))
+        logger.warning("Ignored: %s", str(e))
     return mod
+
+
+def get_class(mod, clsname):
+    if mod is None:
+        return None
+    return getattr(mod, clsname)

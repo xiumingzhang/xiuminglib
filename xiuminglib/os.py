@@ -161,13 +161,14 @@ def _no_trailing_slash(path):
     return path
 
 
-def _select_gfs_user(writeto):
-    """As whom we perform fileutil operations.
+def _select_user(writeto):
+    """As whom we perform file operations.
 
-    Used to set ``--gfs_user`` for ``fileutil``; useful for operations on a
-    folder whose owner is a Ganpati group (e.g., ``gcam-gpu``).
+    Useful for operations on a folder whose owner is a Ganpati group (e.g.,
+    ``gcam-gpu``).
     """
-    assert _is_cnspath(writeto)
+    gfile = preset_import('gfile')
+
     writeto = _no_trailing_slash(writeto)
 
     writeto_exists, writeto_isdir = exists_isdir(writeto)
@@ -177,8 +178,6 @@ def _select_gfs_user(writeto):
     else:
         # Doesn't exist yet or is a file, so we need to write to its parent
         writeto_folder = dirname(writeto)
-
-    gfile = preset_import('gfile')
 
     if gfile is None:
         retcode, stdout, _ = call(
@@ -239,15 +238,16 @@ def cp(src, dst, cns_parallel_copy=10):
         cmd += '%s' % dst
         # Destination directory may be owned by a Ganpati group
         if _is_cnspath(dst):
-            cmd += ' --gfs_user %s' % _select_gfs_user(dst)
+            cmd += ' --gfs_user %s' % _select_user(dst)
         retcode, _, _ = call(cmd)
         assert retcode == 0, "`fileutil cp` failed"
 
     else:
-        if srcisdir:
-            gfile.RecursivelyCopyDir(src, dst)
-        else:
-            gfile.Copy(src, dst)
+        with gfile.AsUser(_select_user(dst)):
+            if srcisdir:
+                gfile.RecursivelyCopyDir(src, dst, overwrite=True)
+            else:
+                gfile.Copy(src, dst, overwrite=True)
 
 
 def makedirs(directory, rm_if_exists=False):
