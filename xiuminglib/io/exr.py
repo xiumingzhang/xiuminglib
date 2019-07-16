@@ -5,8 +5,8 @@ from .. import config
 logger, thisfile = config.create_logger(abspath(__file__))
 
 from ..imprt import preset_import
-OpenEXR = preset_import('OpenEXR')
 Imath = preset_import('Imath')
+OpenEXR = preset_import('OpenEXR')
 
 from ..vis.matrix import matrix_as_image
 from ..vis.geometry import depth_as_image, normal_as_image
@@ -30,7 +30,7 @@ class EXR():
     """
     def __init__(self, exr_path=None):
         self.exr_f = exr_path
-        if self.exr_f is None:
+        if exr_path is None:
             self.data = None
         else:
             self.data = self.load()

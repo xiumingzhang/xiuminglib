@@ -47,33 +47,28 @@ class JobSubmitter():
     def submit(self, job_ids, param_dicts, test=False):
         if test:
             # Submit just one and see how it goes
-            self._submit((job_ids[0], param_dicts[0]))
+            self._submit((job_ids[0], param_dicts[0], test))
         else:
             # Submit all using a pool of workers
             from multiprocessing import Pool
             pool = Pool(self.workers)
             list(tqdm(pool.imap_unordered(
-                self._submit, [(i, x) for i, x in zip(job_ids, param_dicts)]
+                self._submit,
+                [(i, x, test) for i, x in zip(job_ids, param_dicts)]
             ), total=len(job_ids)))
             pool.close()
             pool.join()
 
     def _submit(self, args):
-        if len(args) == 2:
-            job_id, param = args
-            wait = True
-        elif len(args) == 3:
-            job_id, param, wait = args
-        else:
-            raise ValueError(args)
+        job_id, param, test = args
         borg_f = self.gen_borg_file(job_id, param)
         # Submit
-        action = 'reload' # 'runlocal' if is_test else 'reload'
-        # FIXME: runlocal doesn't work with temporal mpm: b/74472376
+        action = 'runlocal' if test else 'reload'
+        action = 'reload' # FIXME: runlocal doesn't work: b/74472376
         bash_cmd = 'cd %s && ' % self.citc
         bash_cmd += 'borgcfg %s %s --skip_confirmation --borguser %s' \
             % (borg_f, action, self.user)
-        call(bash_cmd, wait=wait)
+        call(bash_cmd)
 
     def _format_borg_file_str(self, job_id, param):
         file_str = '''job %s = {
