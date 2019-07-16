@@ -59,7 +59,7 @@ def import_module_404ok(*args, **kwargs):
     except ModuleNotFoundError as e:
         mod = None
         logger.name = logger_name
-        logger.warning("Ignored: %s", str(e))
+        logger.debug("Ignored: %s", str(e))
     return mod
 
 

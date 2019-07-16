@@ -17,9 +17,7 @@ py_library(
         "//third_party/py/scipy",
         "//third_party/py/tqdm",
         # FIXME: Listing OpenEXR and Imath as deps here segfaults bpy on Borg,
-        # *maybe* due to the `--config=libc++-preview` issue, which has been fixed
-        # in cl/255435816
-        "//third_party/py/Imath",
-        "//third_party/py/OpenEXR",
+        # "//third_party/py/Imath",
+        # "//third_party/py/OpenEXR",
     ],
 )
