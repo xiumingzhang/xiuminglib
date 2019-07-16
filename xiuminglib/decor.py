@@ -85,11 +85,11 @@ def colossus_interface(somefunc):
         try:
             cp(src, dst)
             logger.name = logger_name
-            logger.info("\n%s\n\tcopied to\n%s", src, dst)
+            logger.debug("\n%s\n\tcopied to\n%s", src, dst)
         except FileNotFoundError:
             logger.name = logger_name
-            logger.warning(
-                "Doesn't exist yet: %s\nOK if this will be the output", src)
+            logger.debug(
+                "Doesn't exist yet:\n\t%s\nOK if this will be the output", src)
 
     def wrapper(*arg, **kwargs):
         t_eps = 0.05 # seconds buffer for super fast somefunc

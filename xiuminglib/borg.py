@@ -9,7 +9,8 @@ from . import const
 
 
 class JobSubmitter():
-    def __init__(self, citc, label, user=None, workers=24):
+    def __init__(self, citc, label, user=None, workers=24,
+                 local_ram_fs_dir_size='4096M'):
         self.citc = citc
         self.label = label
         myself = getuser()
@@ -27,6 +28,8 @@ class JobSubmitter():
             cell = 'is'
         else:
             raise NotImplementedError(user)
+        # Requirements
+        self.local_ram_fs_dir_size =local_ram_fs_dir_size 
         self.cell = cell
 
     def build(self):
@@ -111,7 +114,7 @@ class JobSubmitter():
             autopilot = true,
             // ram = 1024M,
             // use_ram_soft_limit = true,
-            local_ram_fs_dir { d1 = { size = 1024M } },
+            local_ram_fs_dir { d1 = { size = %s } },
             cpu = 12,
         }
 
@@ -126,7 +129,7 @@ class JobSubmitter():
 
         scheduling = {
             priority = %d,
-    ''' % (self.user, self.priority)
+    ''' % (self.local_ram_fs_dir_size, self.user, self.priority)
         if self.priority == 0:
             file_str += '''    }
     }'''
