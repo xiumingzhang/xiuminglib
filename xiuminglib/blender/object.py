@@ -901,3 +901,37 @@ def smart_uv_unwrap(obj):
     fi_li_vi_u_v = np.array(fi_li_vi_u_v)
 
     return fi_li_vi_u_v
+
+
+def raycast(obj_bvhtree, ray_from_objspc, ray_to_objspc):
+    """Casts a ray to an object.
+
+    Args:
+        obj_bvhtree (mathutils.bvhtree.BVHTree): Constructed BVH tree of the
+            object.
+        ray_from_objspc (mathutils.Vector): Ray origin, in object's local
+            coordinates.
+        ray_to_objspc (mathutils.Vector): Ray goes through this point, also
+            specified in the object's local coordinates. Note that the ray
+            doesn't stop at this point, and this is just for computing the
+            ray direction.
+
+    Returns:
+        tuple:
+            - **hit_loc** (*mathutils.Vector*) -- Hit location on the object,
+              in the object's local coordinates. ``None`` means no
+              intersection.
+            - **hit_normal** (*mathutils.Vector*) -- Normal of the hit
+              location, also in the object's local coordinates.
+            - **hit_fi** (*int*) -- Index of the face where the hit happens.
+            - **ray_dist** (*float*) -- Distance that the ray has traveled
+              before hitting the object. If ``ray_to_objspc`` is a point on
+              the object surface, then this return value is useful for
+              checking for self occlusion.
+    """
+    ray_dir = (ray_to_objspc - ray_from_objspc).normalized()
+    hit_loc, hit_normal, hit_fi, ray_dist = \
+        obj_bvhtree.ray_cast(ray_from_objspc, ray_dir)
+    if hit_loc is None:
+        assert hit_normal is None and hit_fi is None and ray_dist is None
+    return hit_loc, hit_normal, hit_fi, ray_dist
