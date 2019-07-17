@@ -265,7 +265,7 @@ def grid_query_unstruct(uvs, values, grid_res, fill_value=(0,),
         interps.append(interp)
     interps = np.dstack(interps)
 
-    if interps.shape[1] == 1:
+    if interps.shape[2] == 1:
         return interps[:, :, 0].squeeze()
     return interps
 
