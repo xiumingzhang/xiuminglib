@@ -1,86 +1,10 @@
 from os.path import join, dirname
-import numpy as np
 
 from .. import const, os as xm_os
 from .general import _savefig
 
 from ..imprt import preset_import
 cv2 = preset_import('cv2')
-
-
-def rgb_on_uv_canvas(uvs, rgbs,
-                     canvas_rgb=(0, 0, 0), canvas_res=(256, 256),
-                     max_l1_interp=None, outpath=None):
-    r"""Paints colors on a canvas according to their UV locations.
-
-    Args:
-        uvs (numpy.ndarray): N-by-2 array of UV coordinates where we have
-            values (i.e., colors). See
-            :func:`xiuminglib.blender.object.smart_uv_unwrap` for the UV
-            coordinate convention.
-        rgbs (numpy.ndarray): N-by-3 array of RGB values :math:`\in [0, 1]`.
-        canvas_rgb (array_like, optional): Color of the base canvas. Will be
-            used to fill in pixels outside the convex hulls formed by the UV
-            locations, and if ``max_l1_interp`` is provided, also the
-            pixels whose interpolation is too much of a stretch to be
-            trusted.
-        canvas_size (array_like, optional): Resolution (height first; then
-            width) of the visualization. Essentially controls how dense the
-            query grid is.
-        max_l1_interp (int, optional): Maximum :math:`\ell_1` distance, which
-            we can trust in interpolation, to pixels who have values.
-            Interpolation over a larger range will not be trusted and hence
-            not be painted. ``None`` means trusting (and hence showing) all
-            interpolations.
-        outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means
-            ``os.path.join(const.Dir.tmp, 'rgb_on_uv_canvas.png')``.
-
-    Writes
-        - An interpolated image of the UV-indexed colors.
-    """
-    from scipy.interpolate import griddata
-
-    dtype = np.uint8
-    dtype_max = np.iinfo(dtype).max
-
-    if outpath is None:
-        outpath = join(const.Dir.tmp, 'rgb_on_uv_canvas.png')
-
-    if max_l1_interp is None:
-        max_l1_interp = np.inf # trust everything
-
-    h, w = canvas_res
-    # Generate query coordinates
-    grid_x, grid_y = np.meshgrid(np.linspace(0, 1, w), np.linspace(0, 1, h))
-    # +---> x
-    # |
-    # v y
-    grid_u, grid_v = grid_x, 1 - grid_y
-    # ^ v
-    # |
-    # +---> u
-
-    # Figure out which pixels can be trusted
-    has_value = np.zeros((h, w), dtype=np.uint8)
-    ri = ((1 - uvs[:, 1]) * h).astype(int).ravel()
-    ci = (uvs[:, 0] * w).astype(int).ravel()
-    has_value[ri, ci] = 1
-    dist2val = cv2.distanceTransform(1 - has_value, cv2.DIST_L1, 3)
-    trusted = dist2val <= max_l1_interp
-
-    # Process each color channel separately
-    interps = []
-    for ch_i in range(3):
-        v_fill = canvas_rgb[ch_i]
-        v = rgbs[:, ch_i]
-        interp = griddata(uvs, v, (grid_u, grid_v), fill_value=v_fill)
-        interp[~trusted] = v_fill
-        interps.append(interp)
-    rgb = np.dstack(interps) # [0, 1]
-
-    img = (rgb * dtype_max).astype(dtype)
-    cv2.imwrite(outpath, img[:, :, ::-1])
 
 
 def uv_on_texmap(uvs, texmap, ft=None, outpath=None,

@@ -13,9 +13,11 @@ def binarize(im, threshold=None):
     """Binarizes images.
 
     Args:
-        im (numpy.ndarray): Image to binarize. Of any integer type (``uint8``, ``uint16``, etc.).
-            If H-by-W-by-3, will be converted to grayscale and treated as H-by-W.
-        threshold (float, optional): Threshold for binarization. ``None`` means midpoint of the ``dtype``.
+        im (numpy.ndarray): Image to binarize. Of any integer type (``uint8``,
+            ``uint16``, etc.).  If H-by-W-by-3, will be converted to grayscale
+            and treated as H-by-W.
+        threshold (float, optional): Threshold for binarization. ``None``
+            means midpoint of the ``dtype``.
 
     Raises:
         ValueError: If ``im`` has wrong dimensions.
@@ -56,9 +58,12 @@ def remove_islands(im, min_n_pixels, connectivity=4):
         numpy.ndarray: Output image with small islands removed.
     """
     # Validate inputs
-    assert (len(im.shape) == 2), "'im' needs to have exactly two dimensions"
-    assert np.array_equal(np.unique(im), np.array([0, 1])), "'im' needs to contain only 0's and 1's"
-    assert (connectivity == 4 or connectivity == 8), "'connectivity' must be either 4 or 8"
+    assert (len(im.shape) == 2), \
+        "'im' needs to have exactly two dimensions"
+    assert np.array_equal(np.unique(im), np.array([0, 1])), \
+        "'im' needs to contain only 0's and 1's"
+    assert connectivity in (4, 8), \
+        "'connectivity' must be either 4 or 8"
 
     # Find islands, big or small
     nlabels, labelmap, leftx_topy_bbw_bbh_npix, _ = \
@@ -77,11 +82,11 @@ def remove_islands(im, min_n_pixels, connectivity=4):
     return im_clean
 
 
-def grid_query(im, query_x, query_y, method='bilinear'):
+def grid_query_img(im, query_x, query_y, method='bilinear'):
     r"""Grid queries an image via interpolation.
 
     If you want to grid query unstructured data, consider
-    :func:`scipy.interpolate.griddata`.
+    :func:`grid_query_unstruct`.
 
     This function uses either bilinear interpolation that allows you to break
     big matrices into patches and work locally, or bivariate spline
@@ -121,7 +126,7 @@ def grid_query(im, query_x, query_y, method='bilinear'):
     """
     from scipy.interpolate import RectBivariateSpline, interp2d
 
-    logger_name = thisfile + '->grid_query()'
+    logger_name = thisfile + '->grid_query_img()'
 
     # Figure out image size and number of channels
     if im.ndim == 3:
@@ -177,15 +182,104 @@ def grid_query(im, query_x, query_y, method='bilinear'):
     return interp_val
 
 
+def grid_query_unstruct(uvs, values, grid_res, fill_value=(0,),
+                        max_l1_interp=None):
+    r"""Grid queries unstructured data given by coordinates and their values.
+
+    If you are looking to grid query structured data, such as an image, check
+    out :func:`grid_query_img`.
+
+    This function interpolates values on a rectangular grid given some sparse,
+    unstrucured samples. If the values can't be interpolated confidently, the
+    specified filling value will be used to fill the "holes."
+
+    One use case is where you have some UV locations and their associated
+    colors, and you want to "paint the colors" on a UV canvas.
+
+    Args:
+        uvs (numpy.ndarray): N-by-2 array of UV coordinates where we have
+            values (e.g., colors). See
+            :func:`xiuminglib.blender.object.smart_uv_unwrap` for the UV
+            coordinate convention.
+        values (numpy.ndarray): N-by-M array of M-D values at the N UV
+            locations, or N-array of scalar values at the N UV locations.
+            Channels are interpolated independently.
+        grid_res (array_like): Resolution (height first; then width) of
+            the query grid.
+        fill_value (array_like, optional): Will be used to fill in pixels
+            outside the convex hulls formed by the UV locations, and if
+            ``max_l1_interp`` is provided, also the pixels whose
+            interpolation is too much of a stretch to be trusted. In the
+            context of "canvas painting," this will be the canvas' base color.
+        max_l1_interp (int, optional): Maximum :math:`\ell_1` distance, which
+            we can trust in interpolation, to pixels that have values.
+            Interpolation across a longer range will not be trusted, and hence
+            will be filled with ``fill_value``. ``None`` means trusting and
+            accepting all interpolations.
+
+    Returns:
+        numpy.ndarray: Interpolated values at query locations, of shape
+        ``grid_res`` for single-channel input or ``(grid_res[0], grid_res[1],
+        values.shape[2])`` for multi-channel input.
+    """
+    from scipy.interpolate import griddata
+
+    # Standardize inputs
+    if values.ndim == 1:
+        values = values.reshape(-1, 1)
+    assert values.ndim == 2 and values.shape[0] == uvs.shape[0]
+    fill_value = np.array(fill_value)
+    if len(fill_value) == 1:
+        fill_value = np.tile(fill_value, values.shape[1])
+    assert len(fill_value) == values.shape[1]
+
+    if max_l1_interp is None:
+        max_l1_interp = np.inf # trust everything
+
+    h, w = grid_res
+    # Generate query coordinates
+    grid_x, grid_y = np.meshgrid(np.linspace(0, 1, w), np.linspace(0, 1, h))
+    # +---> x
+    # |
+    # v y
+    grid_u, grid_v = grid_x, 1 - grid_y
+    # ^ v
+    # |
+    # +---> u
+
+    # Figure out which pixels can be trusted
+    has_value = np.zeros((h, w), dtype=np.uint8)
+    ri = ((1 - uvs[:, 1]) * h).astype(int).ravel()
+    ci = (uvs[:, 0] * w).astype(int).ravel()
+    has_value[ri, ci] = 1
+    dist2val = cv2.distanceTransform(1 - has_value, cv2.DIST_L1, 3)
+    trusted = dist2val <= max_l1_interp
+
+    # Process each color channel separately
+    interps = []
+    for ch_i in range(values.shape[1]):
+        v_fill = fill_value[ch_i]
+        v = values[:, ch_i]
+        interp = griddata(uvs, v, (grid_u, grid_v), fill_value=v_fill)
+        interp[~trusted] = v_fill
+        interps.append(interp)
+    interps = np.dstack(interps)
+
+    if interps.shape[1] == 1:
+        return interps[:, :, 0].squeeze()
+    return interps
+
+
 def find_local_extrema(im, want_maxima, kernel_size=3):
     """Finds local maxima or minima in an image.
 
     Args:
-        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or H-by-W-by-C for multi-channel
-            (e.g., RGB) images. Extrema are found independently for each of the C channels.
+        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale)
+            or H-by-W-by-C for multi-channel (e.g., RGB) images. Extrema
+            are found independently for each of the C channels.
         want_maxima (bool): Whether maxima or minima are wanted.
-        kernel_size (int, optional): Side length of the square window under consideration. Must be
-            larger than 1.
+        kernel_size (int, optional): Side length of the square window under
+            consideration. Must be larger than 1.
 
     Raises:
         ValueError: If the input image has wrong dimensions.
@@ -244,16 +338,19 @@ def compute_gradients(im):
         [ 3 0 -3 ]           [-3 -10 -3]
 
     Args:
-        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or H-by-W-by-C if multi-channel
-            (e.g., RGB) images. Gradients are computed independently for each of the C channels.
+        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or
+            H-by-W-by-C if multi-channel (e.g., RGB) images. Gradients are
+            computed independently for each of the C channels.
 
     Raises:
         ValueError: If ``im`` has wrong dimensions.
 
     Returns:
         tuple:
-            - **grad_mag** (*numpy.ndarray*) -- Magnitude image of the gradients.
-            - **grad_orient** (*numpy.ndarray*) -- Orientation image of the gradients (in radians).
+            - **grad_mag** (*numpy.ndarray*) -- Magnitude image of the
+              gradients.
+            - **grad_orient** (*numpy.ndarray*) -- Orientation image of the
+              gradients (in radians).
 
               .. code-block:: none
 
@@ -310,10 +407,10 @@ def gamma_correct(im, gamma):
     r"""Applies gamma correction to image.
 
     Args:
-        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or H-by-W-by-C multi-channel
-            (e.g., RGB) images.
-        gamma (float): Gamma value :math:`< 1` shifts image towards the darker end of the spectrum,
-            while value :math:`> 1` towards the brighter.
+        im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or
+            H-by-W-by-C multi-channel (e.g., RGB) images.
+        gamma (float): Gamma value :math:`< 1` shifts image towards the darker
+            end of the spectrum, while value :math:`> 1` towards the brighter.
 
     Returns:
         numpy.ndarray: Gamma-corrected image.
@@ -329,7 +426,8 @@ def gamma_correct(im, gamma):
     # Correct with lookup table
     type_max = np.iinfo(im.dtype).max
     table = np.array([
-        ((x / type_max) ** (1 / gamma)) * type_max for x in np.arange(0, type_max + 1)
+        ((x / type_max) ** (1 / gamma)) * type_max
+        for x in np.arange(0, type_max + 1)
     ]).astype(im.dtype)
     im_corrected = cv2.LUT(im, table)
 

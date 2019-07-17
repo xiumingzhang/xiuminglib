@@ -105,13 +105,15 @@ def angle_between(vec1, vec2, radian=True):
     r"""Computes the angle between two vectors.
 
     Args:
-        vec1 (numpy.ndarray): Vector 1.
+        vec1 (array_like): Vector 1.
         vec2
         radian (bool, optional): Whether to use radians.
 
     Returns:
         float: The angle :math:`\in [0,\pi]`.
     """
+    vec1 = np.array(vec1)
+    vec2 = np.array(vec2)
     cos = np.dot(vec1, vec2) / np.linalg.norm(vec1) / np.linalg.norm(vec2)
     angle = np.arccos(np.clip(cos, -1, 1))
     if not radian:
