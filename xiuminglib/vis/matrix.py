@@ -85,6 +85,9 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         # Grayscale or RGB
         cv2.imwrite(outpath, im[:, :, ::-1])
 
+    logger.name = logger_name
+    logger.info("Matrix visualized as image to:\n%s", outpath)
+
 
 def matrix_as_heatmap_complex(*args, **kwargs):
     """Wraps :func:`matrix_as_heatmap` for complex number support.
@@ -152,6 +155,7 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
     logger_name = thisfile + '->matrix_as_heatmap()'
+
     ok_version = '2.0.2'
     if matplotlib.__version__ != ok_version:
         logger.name = logger_name
@@ -214,3 +218,6 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     _savefig(outpath, contents_only=contents_only, dpi=dpi)
 
     plt.close('all')
+
+    logger.name = logger_name
+    logger.info("Matrix visualized as heatmap to:\n%s", outpath)

@@ -249,8 +249,8 @@ def grid_query_unstruct(uvs, values, grid_res, fill_value=(0,),
 
     # Figure out which pixels can be trusted
     has_value = np.zeros((h, w), dtype=np.uint8)
-    ri = ((1 - uvs[:, 1]) * h).astype(int).ravel()
-    ci = (uvs[:, 0] * w).astype(int).ravel()
+    ri = ((1 - uvs[:, 1]) * (h - 1)).astype(int).ravel()
+    ci = (uvs[:, 0] * (w - 1)).astype(int).ravel()
     has_value[ri, ci] = 1
     dist2val = cv2.distanceTransform(1 - has_value, cv2.DIST_L1, 3)
     trusted = dist2val <= max_l1_interp
