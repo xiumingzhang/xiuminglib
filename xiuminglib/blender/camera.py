@@ -778,8 +778,9 @@ def get_2d_bounding_box(obj, cam):
     logger_name = thisfile + '->get_2d_bounding_box()'
 
     scene = bpy.context.scene
-    w, h = scene.render.resolution_x, scene.render.resolution_y
     scale = scene.render.resolution_percentage / 100.
+    w = scene.render.resolution_x * scale
+    h = scene.render.resolution_y * scale
 
     # Get camera matrix
     cam_mat, _, _ = get_camera_matrix(cam)
@@ -792,17 +793,21 @@ def get_2d_bounding_box(obj, cam):
     pts_2d = np.divide(xyw[:2, :], np.tile(xyw[2, :], (2, 1))) # 2-by-N
 
     # Compute bounding box
-    u_min, v_min = np.min(pts_2d, axis=1)
-    u_max, v_max = np.max(pts_2d, axis=1)
+    x_min, y_min = np.min(pts_2d, axis=1)
+    x_max, y_max = np.max(pts_2d, axis=1)
     corners = np.vstack((
-        np.array([u_min, v_min]),
-        np.array([u_max, v_min]),
-        np.array([u_max, v_max]),
-        np.array([u_min, v_max])))
+        np.array([x_min, y_min]),
+        np.array([x_max, y_min]),
+        np.array([x_max, y_max]),
+        np.array([x_min, y_max])))
 
     logger.name = logger_name
     logger.info("Got 2D bounding box of '%s' in camera '%s'",
                 obj.name, cam.name)
-    logger.warning("... using w = %d; h = %d", w * scale, h * scale)
+    logger.warning("... using w = %d; h = %d", w, h)
+
+    if x_min < 0 or x_max >= w or y_min < 0 or y_max >= h:
+        logger.name = logger_name
+        logger.warning("Part of the bounding box falls outside the frame")
 
     return corners

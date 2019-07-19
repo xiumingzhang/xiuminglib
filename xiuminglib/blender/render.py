@@ -502,7 +502,7 @@ def render_normal(outpath, cam=None, obj_names=None,
         - Another 32-bit .exr normal map of the reference ball, if asked for.
     """
     from .object import add_sphere, remove_objects
-    from .camera import point_camera_to, get_2d_bounding_box
+    from .camera import get_2d_bounding_box
 
     logger_name = thisfile + '->render_normal()'
 
@@ -518,23 +518,6 @@ def render_normal(outpath, cam=None, obj_names=None,
     #     bpy.ops.mesh.select_all()
     #     bpy.ops.mesh.normals_make_consistent()
     #     bpy.ops.object.mode_set(mode='OBJECT')
-
-    # Add reference normal ball
-    if outpath_refball is not None:
-        world_origin = (0, 0, 0)
-        sphere = add_sphere(location=world_origin)
-        point_camera_to(cam, world_origin, up=(0, 0, 1)) # point camera
-        # Scale the ball so that it, when projected, fits into the frame
-        bbox = get_2d_bounding_box(sphere, cam)
-        res_x = scene.render.resolution_x
-        res_y = scene.render.resolution_y
-        res_perc = scene.render.resolution_percentage / 100.
-        s = max((bbox[1, 0] - bbox[0, 0]) / (res_x * res_perc),
-                (bbox[3, 1] - bbox[0, 1]) / (res_y * res_perc)) * 1.2
-        sphere.scale = (1 / s, 1 / s, 1 / s)
-        # Achieve smooth normals with low polycount
-        for f in sphere.data.polygons:
-            f.use_smooth = True
 
     # Set up scene node tree
     node_tree = scene.node_tree
@@ -557,19 +540,49 @@ def render_normal(outpath, cam=None, obj_names=None,
         scene.render.alpha_mode = 'TRANSPARENT'
         _disable_cycles_mat_nodes_for_bi()
 
-    # Render
-    if outpath_refball is not None:
+    def add_refball():
+        from .camera import get_camera_matrix
+        from ..geometry.proj import from_homo
+        Vector = preset_import('Vector')
+        # Place the ball at any depth so long as its center projects to
+        # image center
+        z_c = 10 # any reasonable depth in the camera space
+        cam_mat, cam_int, _ = get_camera_matrix(cam, keep_disparity=True)
+        x, y = cam_int[0][2], cam_int[1][2]
+        center_xy1d = Vector([x, y, 1, 1 / z_c]) # with disparity
+        xyzw = cam_mat.inverted() * center_xy1d # from pixel to world
+        xyz = from_homo(xyzw)
+        sphere = add_sphere(location=xyz)
+        # Scale the ball so that it, when projected, fits into the frame
+        # and occupies reasonably large portion of the image
+        bbox = get_2d_bounding_box(sphere, cam)
+        s = 0.8 / max((bbox[1, 0] - bbox[0, 0]) / (2 * x),
+                      (bbox[3, 1] - bbox[0, 1]) / (2 * y))
+        sphere.scale = (s, s, s)
+        # Achieve smooth normals with low polycount
+        for f in sphere.data.polygons:
+            f.use_smooth = True
+        return sphere
+
+    def render_refball(refball, out):
         mesh_hide_render = {}
         # Hide everything but the ball
         for o in [x for x in objs if x.type == 'MESH']:
             mesh_hide_render[o.name] = o.hide_render # save old state
-            o.hide_render = o.name != sphere.name
-        outpath_refball = _render(
-            scene, outnode, result_socket, outpath_refball)
+            o.hide_render = o.name != refball.name
+        out = _render(scene, outnode, result_socket, out)
         # Restore hide_render
         for k, v in mesh_hide_render.items():
             objs[k].hide_render = v
-        sphere.hide_render = True
+        remove_objects(refball.name)
+        return out
+
+    if outpath_refball is not None:
+        # Add reference normal ball
+        refball = add_refball()
+        outpath_refball = render_refball(refball, outpath_refball)
+
+    # Render
     outpath = _render(scene, outnode, result_socket, outpath)
 
     logger.name = logger_name
@@ -579,9 +592,6 @@ def render_normal(outpath, cam=None, obj_names=None,
         logger.info("Renference ball rendered through the same camera to %s",
                     outpath_refball)
     logger.warning("The scene node tree has changed")
-
-    if outpath_refball is not None:
-        remove_objects(sphere.name)
 
 
 def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
