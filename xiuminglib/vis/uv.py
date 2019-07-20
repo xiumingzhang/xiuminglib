@@ -7,7 +7,7 @@ from ..imprt import preset_import
 cv2 = preset_import('cv2')
 
 
-def uv_on_texmap(uvs, texmap, ft=None, outpath=None,
+def uv_on_texmap(uvs, texmap, ft=None, outpath=None, max_n_lines=None,
                  dotsize=4, dotcolor='r', linewidth=1, linecolor='b'):
     """Visualizes which points on texture map the vertices map to.
 
@@ -23,6 +23,9 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None,
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means
             ``os.path.join(const.Dir.tmp, 'uv_on_texmap.png')``.
+        max_n_lines (int, optional): Plotting a huge number of lines can be
+            slow, so set this to uniformly sample a subset to plot. Useless if
+            ``ft`` is ``None``.
         dotsize (int or list(int), optional): Size(s) of the UV dots.
         dotcolor (str or list(str), optional): Their color(s).
         linewidth (float, optional): Width of the lines connecting the dots.
@@ -91,6 +94,10 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None,
                     (x[ind[i]], y[ind[i]]),
                     (x[ind[(i + 1) % n_verts]], y[ind[(i + 1) % n_verts]])
                 ]) # line start and end
+        if max_n_lines is not None:
+            import numpy as np
+            lines = [lines[i] for i in np.linspace(
+                0, len(lines) - 1, num=max_n_lines, dtype=int)]
         line_collection = LineCollection(
             lines, linewidths=linewidth, colors=linecolor, zorder=1)
         ax.add_collection(line_collection)
