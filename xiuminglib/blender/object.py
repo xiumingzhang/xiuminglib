@@ -856,9 +856,9 @@ def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
 def smart_uv_unwrap(obj):
     """UV unwrapping using Blender's smart projection.
 
-    A vertex may map to multiple UV locations, as one vertex is often shared
-    by multiple faces, and if a face uses M vertices, then it has M loops,
-    each of which has one UV location.
+    A vertex may map to multiple UV locations, but each loop maps to exactly
+    one UV location. If a face uses M vertices, then it has M loops, so a vertex
+    may belong to multiple loops, each of which has one UV location.
 
     Note:
         If a vertex belongs to no face, it doesn't get a UV coordinate,
@@ -868,8 +868,10 @@ def smart_uv_unwrap(obj):
         obj (bpy_types.Object): Object to UV unwrap.
 
     Returns:
-        numpy.ndarray: N-by-5 array with the columns being face index, loop
-        index, vertex index, :math:`u`, and :math:`v`.
+        dict(numpy.ndarray): Dictionary with its keys being the face indices,
+        and values being 2D arrays with four columns containing the
+        corresponding face's loop indices, vertex indices, :math:`u`, and
+        :math:`v`.
 
         UV coordinate convention:
 
@@ -893,12 +895,16 @@ def smart_uv_unwrap(obj):
     bpy.ops.uv.smart_project()
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    fi_li_vi_u_v = []
+    # Since # faces is usually very large, using faces as dictionary
+    # keys usually leads to speedups (compared with having them as
+    # an array's column and then slicing the array)
+    fi_li_vi_u_v = {}
     for f in obj.data.polygons:
+        li_vi_u_v = []
         for vi, li in zip(f.vertices, f.loop_indices):
             uv = obj.data.uv_layers.active.data[li].uv
-            fi_li_vi_u_v.append([f.index, li, vi, uv.x, uv.y])
-    fi_li_vi_u_v = np.array(fi_li_vi_u_v)
+            li_vi_u_v.append([li, vi, uv.x, uv.y])
+        fi_li_vi_u_v[f.index] = np.array(li_vi_u_v)
 
     return fi_li_vi_u_v
 

@@ -23,7 +23,7 @@ from os import makedirs, environ
 import os.path
 from os.path import abspath, join, dirname, basename, getmtime
 
-from .os import _is_cnspath, _no_trailing_slash, cp
+from .os import _is_cnspath, _no_trailing_slash, cp, rm
 
 from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
@@ -126,6 +126,9 @@ def colossus_interface(somefunc):
         for cns_path, local_path in cns2local.items():
             if os.path.exists(local_path) and getmtime(local_path) > t0:
                 cp_verbose(local_path, cns_path)
+        # Free up the space by deleting the temporary files
+        for _, local_path in cns2local.items():
+            rm(local_path)
         return results
 
     return wrapper

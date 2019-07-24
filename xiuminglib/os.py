@@ -80,25 +80,6 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     return files_sorted
 
 
-def rmglob(path_pattern, exclude_dir=True):
-    """Globs a pattern and then deletes the matches.
-
-    Todo:
-        Support for Google Colossus.
-
-    Args:
-        path_pattern (str): Pattern to glob, e.g., ``'/path/to/img???.png'``.
-        exclude_dir (bool, optional): Whether to exclude directories from
-            being deleted.
-    """
-    for x in glob(path_pattern):
-        if isdir(x):
-            if not exclude_dir:
-                rmtree(x)
-        else:
-            os.remove(x)
-
-
 def exists_isdir(path):
     """Determines whether a path exists, and if so, whether it is a file
     or directory.
@@ -250,6 +231,33 @@ def cp(src, dst, cns_parallel_copy=10):
                 gfile.Copy(src, dst, overwrite=True)
 
 
+def rm(path):
+    """Removes a file or recursively a directory, with Google Colossus
+    compatibility.
+
+    Args:
+        path (str)
+    """
+    if not _is_cnspath(path):
+        # Quickly do the job and return
+        if isdir(path):
+            rmtree(path)
+        else:
+            os.remove(path)
+        return
+
+    # OK, a CNS path
+    # Use gfile if available
+    gfile = preset_import('gfile')
+    if gfile is not None:
+        gfile.DeleteRecursively(path) # works for file and directory
+    else:
+        # Falls back to filter CLI
+        cmd = 'fileutil rm -R -f %s' % path # works for file and directory
+        retcode, _, _ = call(cmd, quiet=True)
+        assert retcode == 0, "`fileutil rm` failed"
+
+
 def makedirs(directory, rm_if_exists=False):
     """Wraps :func:`os.makedirs` to support removing the directory if it
     alread exists.
@@ -270,11 +278,6 @@ def makedirs(directory, rm_if_exists=False):
         retcode, _, _ = call(cmd, quiet=True)
         return retcode == 0
 
-    def delete_cns_cli(directory):
-        cmd = 'fileutil rm -R -f %s' % directory
-        retcode, _, _ = call(cmd, quiet=True)
-        assert retcode == 0, "`fileutil rm` failed"
-
     def mkdir_cns_cli(directory):
         cmd = 'fileutil mkdir -p %s' % directory
         retcode, _, _ = call(cmd, quiet=True)
@@ -285,22 +288,19 @@ def makedirs(directory, rm_if_exists=False):
         gfile = preset_import('gfile')
         if gfile is None:
             exists_func = exists_cns_cli
-            delete_func = delete_cns_cli
             mkdir_func = mkdir_cns_cli
         else:
             exists_func = gfile.Exists
-            delete_func = gfile.DeleteRecursively
             mkdir_func = gfile.MakeDirs
     else:
         # Is just a regular local path
         exists_func = exists
-        delete_func = rmtree
         mkdir_func = os.makedirs
 
     # Do the job
     if exists_func(directory):
         if rm_if_exists:
-            delete_func(directory)
+            rm(directory)
             mkdir_func(directory)
             logger.name = logger_name
             logger.info("Removed and then remade: %s", directory)

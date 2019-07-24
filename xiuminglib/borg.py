@@ -29,13 +29,13 @@ class JobSubmitter():
         else:
             raise NotImplementedError(user)
         # Requirements
-        self.local_ram_fs_dir_size =local_ram_fs_dir_size 
+        self.local_ram_fs_dir_size = local_ram_fs_dir_size
         self.cell = cell
 
     def build(self):
         bash_cmd = 'cd %s && ' % self.citc
         bash_cmd += 'rabbit --verifiable build -c opt %s ' % self.label
-        bash_cmd += '--config=libc++-preview'
+        bash_cmd += '--config=libc++-preview' # bpy needs it
         retcode, _, _ = call(bash_cmd)
         assert retcode == 0, "Build failed"
 
