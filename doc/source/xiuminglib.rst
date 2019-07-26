@@ -13,19 +13,12 @@ Subpackages
 
     xiuminglib.blender
     xiuminglib.geometry
+    xiuminglib.google
     xiuminglib.io
     xiuminglib.vis
 
 Submodules
 ----------
-
-xiuminglib.borg module
-----------------------
-
-.. automodule:: xiuminglib.borg
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 xiuminglib.camera module
 ------------------------

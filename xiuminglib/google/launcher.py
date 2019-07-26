@@ -1,70 +1,70 @@
-"""Specific to Google's Borg."""
-
 from os.path import join
 from getpass import getuser
 from time import time
 
 from tqdm import tqdm
 
-from .os import call
-from . import const
+from ..os import call
+from .. import const
 
 
-class JobSubmitter():
-    def __init__(self, citc, label, user=None, workers=24,
+class Launcher():
+    def __init__(self, citc, label, borg_user=None, borg_submitters=24,
                  local_ram_fs_dir_size='4096M'):
         self.citc = citc
         self.label = label
         myself = getuser()
-        if user is None:
-            user = myself
-        self.user = user
-        self.workers = workers
+        if borg_user is None:
+            borg_user = myself
+        self.borg_user = borg_user
+        self.borg_submitters = borg_submitters
         # Deriving other values
-        self.priority = 0 if user == myself else 115
-        if user == myself:
+        self.priority = 0 if borg_user == myself else 115
+        if borg_user == myself:
             cell = 'qu'
-        elif user == 'gcam-eng':
+        elif borg_user == 'gcam-eng':
             cell = 'ok'
-        elif user == 'gcam-gpu':
+        elif borg_user == 'gcam-gpu':
             cell = 'is'
         else:
-            raise NotImplementedError(user)
+            raise NotImplementedError(borg_user)
         self.cell = cell
         # Requirements
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
 
     def build(self):
         bash_cmd = 'cd %s && ' % self.citc
-        bash_cmd += 'rabbit --verifiable build -c opt %s ' % self.label
-        bash_cmd += '--config=libc++-preview' # bpy needs it
+        bash_cmd += 'rabbit --verifiable build -c opt %s' % self.label
+        bash_cmd += ' --config=libc++-preview' # bpy needs it
         retcode, _, _ = call(bash_cmd)
         assert retcode == 0, "Build failed"
 
-    def gen_borg_file(self, job_id, param):
-        borg_file_str = self._format_borg_file_str(job_id, param)
-        borg_f = join(const.Dir.tmp, '%s_%f.borg' % (job_id, time()))
-        with open(borg_f, 'w') as h:
-            h.write(borg_file_str)
-        return borg_f
+    def blaze_run(self, param_dict=None):
+        bash_cmd = 'cd %s && ' % self.citc
+        bash_cmd += 'blaze run %s' % self.label
+        if param_dict is not None:
+            bash_cmd += ' --'
+            for k, v in param_dict.items():
+                bash_cmd += ' --%s %s' % (k, v)
+        call(bash_cmd)
 
-    def submit(self, job_ids, param_dicts, runlocal=False):
+    def submit_to_borg(self, job_ids, param_dicts, runlocal=False):
         n_jobs = len(job_ids)
         assert n_jobs == len(param_dicts)
-        if n_jobs == 1 or self.workers == 0:
+        if n_jobs == 1 or self.borg_submitters == 0:
             for job_id, param_dict in tqdm(zip(job_ids, param_dicts)):
-                self._submit((job_id, param_dict, runlocal))
+                self._borg_run((job_id, param_dict, runlocal))
         else:
             from multiprocessing import Pool
-            pool = Pool(self.workers)
+            pool = Pool(self.borg_submitters)
             list(tqdm(pool.imap_unordered(
-                self._submit,
+                self._borg_run,
                 [(i, x, runlocal) for i, x in zip(job_ids, param_dicts)]
             ), total=len(job_ids)))
             pool.close()
             pool.join()
 
-    def _submit(self, args):
+    def _borg_run(self, args):
         job_id, param, runlocal = args
         borg_f = self.gen_borg_file(job_id, param)
         # Submit
@@ -72,8 +72,15 @@ class JobSubmitter():
         # FIXME: runlocal doesn't work for temporary MPM: b/74472376
         bash_cmd = 'cd %s && ' % self.citc
         bash_cmd += 'borgcfg %s %s --skip_confirmation --borguser %s' \
-            % (borg_f, action, self.user)
+            % (borg_f, action, self.borg_user)
         call(bash_cmd)
+
+    def gen_borg_file(self, job_id, param):
+        borg_file_str = self._format_borg_file_str(job_id, param)
+        borg_f = join(const.Dir.tmp, '%s_%f.borg' % (job_id, time()))
+        with open(borg_f, 'w') as h:
+            h.write(borg_file_str)
+        return borg_f
 
     def _format_borg_file_str(self, job_id, param):
         tab = ' ' * 4
@@ -135,7 +142,7 @@ class JobSubmitter():
 
         scheduling = {
             priority = %d,
-    ''' % (tab, tab, self.local_ram_fs_dir_size, self.user, self.priority)
+    ''' % (tab, tab, self.local_ram_fs_dir_size, self.borg_user, self.priority)
         if self.priority == 0:
             file_str += '''%s}
     }''' % tab
