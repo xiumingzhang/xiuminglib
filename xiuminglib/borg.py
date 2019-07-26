@@ -4,6 +4,8 @@ from os.path import join
 from getpass import getuser
 from time import time
 
+from tqdm import tqdm
+
 from .os import call
 from . import const
 
@@ -28,9 +30,9 @@ class JobSubmitter():
             cell = 'is'
         else:
             raise NotImplementedError(user)
+        self.cell = cell
         # Requirements
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
-        self.cell = cell
 
     def build(self):
         bash_cmd = 'cd %s && ' % self.citc
@@ -46,14 +48,14 @@ class JobSubmitter():
             h.write(borg_file_str)
         return borg_f
 
-    def submit(self, job_ids, param_dicts, just_one=False, runlocal=False):
-        if just_one:
-            # Submit just one and see how it goes
-            self._submit((job_ids[0], param_dicts[0], runlocal))
+    def submit(self, job_ids, param_dicts, runlocal=False):
+        n_jobs = len(job_ids)
+        assert n_jobs == len(param_dicts)
+        if n_jobs == 1 or self.workers == 0:
+            for job_id, param_dict in tqdm(zip(job_ids, param_dicts)):
+                self._submit((job_id, param_dict, runlocal))
         else:
-            # Submit all using a pool of workers
             from multiprocessing import Pool
-            from tqdm import tqdm
             pool = Pool(self.workers)
             list(tqdm(pool.imap_unordered(
                 self._submit,
@@ -67,13 +69,14 @@ class JobSubmitter():
         borg_f = self.gen_borg_file(job_id, param)
         # Submit
         action = 'runlocal' if runlocal else 'reload'
-        # FIXME: runlocal doesn't work: b/74472376
+        # FIXME: runlocal doesn't work for temporary MPM: b/74472376
         bash_cmd = 'cd %s && ' % self.citc
         bash_cmd += 'borgcfg %s %s --skip_confirmation --borguser %s' \
             % (borg_f, action, self.user)
         call(bash_cmd)
 
     def _format_borg_file_str(self, job_id, param):
+        tab = ' ' * 4
         file_str = '''job %s = {
         // What cell should we run in?
         runtime = {
@@ -97,7 +100,7 @@ class JobSubmitter():
         // What command line parameters should we pass to this program?
         args = {
     ''' % (job_id, self.cell, self.label)
-        for k, v in param.items():
+        for i, (k, v) in enumerate(param.items()):
             if isinstance(v, str):
                 v = "'%s'" % v
             elif isinstance(v, int):
@@ -106,8 +109,11 @@ class JobSubmitter():
                 v = "'" + ",".join(str(x) for x in v) + "'"
             else:
                 raise TypeError(type(v))
-            file_str += "        %s = %s,\n" % (k, v)
-        file_str += '''    }
+            if i == 0:
+                file_str += "%s%s%s = %s,\n" % (tab, tab, k, v)
+            else:
+                file_str += "%s%s%s%s = %s,\n" % (tab, tab, tab, k, v)
+        file_str += '''%s%s}
 
         // What resources does this program need to run?
         requirements = {
@@ -129,10 +135,10 @@ class JobSubmitter():
 
         scheduling = {
             priority = %d,
-    ''' % (self.local_ram_fs_dir_size, self.user, self.priority)
+    ''' % (tab, tab, self.local_ram_fs_dir_size, self.user, self.priority)
         if self.priority == 0:
-            file_str += '''    }
-    }'''
+            file_str += '''%s}
+    }''' % tab
         else: # e.g., P115 needs a batch strategy
             file_str += '''
             batch_quota {
