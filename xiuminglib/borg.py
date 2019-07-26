@@ -46,10 +46,10 @@ class JobSubmitter():
             h.write(borg_file_str)
         return borg_f
 
-    def submit(self, job_ids, param_dicts, test=False):
-        if test:
+    def submit(self, job_ids, param_dicts, just_one=False, runlocal=False):
+        if just_one:
             # Submit just one and see how it goes
-            self._submit((job_ids[0], param_dicts[0], test))
+            self._submit((job_ids[0], param_dicts[0], runlocal))
         else:
             # Submit all using a pool of workers
             from multiprocessing import Pool
@@ -57,17 +57,17 @@ class JobSubmitter():
             pool = Pool(self.workers)
             list(tqdm(pool.imap_unordered(
                 self._submit,
-                [(i, x, test) for i, x in zip(job_ids, param_dicts)]
+                [(i, x, runlocal) for i, x in zip(job_ids, param_dicts)]
             ), total=len(job_ids)))
             pool.close()
             pool.join()
 
     def _submit(self, args):
-        job_id, param, test = args
+        job_id, param, runlocal = args
         borg_f = self.gen_borg_file(job_id, param)
         # Submit
-        action = 'runlocal' if test else 'reload'
-        action = 'reload' # FIXME: runlocal doesn't work: b/74472376
+        action = 'runlocal' if runlocal else 'reload'
+        # FIXME: runlocal doesn't work: b/74472376
         bash_cmd = 'cd %s && ' % self.citc
         bash_cmd += 'borgcfg %s %s --skip_confirmation --borguser %s' \
             % (borg_f, action, self.user)
