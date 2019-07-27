@@ -49,10 +49,13 @@ class Launcher():
         call(bash_cmd)
 
     def submit_to_borg(self, job_ids, param_dicts, runlocal=False):
+        assert isinstance(job_ids, list) and isinstance(param_dicts, list), \
+            "If submitting just one job, make both arguments single-item lists"
         n_jobs = len(job_ids)
         assert n_jobs == len(param_dicts)
         if n_jobs == 1 or self.borg_submitters == 0:
-            for job_id, param_dict in tqdm(zip(job_ids, param_dicts)):
+            for job_id, param_dict in tqdm(zip(job_ids, param_dicts),
+                                           total=n_jobs):
                 self._borg_run((job_id, param_dict, runlocal))
         else:
             from multiprocessing import Pool
@@ -65,8 +68,8 @@ class Launcher():
             pool.join()
 
     def _borg_run(self, args):
-        job_id, param, runlocal = args
-        borg_f = self.gen_borg_file(job_id, param)
+        job_id, param_dict, runlocal = args
+        borg_f = self.gen_borg_file(job_id, param_dict)
         # Submit
         action = 'runlocal' if runlocal else 'reload'
         # FIXME: runlocal doesn't work for temporary MPM: b/74472376
@@ -75,14 +78,14 @@ class Launcher():
             % (borg_f, action, self.borg_user)
         call(bash_cmd)
 
-    def gen_borg_file(self, job_id, param):
-        borg_file_str = self._format_borg_file_str(job_id, param)
+    def gen_borg_file(self, job_id, param_dict):
+        borg_file_str = self._format_borg_file_str(job_id, param_dict)
         borg_f = join(const.Dir.tmp, '%s_%f.borg' % (job_id, time()))
         with open(borg_f, 'w') as h:
             h.write(borg_file_str)
         return borg_f
 
-    def _format_borg_file_str(self, job_id, param):
+    def _format_borg_file_str(self, job_id, param_dict):
         tab = ' ' * 4
         file_str = '''job %s = {
         // What cell should we run in?
@@ -107,7 +110,7 @@ class Launcher():
         // What command line parameters should we pass to this program?
         args = {
     ''' % (job_id, self.cell, self.label)
-        for i, (k, v) in enumerate(param.items()):
+        for i, (k, v) in enumerate(param_dict.items()):
             if isinstance(v, str):
                 v = "'%s'" % v
             elif isinstance(v, int):
