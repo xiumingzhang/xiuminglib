@@ -6,7 +6,7 @@ py_library(
     data = glob(["data/**/*"]),
     srcs_version = "PY3",
     deps = [
-        # bpy not in third_party, so has to be wrapped into a MPM package
+        # bpy not in third_party, so has to be wrapped into an MPM package
         "//pyglib:gfile",
         "//file/colossus/cns",
         "//third_party/py/cvx2",
@@ -25,7 +25,7 @@ py_library(
     data = glob(["data/**/*"]),
     srcs_version = "PY3",
     deps = [
-        # bpy not in third_party, so has to be wrapped into a MPM package
+        # bpy not in third_party, so has to be wrapped into an MPM package
         "//pyglib:gfile",
         "//file/colossus/cns",
         "//third_party/py/cvx2",
