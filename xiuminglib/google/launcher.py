@@ -1,11 +1,13 @@
-from os.path import join
+from os.path import join, abspath
 from getpass import getuser
 from time import time
 
 from tqdm import tqdm
 
-from ..os import call
+from ..os import call, makedirs
 from .. import const
+from ..config import create_logger
+logger, thisfile = create_logger(abspath(__file__))
 
 
 class Launcher():
@@ -46,17 +48,27 @@ class Launcher():
             bash_cmd += ' --'
             for k, v in param_dict.items():
                 bash_cmd += ' --%s %s' % (k, v)
-        call(bash_cmd)
+        # call(bash_cmd)
+        # FIXME: stdout can't catch the printouts
+        print("Run:\n%s" % bash_cmd)
 
     def submit_to_borg(self, job_ids, param_dicts, runlocal=False):
+        logger_name = thisfile + '->Launcher:submit_to_borg()'
         assert isinstance(job_ids, list) and isinstance(param_dicts, list), \
             "If submitting just one job, make both arguments single-item lists"
         n_jobs = len(job_ids)
+        if not self.label.endswith(':main_mpm'):
+            logger.name = logger_name
+            logger.warning(
+                ("Submitting to Borg, but label is not `main_mpm` "
+                 "(assumed in generating .borg file)"))
         assert n_jobs == len(param_dicts)
+        # If just one job or no parallel workers
         if n_jobs == 1 or self.borg_submitters == 0:
             for job_id, param_dict in tqdm(zip(job_ids, param_dicts),
                                            total=n_jobs):
                 self._borg_run((job_id, param_dict, runlocal))
+        # Multiple jobs are submitted by a pool of workers
         else:
             from multiprocessing import Pool
             pool = Pool(self.borg_submitters)
@@ -80,7 +92,9 @@ class Launcher():
 
     def gen_borg_file(self, job_id, param_dict):
         borg_file_str = self._format_borg_file_str(job_id, param_dict)
-        borg_f = join(const.Dir.tmp, '%s_%f.borg' % (job_id, time()))
+        out_dir = join(const.Dir.tmp, '%f' % time())
+        makedirs(out_dir)
+        borg_f = join(out_dir, '%s.borg' % job_id)
         with open(borg_f, 'w') as h:
             h.write(borg_file_str)
         return borg_f
