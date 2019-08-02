@@ -403,14 +403,15 @@ def compute_gradients(im):
     return grad_mag, grad_orient
 
 
-def gamma_correct(im, gamma):
+def gamma_correct(im, gamma=2.2):
     r"""Applies gamma correction to image.
 
     Args:
         im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or
             H-by-W-by-C multi-channel (e.g., RGB) images.
-        gamma (float): Gamma value :math:`< 1` shifts image towards the darker
-            end of the spectrum, while value :math:`> 1` towards the brighter.
+        gamma (float, optional): Gamma value :math:`< 1` shifts image towards
+            the darker end of the spectrum, while value :math:`> 1` towards
+            the brighter.
 
     Returns:
         numpy.ndarray: Gamma-corrected image.

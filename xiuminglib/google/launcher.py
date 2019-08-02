@@ -41,16 +41,20 @@ class Launcher():
         retcode, _, _ = call(bash_cmd)
         assert retcode == 0, "Build failed"
 
-    def blaze_run(self, param_dict=None):
+    def blaze_run(self, param_dict=None, print_instead=False):
+        logger_name = thisfile + '->Launcher:blaze_run()'
         bash_cmd = 'cd %s && ' % self.citc
         bash_cmd += 'blaze run %s' % self.label
         if param_dict is not None:
             bash_cmd += ' --'
             for k, v in param_dict.items():
                 bash_cmd += ' --%s %s' % (k, v)
-        # call(bash_cmd)
-        # FIXME: stdout can't catch the printouts
-        print("Run:\n%s" % bash_cmd)
+        if print_instead:
+            logger.name = logger_name
+            logger.info("Run:\n%s", bash_cmd)
+        else:
+            call(bash_cmd)
+            # FIXME: sometimes stdout can't catch the printouts (e.g., tqdm)
 
     def submit_to_borg(self, job_ids, param_dicts, runlocal=False):
         logger_name = thisfile + '->Launcher:submit_to_borg()'
