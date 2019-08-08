@@ -18,7 +18,7 @@ def timeit(somefunc):
         results = somefunc(*arg, **kwargs)
         t = time() - t0
         logger.name = logger_name
-        logger.info("    ... and done in %.2f seconds", t)
+        logger.info("... and finished in %f seconds", t)
         return results
 
     return wrapper
