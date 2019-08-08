@@ -1,22 +1,21 @@
 from os import remove
 from os.path import abspath, dirname, exists
-try:
-    import bpy
-except ModuleNotFoundError:
-    # For building the doc
-    pass
 
-import xiuminglib as xm
+from ..imprt import preset_import
+bpy = preset_import('bpy')
 
-logger, thisfile = xm.config.create_logger(abspath(__file__))
+from .. import config, os as xm_os
+logger, thisfile = config.create_logger(abspath(__file__))
 
 
 def save_blend(outpath=None, delete_overwritten=False):
     """Saves current scene to a .blend file.
 
     Args:
-        outpath (str, optional): Path to save the scene to, e.g., ``'~/foo.blend'``. ``None`` means saving to the current file.
-        delete_overwritten (bool, optional): Whether to delete or keep as .blend1 the same-name file.
+        outpath (str, optional): Path to save the scene to, e.g.,
+            ``'~/foo.blend'``. ``None`` means saving to the current file.
+        delete_overwritten (bool, optional): Whether to delete or keep
+            as .blend1 the same-name file.
 
     Writes
         - A .blend file.
@@ -25,7 +24,7 @@ def save_blend(outpath=None, delete_overwritten=False):
 
     if outpath is not None:
         # "Save as" scenario: delete and then save
-        xm.os.makedirs(dirname(outpath))
+        xm_os.makedirs(dirname(outpath))
         if exists(outpath) and delete_overwritten:
             remove(outpath)
 

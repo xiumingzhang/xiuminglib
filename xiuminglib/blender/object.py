@@ -1,16 +1,44 @@
 import re
 from os.path import abspath, basename, dirname
 import numpy as np
-try:
-    import bpy
-    import bmesh
-    from mathutils import Matrix, Vector
-except ModuleNotFoundError:
-    # For building the doc
-    pass
 
-import xiuminglib as xm
-logger, thisfile = xm.config.create_logger(abspath(__file__))
+from ..imprt import preset_import
+bpy = preset_import('bpy')
+bmesh = preset_import('bmesh')
+Matrix = preset_import('Matrix')
+Vector = preset_import('Vector')
+
+from .. import config, os as xm_os
+logger, thisfile = config.create_logger(abspath(__file__))
+
+
+def get_object(otype, any_ok=False):
+    """Gets the handle of the only (or any) object of the given type.
+
+    Args:
+        otype (str): Object type: ``'MESH'``, ``'CAMERA'``, ``'LAMP'`` or any
+            string ``a_bpy_obj.type`` may return.
+        any_ok (bool, optional): Whether it's ok to grab any object when there
+            exist multiple ones matching the given type. If ``False``, there
+            must be exactly one object of the given type.
+
+    Raises:
+        RuntimeError: If it's ambiguous which object to get.
+
+    Returns:
+        bpy_types.Object.
+    """
+    objs = [x for x in bpy.data.objects if x.type == otype]
+    n_objs = len(objs)
+    if n_objs == 0:
+        raise RuntimeError("There's no object matching the given type")
+    if n_objs == 1:
+        return objs[0]
+    # More than one objects
+    if any_ok:
+        return objs[0]
+    raise RuntimeError(("When `any_ok` is `False`, there must be exactly "
+                        "one object matching the given type"))
 
 
 def remove_objects(name_pattern, regex=False):
@@ -26,7 +54,8 @@ def remove_objects(name_pattern, regex=False):
     removed = []
 
     if regex:
-        assert (name_pattern != '*'), "Want to match everything? Correct regex for this is '.*'"
+        assert (name_pattern != '*'), \
+            "Want to match everything? Correct regex for that is '.*'"
 
         name_pattern = re.compile(name_pattern)
 
@@ -68,8 +97,10 @@ def import_object(model_path,
         model_path (str): Path to object to add.
         axis_forward (str, optional): Which direction is forward.
         axis_up (str, optional): Which direction is upward.
-        rot_mat (array_like, optional): 3-by-3 rotation matrix *preceding* translation.
-        trans_vec (array_like, optional): 3D translation vector *following* rotation.
+        rot_mat (array_like, optional): 3-by-3 rotation matrix *preceding*
+            translation.
+        trans_vec (array_like, optional): 3D translation vector *following*
+            rotation.
         scale (float, optional): Scale of the object.
         merge (bool, optional): Whether to merge objects into one.
         name (str, optional): Object name after import.
@@ -88,7 +119,8 @@ def import_object(model_path,
 
     # Import
     if model_path.endswith('.obj'):
-        bpy.ops.import_scene.obj(filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
+        bpy.ops.import_scene.obj(
+            filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
     elif model_path.endswith('.ply'):
         bpy.ops.import_mesh.ply(filepath=model_path)
 
@@ -103,7 +135,8 @@ def import_object(model_path,
         context = bpy.context.copy()
         context['active_object'] = objs_to_merge[0]
         context['selected_objects'] = objs_to_merge
-        context['selected_editable_bases'] = [bpy.context.scene.object_bases[o.name] for o in objs_to_merge]
+        context['selected_editable_bases'] = \
+            [bpy.context.scene.object_bases[o.name] for o in objs_to_merge]
         bpy.ops.object.join(context)
         objs_to_merge[0].name = 'merged' # change object name
         # objs_to_merge[0].data.name = 'merged' # change mesh name
@@ -140,28 +173,28 @@ def import_object(model_path,
     return obj_list
 
 
-def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
-    """Exports Blender object(s) to a .obj file.
+def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
+    """Exports Blender object(s) to a file.
 
     Args:
-        obj_names (str or list(str)): Object name(s) to export.
-        model_path (str): Output path ending with .obj.
-        axis_forward (str, optional): Which direction is forward.
-        axis_up (str, optional): Which direction is upward.
+        obj_names (str or list(str)): Object name(s) to export. Must be a
+            single string if output format is .ply.
+        model_path (str): Output .obj or .ply path.
+        axis_forward (str, optional): Which direction is forward. For .obj,
+            the default is ``'-Z'``, and ``'Y'`` for .ply.
+        axis_up (str, optional): Which direction is upward. For .obj, the
+            default is ``'Y'``, and ``'Z'`` for .ply.
 
     Raises:
-        NotImplementedError: If the output path doesn't end with .obj.
+        NotImplementedError: If the output path doesn't end with .obj or .ply.
 
     Writes
-        - Exported .obj file, possibly accompanied by a .mtl file.
+        - Exported model file, possibly accompanied by a material file.
     """
     logger_name = thisfile + '->export_object()'
 
-    if not model_path.endswith('.obj'):
-        raise NotImplementedError(".%s" % model_path.split('.')[-1])
-
     out_dir = dirname(model_path)
-    xm.os.makedirs(out_dir)
+    xm_os.makedirs(out_dir)
 
     if isinstance(obj_names, str):
         obj_names = [obj_names]
@@ -172,23 +205,44 @@ def export_object(obj_names, model_path, axis_forward='-Z', axis_up='Y'):
         if o.select:
             exported.append(o.name)
 
-    bpy.ops.export_scene.obj(
-        filepath=model_path, use_selection=True,
-        axis_forward=axis_forward, axis_up=axis_up)
+    if model_path.endswith('.ply'):
+        assert len(obj_names) == 1, \
+            ".ply holds a single object; use .obj for multiple objects"
+
+        if axis_forward is None:
+            axis_forward = 'Y'
+        if axis_up is None:
+            axis_up = 'Z'
+
+        bpy.ops.export_mesh.ply(
+            filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
+
+    elif model_path.endswith('.obj'):
+        if axis_forward is None:
+            axis_forward = '-Z'
+        if axis_up is None:
+            axis_up = 'Y'
+
+        bpy.ops.export_scene.obj(
+            filepath=model_path, use_selection=True,
+            axis_forward=axis_forward, axis_up=axis_up)
+
+    else:
+        raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
     logger.name = logger_name
     logger.info("%s Exported to %s", exported, model_path)
 
 
-def add_cylinder_between(pt1, pt2, r, name=None):
+def add_cylinder_between(pt1, pt2, r=1e-3, name=None):
     """Adds a cylinder specified by two end points and radius.
 
     Super useful for visualizing rays in ray tracing while debugging.
 
     Args:
-        pt1 (array_like): Global coordinates of point 1.
-        pt2 (array_like): Global coordinates of point 2.
-        r (float): Cylinder radius.
+        pt1 (array_like): World coordinates of point 1.
+        pt2 (array_like): World coordinates of point 2.
+        r (float, optional): Cylinder radius.
         name (str, optional): Cylinder name.
 
     Returns:
@@ -260,13 +314,14 @@ def add_rectangular_plane(center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2),
     return plane_obj
 
 
-def create_mesh(verts, faces, name):
+def create_mesh(verts, faces, name='new-mesh'):
     """Creates a mesh from vertices and faces.
 
     Args:
-        verts (array_like): Local coordinates of the vertices. Of shape N-by-3.
+        verts (array_like): Local coordinates of the vertices, of shape
+            N-by-3.
         faces (list(tuple)): Faces specified by ordered vertex indices.
-        name (str): Mesh name.
+        name (str, optional): Mesh name.
 
     Returns:
         bpy_types.Mesh: Mesh data created.
@@ -286,12 +341,14 @@ def create_mesh(verts, faces, name):
     return mesh_data
 
 
-def create_object_from_mesh(mesh_data, obj_name, location=(0, 0, 0), rotation_euler=(0, 0, 0), scale=(1, 1, 1)):
+def create_object_from_mesh(mesh_data, obj_name='new-obj',
+                            location=(0, 0, 0), rotation_euler=(0, 0, 0),
+                            scale=(1, 1, 1)):
     """Creates object from mesh data.
 
     Args:
         mesh_data (bpy_types.Mesh): Mesh data.
-        obj_name (str): Object name.
+        obj_name (str, optional): Object name.
         location (tuple, optional): Object location in world coordinates.
         rotation_euler (tuple, optional): Object rotation in radians.
         scale (tuple, optional): Object scale.
@@ -327,7 +384,8 @@ def create_object_from_mesh(mesh_data, obj_name, location=(0, 0, 0), rotation_eu
 def _clear_nodetree_for_active_material(obj):
     """Internal helper function clears the node tree of active material.
 
-    So that desired node tree can be cleanly set up. If no active material, one will be created.
+    So that desired node tree can be cleanly set up. If no active material, one
+    will be created.
     """
     # Create material if none
     if obj.active_material is None:
@@ -354,15 +412,17 @@ def _clear_nodetree_for_active_material(obj):
 def color_vertices(obj, vert_ind, colors):
     r"""Colors each vertex of interest with the given color.
 
-    Colors are defined for vertex loops, in fact. This function uses the same color
-    for all loops of a vertex. Useful for making a 3D heatmap.
+    Colors are defined for vertex loops, in fact. This function uses the same
+    color for all loops of a vertex. Useful for making a 3D heatmap.
 
     Args:
         obj (bpy_types.Object): Object.
-        vert_ind (int or list(int)): Index/indices of vertex/vertices to color.
-        colors (tuple or list(tuple)): RGB value(s) to paint on vertex/vertices.
-            Values :math:`\in [0, 1]`. If one tuple, this color will be applied to all vertices.
-            If list of tuples, must be of the same length as ``vert_ind``.
+        vert_ind (int or list(int)): Index/indices of vertex/vertices to
+            color.
+        colors (tuple or list(tuple)): RGB value(s) to paint on
+            vertex/vertices. Values :math:`\in [0, 1]`. If one tuple,
+            this color will be applied to all vertices. If list of tuples,
+            must be of the same length as ``vert_ind``.
 
     Raises:
         ValueError: If color length is wrong.
@@ -377,7 +437,8 @@ def color_vertices(obj, vert_ind, colors):
     if isinstance(colors, tuple):
         colors = [colors] * len(vert_ind)
     assert (len(colors) == len(vert_ind)), \
-        "`colors` and `vert_ind` must be of the same length, or `colors` is a single tuple"
+        ("`colors` and `vert_ind` must be of the same length, "
+         "or `colors` is a single tuple")
     for i, c in enumerate(colors):
         c = tuple(c)
         if len(c) == 3:
@@ -401,8 +462,9 @@ def color_vertices(obj, vert_ind, colors):
     else:
         vcol_layer = mesh.vertex_colors.new()
 
-    # A vertex and one of its edges combined are called a loop, which has a color
-    # So if a vertex has four outgoing edges, it has four colors for the four loops
+    # A vertex and one of its edges combined are called a loop, which has a
+    # color. So if a vertex has four outgoing edges, it has four colors for
+    # the four loops
     for poly in mesh.polygons:
         for loop_idx in poly.loop_indices:
             loop_vert_idx = mesh.loops[loop_idx].vertex_index
@@ -420,19 +482,19 @@ def color_vertices(obj, vert_ind, colors):
     # Set up nodes for vertex colors
     node_tree = _clear_nodetree_for_active_material(obj)
     nodes = node_tree.nodes
-    nodes.new('ShaderNodeAttribute')
-    nodes.new('ShaderNodeBsdfDiffuse')
-    nodes.new('ShaderNodeOutputMaterial')
+    attr_node = nodes.new('ShaderNodeAttribute')
+    diffuse_node = nodes.new('ShaderNodeBsdfDiffuse')
+    output_node = nodes.new('ShaderNodeOutputMaterial')
     nodes['Attribute'].attribute_name = vcol_layer.name
-    node_tree.links.new(nodes['Attribute'].outputs[0], nodes['Diffuse BSDF'].inputs[0])
-    node_tree.links.new(nodes['Diffuse BSDF'].outputs[0], nodes['Material Output'].inputs[0])
+    node_tree.links.new(attr_node.outputs[0], diffuse_node.inputs[0])
+    node_tree.links.new(diffuse_node.outputs[0], output_node.inputs[0])
 
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
     logger.name = logger_name
     logger.info("Vertex color(s) added to '%s'", obj.name)
-    logger.warning("    ..., so node tree of '%s' has changed", obj.name)
+    logger.warning("..., so node tree of '%s' has changed", obj.name)
 
 
 def _assert_cycles(scene):
@@ -449,8 +511,7 @@ def _make_texture_node(obj, texture_str):
     mat = obj.active_material
     node_tree = mat.node_tree
     nodes = node_tree.nodes
-    nodes.new('ShaderNodeTexImage')
-    texture_node = nodes['Image Texture']
+    texture_node = nodes.new('ShaderNodeTexImage')
     if texture_str == 'bundled':
         texture = mat.active_texture
         assert texture is not None, "No bundled texture found"
@@ -459,29 +520,42 @@ def _make_texture_node(obj, texture_str):
         # Path given -- external texture map
         bpy.data.images.load(texture_str, check_existing=True)
         img = bpy.data.images[basename(texture_str)]
-        nodes.new('ShaderNodeTexCoord') # careless
-        node_tree.links.new(nodes['Texture Coordinate'].outputs['Generated'],
-                            texture_node.inputs['Vector'])
+        # Careless texture mapping
+        texture_node.projection = 'FLAT'
+        texcoord_node = nodes.new('ShaderNodeTexCoord')
+        if obj.data.uv_layers.active is None:
+            texcoord = texcoord_node.outputs['Generated']
+        else:
+            texcoord = texcoord_node.outputs['UV']
+        node_tree.links.new(texcoord, texture_node.inputs['Vector'])
     texture_node.image = img
     return texture_node
 
 
-def setup_diffuse_nodetree(obj, texture, roughness=0):
-    r"""Sets up a diffuse texture node tree.
+def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
+    r"""Sets up a simple (diffuse or glossy) node tree.
 
-    Bundled texture can be an external texture map (carelessly mapped) or a pure color.
-    Mathematically, the BRDF model used is either Lambertian (no roughness) or Oren-Nayar (with roughness).
+    Texture can be an bundled texture map, a path to an external texture map,
+    or simply a pure color. If a path to an external image, and UV
+    coordinates are given (e.g., in the geometry .obj file), then they will be
+    used. If they are not given, texture mapping will be done carelessly,
+    with automatically generated UV coordinates. See private function
+    :func:`_make_texture_node` for how this is done.
 
     Args:
         obj (bpy_types.Object): Object, optionally bundled with texture map.
-        texture (str or tuple): If string, must be ``'bundled'`` or path to the texture image.
-            If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
-        roughness (float, optional): Roughness in Oren-Nayar model. 0 gives Lambertian.
+        texture (str or tuple): If string, must be ``'bundled'`` or path to
+            the texture image. If tuple, must be of 4 floats
+            :math:`\in [0, 1]` as RGBA values.
+        shader_type (str): Either ``'diffuse'`` or ``'glossy'``.
+        roughness (float, optional): If diffuse, the roughness in Oren-Nayar,
+            0 gives Lambertian. If glossy, 0 means perfectly reflective.
 
     Raises:
         TypeError: If ``texture`` is of wrong type.
+        ValueError: If ``shader_type`` is illegal.
     """
-    logger_name = thisfile + '->setup_diffuse_nodetree()'
+    logger_name = thisfile + '->setup_simple_nodetree()'
 
     scene = bpy.context.scene
     _assert_cycles(scene)
@@ -489,60 +563,35 @@ def setup_diffuse_nodetree(obj, texture, roughness=0):
     node_tree = _clear_nodetree_for_active_material(obj)
     nodes = node_tree.nodes
 
-    # Set color for diffuse node
-    diffuse_node = nodes.new('ShaderNodeBsdfDiffuse')
+    if shader_type == 'glossy':
+        shader_node = nodes.new('ShaderNodeBsdfGlossy')
+    elif shader_type == 'diffuse':
+        shader_node = nodes.new('ShaderNodeBsdfDiffuse')
+    else:
+        raise ValueError(shader_type)
+
     if isinstance(texture, str):
         texture_node = _make_texture_node(obj, texture)
-        node_tree.links.new(texture_node.outputs['Color'], diffuse_node.inputs['Color'])
+        node_tree.links.new(texture_node.outputs['Color'],
+                            shader_node.inputs['Color'])
     elif isinstance(texture, tuple):
-        diffuse_node.inputs['Color'].default_value = texture
+        shader_node.inputs['Color'].default_value = texture
     else:
         raise TypeError(texture)
 
     output_node = nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(diffuse_node.outputs['BSDF'], output_node.inputs['Surface'])
+    node_tree.links.new(shader_node.outputs['BSDF'],
+                        output_node.inputs['Surface'])
 
     # Roughness
-    diffuse_node.inputs['Roughness'].default_value = roughness
+    shader_node.inputs['Roughness'].default_value = roughness
 
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
     logger.name = logger_name
-    logger.info("Diffuse node tree set up for '%s'", obj.name)
-
-
-def setup_glossy_nodetree(obj, color=(1, 1, 1, 1), roughness=0):
-    r"""Sets up a glossy node tree for a pure color.
-
-    To extend it with texture maps, see :func:`setup_diffuse_nodetree`.
-
-    Args:
-        obj (bpy_types.Object): Object bundled with texture map.
-        color (tuple, optional): RGBA values :math:`\in [0, 1]`.
-        roughness (float, optional): Roughness. 0 means perfectly reflective.
-    """
-    logger_name = thisfile + '->setup_glossy_nodetree()'
-
-    scene = bpy.context.scene
-    _assert_cycles(scene)
-
-    node_tree = _clear_nodetree_for_active_material(obj)
-    nodes = node_tree.nodes
-
-    nodes.new('ShaderNodeBsdfGlossy')
-    nodes['Glossy BSDF'].inputs[0].default_value = color
-    nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(nodes['Glossy BSDF'].outputs[0], nodes['Material Output'].inputs[0])
-
-    # Roughness
-    node_tree.nodes['Glossy BSDF'].inputs['Roughness'].default_value = roughness
-
-    # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
-
-    logger.name = logger_name
-    logger.info("Glossy node tree set up for '%s'", obj.name)
+    logger.info("%s node tree set up for '%s'",
+                shader_type.capitalize(), obj.name)
 
 
 def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
@@ -772,19 +821,23 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
     logger.info("Selected %s elements of '%s'", select_type, obj.name)
 
 
-def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=4):
+def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
     """Adds a sphere.
 
     Args:
         location (array_like, optional): Location of the sphere center.
         scale (float, optional): Scale of the sphere.
         n_subdiv (int, optional): Control of how round the sphere is.
+        name (str, optional): Name of the added sphere.
 
     Returns:
         bpy_types.Object: Sphere created.
     """
     bpy.ops.mesh.primitive_ico_sphere_add()
     sphere = bpy.context.active_object
+
+    if name is not None:
+        sphere.name = name
 
     sphere.location = location
     sphere.scale = (scale, scale, scale)
@@ -798,3 +851,93 @@ def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=4):
     bpy.ops.object.modifier_apply(modifier='Subsurf', apply_as='DATA')
 
     return sphere
+
+
+def smart_uv_unwrap(obj):
+    """UV unwrapping using Blender's smart projection.
+
+    A vertex may map to multiple UV locations, but each loop maps to exactly
+    one UV location. If a face uses M vertices, then it has M loops, so a vertex
+    may belong to multiple loops, each of which has one UV location.
+
+    Note:
+        If a vertex belongs to no face, it doesn't get a UV coordinate,
+        so don't assume you can get a UV for any given vertex index.
+
+    Args:
+        obj (bpy_types.Object): Object to UV unwrap.
+
+    Returns:
+        dict(numpy.ndarray): Dictionary with its keys being the face indices,
+        and values being 2D arrays with four columns containing the
+        corresponding face's loop indices, vertex indices, :math:`u`, and
+        :math:`v`.
+
+        UV coordinate convention:
+
+        .. code-block:: none
+
+            (0, 1)
+                ^ v
+                |
+                |
+                |
+                |
+                +-----------> (1, 0)
+            (0, 0)        u
+    """
+    assert obj.type == 'MESH'
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.context.scene.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project()
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Since # faces is usually very large, using faces as dictionary
+    # keys usually leads to speedups (compared with having them as
+    # an array's column and then slicing the array)
+    fi_li_vi_u_v = {}
+    for f in obj.data.polygons:
+        li_vi_u_v = []
+        for vi, li in zip(f.vertices, f.loop_indices):
+            uv = obj.data.uv_layers.active.data[li].uv
+            li_vi_u_v.append([li, vi, uv.x, uv.y])
+        fi_li_vi_u_v[f.index] = np.array(li_vi_u_v)
+
+    return fi_li_vi_u_v
+
+
+def raycast(obj_bvhtree, ray_from_objspc, ray_to_objspc):
+    """Casts a ray to an object.
+
+    Args:
+        obj_bvhtree (mathutils.bvhtree.BVHTree): Constructed BVH tree of the
+            object.
+        ray_from_objspc (mathutils.Vector): Ray origin, in object's local
+            coordinates.
+        ray_to_objspc (mathutils.Vector): Ray goes through this point, also
+            specified in the object's local coordinates. Note that the ray
+            doesn't stop at this point, and this is just for computing the
+            ray direction.
+
+    Returns:
+        tuple:
+            - **hit_loc** (*mathutils.Vector*) -- Hit location on the object,
+              in the object's local coordinates. ``None`` means no
+              intersection.
+            - **hit_normal** (*mathutils.Vector*) -- Normal of the hit
+              location, also in the object's local coordinates.
+            - **hit_fi** (*int*) -- Index of the face where the hit happens.
+            - **ray_dist** (*float*) -- Distance that the ray has traveled
+              before hitting the object. If ``ray_to_objspc`` is a point on
+              the object surface, then this return value is useful for
+              checking for self occlusion.
+    """
+    ray_dir = (ray_to_objspc - ray_from_objspc).normalized()
+    hit_loc, hit_normal, hit_fi, ray_dist = \
+        obj_bvhtree.ray_cast(ray_from_objspc, ray_dir)
+    if hit_loc is None:
+        assert hit_normal is None and hit_fi is None and ray_dist is None
+    return hit_loc, hit_normal, hit_fi, ray_dist

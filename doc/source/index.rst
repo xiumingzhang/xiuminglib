@@ -60,12 +60,14 @@ Depending on what functions you want to use, you may also need to install:
         in the build's bin folder and can ``import bpy`` in your Python (not the Blender-bundled
         Python) after you add it to your ``PYTHONPATH``.
 
-        I did this "the hard way":
-        `building it from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
-        with ``-DWITH_PYTHON_MODULE=ON`` for CMake. This gave me control over library versions, etc.,
-        but if you are feeling lucky, you can try conda one-liners
-        (like `this one <https://anaconda.org/kitsune.one/python-blender>`_) for a pre-built one,
-        although I doubt it will just work magically.
+        I did this "the hard way": first building all dependencies from source, and then
+        `building Blender from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
+        with ``-DWITH_PYTHON_MODULE=ON`` for CMake, primarily because I wanted to build to an NFS
+        location so that a cluster of machines on the NFS can all use the build.
+
+        If you only need Blender on a local machine, for which you can ``sudo``, then dependency
+        installations are almost automatic -- just run ``install_deps.sh``, although when I did this,
+        I had to ``skip-osl`` to complete the run, for some reason I didn't take time to find out.
 
         Blender 2.80 made some API changes that are incompatible with this library, so please make sure
         you check out
@@ -77,6 +79,9 @@ Depending on what functions you want to use, you may also need to install:
 
     Trimesh
         See `their installation guide <https://github.com/mikedh/trimesh/blob/master/docs/install.rst>`_.
+
+    OpenEXR
+        ``pip install OpenEXR`` worked for me, but ``conda install -c conda-forge openexr`` didn't.
 
 The library uses "on-demand" imports whenever possible, so that it won't fail on imports that you don't need.
 

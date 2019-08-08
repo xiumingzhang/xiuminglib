@@ -12,7 +12,10 @@ Subpackages
 .. toctree::
 
     xiuminglib.blender
+    xiuminglib.geometry
+    xiuminglib.google
     xiuminglib.io
+    xiuminglib.vis
 
 Submodules
 ----------
@@ -33,6 +36,14 @@ xiuminglib.config module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.const module
+-----------------------
+
+.. automodule:: xiuminglib.const
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.decor module
 -----------------------
 
@@ -41,18 +52,18 @@ xiuminglib.decor module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.geometry module
---------------------------
-
-.. automodule:: xiuminglib.geometry
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 xiuminglib.imgproc module
 -------------------------
 
 .. automodule:: xiuminglib.imgproc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.imprt module
+-----------------------
+
+.. automodule:: xiuminglib.imprt
     :members:
     :undoc-members:
     :show-inheritance:
@@ -93,14 +104,6 @@ xiuminglib.tracker module
 -------------------------
 
 .. automodule:: xiuminglib.tracker
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-xiuminglib.vis module
----------------------
-
-.. automodule:: xiuminglib.vis
     :members:
     :undoc-members:
     :show-inheritance:
