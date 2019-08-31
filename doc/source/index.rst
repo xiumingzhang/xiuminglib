@@ -62,6 +62,7 @@ Depending on what functions you want to use, you may also need to install:
 
         I did this "the hard way": first building all dependencies from source, and then
         `building Blender from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
+        (see `this <https://wiki.blender.org/wiki/Building_Blender/Mac>`_ for macOS)
         with ``-DWITH_PYTHON_MODULE=ON`` for CMake, primarily because I wanted to build to an NFS
         location so that a cluster of machines on the NFS can all use the build.
 
@@ -70,7 +71,7 @@ Depending on what functions you want to use, you may also need to install:
         I had to ``skip-osl`` to complete the run, for some reason I didn't take time to find out.
 
         Blender 2.80 made some API changes that are incompatible with this library, so please make sure
-        you check out
+        after ``git clone``, you check out
         `the correct tag <https://git.blender.org/gitweb/gitweb.cgi/blender.git/tag/refs/tags/v2.79b>`_
         with ``git checkout``, followed by ``git submodule update`` to ensure the submodules are of
         the correct versions.
