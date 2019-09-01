@@ -60,23 +60,129 @@ Depending on what functions you want to use, you may also need to install:
         in the build's bin folder and can ``import bpy`` in your Python (not the Blender-bundled
         Python) after you add it to your ``PYTHONPATH``.
 
-        I did this "the hard way": first building all dependencies from source, and then
-        `building Blender from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
-        (see `this <https://wiki.blender.org/wiki/Building_Blender/Mac>`_ for macOS)
-        with ``-DWITH_PYTHON_MODULE=ON`` for CMake, primarily because I wanted to build to an NFS
-        location so that a cluster of machines on the NFS can all use the build.
+        Ubuntu
+            I did this "the hard way": first building all dependencies from source manually, and then
+            `building Blender from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
+            with ``-DWITH_PYTHON_MODULE=ON`` for CMake, primarily because I wanted to build to an NFS
+            location so that a cluster of machines on the NFS can all use the build.
 
-        If you only need Blender on a local machine, for which you can ``sudo``, then dependency
-        installations are almost automatic -- just run ``install_deps.sh``, although when I did this,
-        I had to ``skip-osl`` to complete the run, for some reason I didn't take time to find out.
+            If you only need Blender on a local machine, for which you can ``sudo``, then dependency
+            installations are almost automatic -- just run ``install_deps.sh``, although when I did this,
+            I had to ``skip-osl`` to complete the run, for some reason I didn't take time to find out.
 
-        Blender 2.80 made some API changes that are incompatible with this library, so please make sure
-        after ``git clone``, you check out
-        `the correct tag <https://git.blender.org/gitweb/gitweb.cgi/blender.git/tag/refs/tags/v2.79b>`_
-        with ``git checkout``, followed by ``git submodule update`` to ensure the submodules are of
-        the correct versions.
+            Blender 2.80 made some API changes that are incompatible with this library, so please make sure
+            after ``git clone``, you check out
+            `the correct tag <https://git.blender.org/gitweb/gitweb.cgi/blender.git/tag/refs/tags/v2.79b>`_
+            with ``git checkout v2.79b``, followed by ``git submodule update`` to ensure the submodules are of
+            the correct versions.
 
-        If ``import bpy`` throws ``Segmentation fault``, try again with Python 3.6.3.
+            If ``import bpy`` throws ``Segmentation fault``, try again with Python 3.6.3.
+
+        macOS
+            `This instruction <https://wiki.blender.org/wiki/Building_Blender/Mac>`_ wasn't very helpful, so
+            below documents each step I took to finally get it working (though with some non-fatal warnings).
+
+            First, install Xcode 9.4 to build against the old ``libstdc++`` (instead of `Xcode 10+ that
+            forces the use of the newer <https://stackoverflow.com/a/42034101/2106753>`_ ``libc++``).
+            Then, ``brew install`` CMake.
+
+            Install `Python Framework 3.6.3
+            <https://www.python.org/ftp/python/3.6.3/python-3.6.3-macosx10.6.pkg>`_. I tried to use
+            an Anaconda Python, but to no avail.
+
+            Clone the Blender repo., check out v2.79b, and make sure submodules are consistent.
+
+            .. code-block:: bash
+
+                mkdir ~/blender-git && cd ~/blender-git
+                git clone https://git.blender.org/blender.git && cd blender
+                git checkout v2.79b # may also work: git reset --hard v2.79b
+                git submodule update --init --recursive
+                git submodule foreach git checkout master
+                git submodule foreach git pull --rebase origin master
+
+            Download the pre-built libraries, and move them to the correct place.
+
+            .. code-block:: bash
+
+                cd ~/blender-git
+                svn export https://svn.blender.org/svnroot/bf-blender/tags/blender-2.79-release/lib/darwin-9.x.universal/
+                mkdir lib && mv darwin-9.x.universal lib/
+
+            Edit ``~/blender-git/blender/build_files/cmake/platform/platform_apple.cmake`` to replace
+            ``set(PYTHON_VERSION 3.5)`` with ``set(PYTHON_VERSION 3.6)``.
+
+            Make ``bpy.so`` by running ``cd ~/blender-git/blender && make bpy``. You *may* also need
+            ``cd ~/blender-git/build_darwin_bpy && make install``. Upon success, ``bpy.so``
+            is in ``~/blender-git/build_darwin_bpy/bin/``, and so is ``2.79/``.
+
+            For ``scripts/modules`` to be found during import, do
+
+            .. code-block:: bash
+
+                mkdir ~/blender-git/build_darwin_bpy/Resources
+                cp -r ~/blender-git/build_darwin_bpy/bin/2.79 ~/blender-git/build_darwin_bpy/Resources/
+
+            Add the bin folder to ``PYTHONPATH`` with ``export PYTHONPATH="~/blender-git/build_darwin_bpy/bin/":"$PYTHONPATH"``.
+
+            Verify your success with
+
+            .. code-block:: bash
+
+                /Library/Frameworks/Python.framework/Versions/3.6/bin/python3.6 \
+                    -c 'import bpy; bpy.ops.render.render(write_still=True)'
+
+            but expect the aforementioned "non-fatal warnings": 
+
+            .. code-block:: bash
+
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 331, in enable
+                    mod = __import__(module_name)
+                ModuleNotFoundError: No module named 'io_scene_3ds'
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 331, in enable
+                    mod = __import__(module_name)
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_scene_fbx/__init__.py", line 52, in <module>
+                    from bpy_extras.io_utils import (
+                ImportError: cannot import name 'orientation_helper'
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 331, in enable
+                    mod = __import__(module_name)
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_anim_bvh/__init__.py", line 49, in <module>
+                    from bpy_extras.io_utils import (
+                ImportError: cannot import name 'orientation_helper'
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 331, in enable
+                    mod = __import__(module_name)
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_mesh_ply/__init__.py", line 56, in <module>
+                    from bpy_extras.io_utils import (
+                ImportError: cannot import name 'orientation_helper'
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 331, in enable
+                    mod = __import__(module_name)
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_scene_obj/__init__.py", line 48, in <module>
+                    from bpy_extras.io_utils import (
+                ImportError: cannot import name 'orientation_helper'
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 331, in enable
+                    mod = __import__(module_name)
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_scene_x3d/__init__.py", line 48, in <module>
+                    from bpy_extras.io_utils import (
+                ImportError: cannot import name 'orientation_helper'
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 331, in enable
+                    mod = __import__(module_name)
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_mesh_stl/__init__.py", line 66, in <module>
+                    from bpy_extras.io_utils import (
+                ImportError: cannot import name 'orientation_helper'
+                Exception in module register(): '/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_curve_svg/__init__.py'
+                Traceback (most recent call last):
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/modules/addon_utils.py", line 350, in enable
+                    mod.register()
+                  File "/Users/xiuming/blender-git/build_darwin_bpy/Resources/2.79/scripts/addons/io_curve_svg/__init__.py", line 70, in register
+                    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+                AttributeError: 'RNA_Types' object has no attribute 'TOPBAR_MT_file_import'
 
     Trimesh
         See `their installation guide <https://github.com/mikedh/trimesh/blob/master/docs/install.rst>`_.
