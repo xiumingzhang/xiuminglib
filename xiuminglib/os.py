@@ -286,7 +286,7 @@ def makedirs(directory, rm_if_exists=False):
     if _is_cnspath(directory):
         # Is a CNS path
         gfile = preset_import('gfile')
-        if gfile is None: # maybe due to not using blaze
+        if gfile is None:
             exists_func = exists_cns_cli
             mkdir_func = mkdir_cns_cli
         else:
@@ -297,7 +297,7 @@ def makedirs(directory, rm_if_exists=False):
         exists_func = exists
         mkdir_func = os.makedirs
 
-    # Do the work
+    # Do the job
     if exists_func(directory):
         if rm_if_exists:
             rm(directory)
