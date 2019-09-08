@@ -56,7 +56,7 @@ def import_module_404ok(*args, **kwargs):
     logger_name = thisfile + '->import_module_404ok()'
     try:
         mod = import_module(*args, **kwargs)
-    except ModuleNotFoundError as e:
+    except (ModuleNotFoundError, ImportError) as e:
         mod = None
         logger.name = logger_name
         logger.debug("Ignored: %s", str(e))
