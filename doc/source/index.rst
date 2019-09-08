@@ -132,7 +132,7 @@ Depending on what functions you want to use, you may also need to install:
                 /Library/Frameworks/Python.framework/Versions/3.6/bin/python3.6 \
                     -c 'import bpy; bpy.ops.render.render(write_still=True)'
 
-            but expect the aforementioned "non-fatal warnings": 
+            but expect the aforementioned "non-fatal warnings":
 
             .. code-block:: bash
 
@@ -189,6 +189,7 @@ Depending on what functions you want to use, you may also need to install:
 
     OpenEXR
         ``pip install OpenEXR`` worked for me, but ``conda install -c conda-forge openexr`` didn't.
+        You may need to install ``sudo apt-get install libopenexr-dev`` first if you don't have it yet.
 
 The library uses "on-demand" imports whenever possible, so that it won't fail on imports that you don't need.
 

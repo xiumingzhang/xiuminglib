@@ -2,9 +2,9 @@ numpy
 scipy
 matplotlib==2.0.2
 
-opencv-python
-OpenEXR
-trimesh
+# opencv-python
+# OpenEXR
+# trimesh
 
 # If you need Blender, then you need to build Blender 2.79 as a Python module
 # bpy
