@@ -3,11 +3,12 @@ scipy
 matplotlib==2.0.2
 tqdm
 
+sphinx==2.0.1
+
+# Optional, depending on what you need. See
+# https://xiuminglib.readthedocs.io/en/latest/index.html#dependencies
+# for instructions
 # opencv-python
 # OpenEXR
 # trimesh
-
-# If you need Blender, then you need to build Blender 2.79 as a Python module
 # bpy
-
-sphinx==2.0.1
