@@ -1,6 +1,7 @@
 numpy
 scipy
 matplotlib==2.0.2
+tqdm
 
 # opencv-python
 # OpenEXR
