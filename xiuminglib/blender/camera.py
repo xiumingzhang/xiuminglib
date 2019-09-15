@@ -123,6 +123,9 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
             points up in the image plane.
     """
     logger_name = thisfile + '->point_camera_to()'
+    failed_ensuring_up_msg = \
+        "Camera '%s' pointed to %s, but with no guarantee on up vector" \
+        % (cam.name, tuple(xyz_target))
 
     up = Vector(up)
     xyz_target = Vector(xyz_target)
@@ -151,6 +154,14 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
         logger.error(
             ("w in homogeneous coordinates is 0; "
              "camera coincides with the point to project? "
+             "So can't rotate camera to ensure up vector"))
+        logger.info(failed_ensuring_up_msg)
+        return cam
+    if up_proj.length == 0:
+        logger.name = logger_name
+        logger.error(
+            ("Up vector projected to zero length; "
+             "optical axis coincides with the up vector? "
              "So can't rotate camera to ensure up vector"))
         logger.info(
             "Camera '%s' pointed to %s, but with no guarantee on up vector",
