@@ -407,6 +407,7 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
     scene.render.engine = 'CYCLES'
     scene.cycles.film_transparent = True
     # Anti-aliased edges are built up by averaging multiple samples
+    samples_old = scene.cycles.samples
     scene.cycles.samples = samples
 
     # Set nodes for (binary) alpha pass rendering
@@ -417,6 +418,9 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
     # Render
     outpath = _render(scene, outnode, result_socket, outpath,
                       exr=False, alpha=False)
+
+    # Restore samples
+    scene.cycles.samples = samples_old
 
     logger.name = logger_name
     logger.info("Mask image of %s rendered through '%s'",
