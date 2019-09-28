@@ -437,3 +437,16 @@ def gamma_correct(im, gamma=2.2):
         im_corrected = np.dstack((im_corrected, alpha))
 
     return im_corrected
+
+
+def rgb2lum(im):
+    """Converts RGB to luminance.
+
+    Args:
+        im (numpy.ndarray): H-by-W-3 array of RGB values.
+
+    Returns:
+        numpy.ndarray: H-by-W array of luminance.
+    """
+    lum = 0.2126 * im[:, :, 0] + 0.7152 * im[:, :, 1] + 0.0722 * im[:, :, 2]
+    return lum
