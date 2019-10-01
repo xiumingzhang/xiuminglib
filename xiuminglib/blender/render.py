@@ -405,6 +405,7 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     scene.render.engine = 'CYCLES'
+    film_transparent_old = scene.cycles.film_transparent
     scene.cycles.film_transparent = True
     # Anti-aliased edges are built up by averaging multiple samples
     samples_old = scene.cycles.samples
@@ -419,8 +420,9 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
     outpath = _render(scene, outnode, result_socket, outpath,
                       exr=False, alpha=False)
 
-    # Restore samples
+    # Restore
     scene.cycles.samples = samples_old
+    scene.cycles.film_transparent = film_transparent_old
 
     logger.name = logger_name
     logger.info("Mask image of %s rendered through '%s'",
@@ -537,7 +539,9 @@ def render_normal(outpath, cam=None, obj_names=None,
     # Select rendering engine based on whether camera or world space
     if world_coords:
         scene.render.engine = 'CYCLES'
+        film_transparent_old = scene.cycles.film_transparent
         scene.cycles.film_transparent = True
+        samples_old = scene.cycles.samples
         scene.cycles.samples = 16 # for anti-aliased edges
     else: # camera space
         scene.render.engine = 'BLENDER_RENDER'
@@ -589,6 +593,11 @@ def render_normal(outpath, cam=None, obj_names=None,
     # Render
     outpath = _render(scene, outnode, result_socket, outpath)
 
+    # Restore
+    if world_coords:
+        scene.cycles.film_transparent = film_transparent_old
+        scene.cycles.samples = samples_old
+
     logger.name = logger_name
     logger.info("Normal map of %s rendered through %s to %s",
                 obj_names, cam_name, outpath)
@@ -627,7 +636,9 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     scene.render.engine = 'CYCLES'
+    n_samples_old = scene.cycles.samples
     scene.cycles.samples = n_samples
+    film_transparent_old = scene.cycles.film_transparent
     scene.cycles.film_transparent = True
 
     # Enable all passes of interest
@@ -650,6 +661,10 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
 
     # Render
     outpath = _render(scene, outnode, result_sockets, outpath)
+
+    # Restore
+    scene.cycles.samples = n_samples_old
+    scene.cycles.film_transparent = film_transparent_old
 
     logger.name = logger_name
     logger.info("Select lighting passes of %s rendered through '%s' to %s",
