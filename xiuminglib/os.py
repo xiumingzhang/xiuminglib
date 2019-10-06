@@ -374,16 +374,17 @@ def call(cmd, cwd=None, wait=True, quiet=False):
         cwd (str, optional): Directory to execute the command in. ``None``
             means current directory.
         wait (bool, optional): Whether to block until the call finishes.
-        quiet (bool, optional): Whether to print out these streams.
+        quiet (bool, optional): Whether to print out the output stream (if any)
+            and error stream (if error occured).
 
     Returns:
         tuple:
             - **retcode** (*int*) -- Command exit code. 0 means a successful
-              call. ``None`` if not waiting for the command to finish.
-            - **stdout** (*str*) -- Standard output stream. ``None`` if not
-              waiting.
-            - **stderr** (*str*) -- Standard error stream. ``None`` if not
-              waiting.
+              call. Always ``None`` if not waiting for the command to finish.
+            - **stdout** (*str*) -- Standard output stream. Always ``None`` if
+              not waiting.
+            - **stderr** (*str*) -- Standard error stream. Always ``None`` if
+              not waiting.
     """
     from subprocess import Popen, PIPE
 
