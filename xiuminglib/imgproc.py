@@ -182,19 +182,15 @@ def grid_query_img(im, query_x, query_y, method='bilinear'):
     return interp_val
 
 
-def grid_query_unstruct(uvs, values, grid_res, fill_value=(0,),
-                        max_l1_interp=None):
+def grid_query_unstruct(uvs, values, grid_res, method=None):
     r"""Grid queries unstructured data given by coordinates and their values.
 
     If you are looking to grid query structured data, such as an image, check
     out :func:`grid_query_img`.
 
     This function interpolates values on a rectangular grid given some sparse,
-    unstrucured samples. If the values can't be interpolated confidently, the
-    specified filling value will be used to fill the "holes."
-
-    One use case is where you have some UV locations and their associated
-    colors, and you want to "paint the colors" on a UV canvas.
+    unstrucured samples. One use case is where you have some UV locations and
+    their associated colors, and you want to "paint the colors" on a UV canvas.
 
     Args:
         uvs (numpy.ndarray): N-by-2 array of UV coordinates where we have
@@ -206,35 +202,56 @@ def grid_query_unstruct(uvs, values, grid_res, fill_value=(0,),
             Channels are interpolated independently.
         grid_res (array_like): Resolution (height first; then width) of
             the query grid.
-        fill_value (array_like, optional): Will be used to fill in pixels
-            outside the convex hulls formed by the UV locations, and if
-            ``max_l1_interp`` is provided, also the pixels whose
-            interpolation is too much of a stretch to be trusted. In the
-            context of "canvas painting," this will be the canvas' base color.
-        max_l1_interp (int, optional): Maximum :math:`\ell_1` distance, which
-            we can trust in interpolation, to pixels that have values.
-            Interpolation across a longer range will not be trusted, and hence
-            will be filled with ``fill_value``. ``None`` means trusting and
-            accepting all interpolations.
+        method (dict, optional): Dictionary of method-specific parameters.
+            Implemented methods and their default parameters:
+
+            .. code-block:: python
+
+                method = {
+                    'func': 'griddata',
+                    # Which SciPy function to call.
+
+                    'func_underlying': 'linear',
+                    # Fed to `griddata` as the `method` parameter.
+
+                    'fill_value': (0,), # black
+                    # Will be used to fill in pixels outside the convex hulls
+                    # formed by the UV locations, and if `max_l1_interp` is
+                    # provided, also the pixels whose interpolation is too much
+                    # of a stretch to be trusted. In the context of "canvas
+                    # painting," this will be the canvas' base color.
+
+                    'max_l1_interp': np.inf, # trust/accept all interpolations
+                    # Maximum L1 distance, which we can trust in interpolation,
+                    # to pixels that have values. Interpolation across a longer
+                    # range will not be trusted, and hence will be filled with
+                    # `fill_value`.
+                }
+
+            .. code-block:: python
+
+                method = {
+                    'func': 'rbf',
+                    # Which SciPy function to call.
+
+                    'func_underlying': 'linear',
+                    # Fed to `Rbf` as the `method` parameter.
+
+                    'smooth': 0, # no smoothing
+                    # Fed to `Rbf` as the `smooth` parameter.
+                }
 
     Returns:
         numpy.ndarray: Interpolated values at query locations, of shape
         ``grid_res`` for single-channel input or ``(grid_res[0], grid_res[1],
         values.shape[2])`` for multi-channel input.
     """
-    from scipy.interpolate import griddata
-
-    # Standardize inputs
     if values.ndim == 1:
         values = values.reshape(-1, 1)
     assert values.ndim == 2 and values.shape[0] == uvs.shape[0]
-    fill_value = np.array(fill_value)
-    if len(fill_value) == 1:
-        fill_value = np.tile(fill_value, values.shape[1])
-    assert len(fill_value) == values.shape[1]
 
-    if max_l1_interp is None:
-        max_l1_interp = np.inf # trust everything
+    if method is None:
+        method = {'func': 'griddata'}
 
     h, w = grid_res
     # Generate query coordinates
@@ -247,23 +264,62 @@ def grid_query_unstruct(uvs, values, grid_res, fill_value=(0,),
     # |
     # +---> u
 
-    # Figure out which pixels can be trusted
-    has_value = np.zeros((h, w), dtype=np.uint8)
-    ri = ((1 - uvs[:, 1]) * (h - 1)).astype(int).ravel()
-    ci = (uvs[:, 0] * (w - 1)).astype(int).ravel()
-    has_value[ri, ci] = 1
-    dist2val = cv2.distanceTransform(1 - has_value, cv2.DIST_L1, 3)
-    trusted = dist2val <= max_l1_interp
+    if method['func'] == 'griddata':
+        from scipy.interpolate import griddata
 
-    # Process each color channel separately
-    interps = []
-    for ch_i in range(values.shape[1]):
-        v_fill = fill_value[ch_i]
-        v = values[:, ch_i]
-        interp = griddata(uvs, v, (grid_u, grid_v), fill_value=v_fill)
-        interp[~trusted] = v_fill
-        interps.append(interp)
-    interps = np.dstack(interps)
+        func_underlying = method.get('func_underlying', 'linear')
+        fill_value = method.get('fill_value', (0,))
+        max_l1_interp = method.get('max_l1_interp', np.inf)
+
+        fill_value = np.array(fill_value)
+        if len(fill_value) == 1:
+            fill_value = np.tile(fill_value, values.shape[1])
+        assert len(fill_value) == values.shape[1]
+
+        if max_l1_interp is None:
+            max_l1_interp = np.inf # trust everything
+
+        # Figure out which pixels can be trusted
+        has_value = np.zeros((h, w), dtype=np.uint8)
+        ri = ((1 - uvs[:, 1]) * (h - 1)).astype(int).ravel()
+        ci = (uvs[:, 0] * (w - 1)).astype(int).ravel()
+        in_canvas = np.logical_and.reduce(
+            (ri >= 0, ri < h, ci >= 0, ci < w)) # to ignore out-of-canvas points
+        has_value[ri[in_canvas], ci[in_canvas]] = 1
+        dist2val = cv2.distanceTransform(1 - has_value, cv2.DIST_L1, 3)
+        trusted = dist2val <= max_l1_interp
+
+        # Process each color channel separately
+        interps = []
+        for ch_i in range(values.shape[1]):
+            v_fill = fill_value[ch_i]
+            v = values[:, ch_i]
+            interp = griddata(uvs, v, (grid_u, grid_v),
+                              method=func_underlying,
+                              fill_value=v_fill)
+            interp[~trusted] = v_fill
+            interps.append(interp)
+        interps = np.dstack(interps)
+
+    elif method['func'] == 'rbf':
+        from scipy.interpolate import Rbf
+
+        func_underlying = method.get('func_underlying', 'linear')
+        smooth = method.get('smooth', 0)
+
+        # Process each color channel separately
+        interps = []
+        for ch_i in range(values.shape[1]):
+            v = values[:, ch_i]
+            rbfi = Rbf(uvs[:, 0], uvs[:, 1], v,
+                       function=func_underlying,
+                       smooth=smooth)
+            interp = rbfi(grid_u, grid_v)
+            interps.append(interp)
+        interps = np.dstack(interps)
+
+    else:
+        raise NotImplementedError(method['func'])
 
     if interps.shape[2] == 1:
         return interps[:, :, 0].squeeze()
