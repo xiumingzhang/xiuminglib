@@ -101,27 +101,27 @@ class Launcher():
     def _format_borg_file_str(self, job_id, param_dict):
         tab = ' ' * 4
         file_str = '''job %s = {
-        // What cell should we run in?
-        runtime = {
-            // 'oregon' // automatically picks a Borg cell with free capacity
-            cell = '%s',
+    // What cell should we run in?
+    runtime = {
+        // 'oregon' // automatically picks a Borg cell with free capacity
+        cell = '%s',
+    }
+
+    // What packages are needed?
+    packages {
+        package bin = {
+            // A blaze label pointing to a `genmpm(temporal=1)` rule. Borgcfg will
+            // build a "temporal MPM" on the fly out of files in the blaze-genfiles
+            // directory. See go/temporal-mpm for full documentation.
+            blaze_label = '%s',
         }
+    }
 
-        // What packages are needed?
-        packages {
-            package bin = {
-                // A blaze label pointing to a `genmpm(temporal=1)` rule. Borgcfg will
-                // build a "temporal MPM" on the fly out of files in the blaze-genfiles
-                // directory. See go/temporal-mpm for full documentation.
-                blaze_label = '%s',
-            }
-        }
+    // What program are we going to run?
+    package_binary = 'bin/main'
 
-        // What program are we going to run?
-        package_binary = 'bin/main'
-
-        // What command line parameters should we pass to this program?
-        args = {
+    // What command line parameters should we pass to this program?
+    args = {
     ''' % (job_id, self.cell, self.label)
         for i, (k, v) in enumerate(param_dict.items()):
             if isinstance(v, str):
@@ -138,35 +138,35 @@ class Launcher():
                 file_str += "%s%s%s%s = %s,\n" % (tab, tab, tab, k, v)
         file_str += '''%s%s}
 
-        // What resources does this program need to run?
-        requirements = {
-            autopilot = true,
-            // ram = 1024M,
-            // use_ram_soft_limit = true,
-            local_ram_fs_dir { d1 = { size = %s } },
-            cpu = 12,
-        }
+    // What resources does this program need to run?
+    requirements = {
+        autopilot = true,
+        // ram = 1024M,
+        // use_ram_soft_limit = true,
+        local_ram_fs_dir { d1 = { size = %s } },
+        cpu = 12,
+    }
 
-        // How latency-sensitive is this program?
-        appclass = {
-            type = 'LATENCY_TOLERANT_SECONDARY',
-        }
+    // How latency-sensitive is this program?
+    appclass = {
+        type = 'LATENCY_TOLERANT_SECONDARY',
+    }
 
-        permissions = {
-            user = '%s',
-        }
+    permissions = {
+        user = '%s',
+    }
 
-        scheduling = {
-            priority = %d,
+    scheduling = {
+        priority = %d,
     ''' % (tab, tab, self.local_ram_fs_dir_size, self.borg_user, self.priority)
         if self.priority == 0:
             file_str += '''%s}
     }''' % tab
         else: # e.g., P115 needs a batch strategy
             file_str += '''
-            batch_quota {
-                strategy = 'RUN_SOON'
-            }
+        batch_quota {
+            strategy = 'RUN_SOON'
         }
-    }'''
+    }
+}'''
         return file_str
