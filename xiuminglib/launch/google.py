@@ -47,7 +47,7 @@ class Launcher():
             call(bash_cmd)
             # FIXME: sometimes stdout can't catch the printouts (e.g., tqdm)
 
-    def build(self):
+    def build_for_borg(self):
         bash_cmd = 'rabbit --verifiable build -c opt %s' % self.label
         retcode, _, _ = call(bash_cmd)
         assert retcode == 0, "Build failed"
