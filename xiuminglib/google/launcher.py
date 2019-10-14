@@ -33,11 +33,6 @@ class Launcher():
         # Requirements
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
 
-    def build(self):
-        bash_cmd = 'rabbit --verifiable build -c opt %s' % self.label
-        retcode, _, _ = call(bash_cmd)
-        assert retcode == 0, "Build failed"
-
     def blaze_run(self, param_dict=None, print_instead=False):
         logger_name = thisfile + '->Launcher:blaze_run()'
         bash_cmd = 'blaze run -c opt %s' % self.label
@@ -51,6 +46,11 @@ class Launcher():
         else:
             call(bash_cmd)
             # FIXME: sometimes stdout can't catch the printouts (e.g., tqdm)
+
+    def build(self):
+        bash_cmd = 'rabbit --verifiable build -c opt %s' % self.label
+        retcode, _, _ = call(bash_cmd)
+        assert retcode == 0, "Build failed"
 
     def submit_to_borg(self, job_ids, param_dicts, runlocal=False):
         logger_name = thisfile + '->Launcher:submit_to_borg()'
@@ -113,7 +113,7 @@ class Launcher():
                 // A blaze label pointing to a `genmpm(temporal=1)` rule. Borgcfg will
                 // build a "temporal MPM" on the fly out of files in the blaze-genfiles
                 // directory. See go/temporal-mpm for full documentation.
-                blaze_label = '//%s',
+                blaze_label = '%s',
             }
         }
 
