@@ -11,9 +11,8 @@ logger, thisfile = create_logger(abspath(__file__))
 
 
 class Launcher():
-    def __init__(self, citc, label, borg_user=None, borg_submitters=24,
+    def __init__(self, label, borg_user=None, borg_submitters=24,
                  local_ram_fs_dir_size='4096M'):
-        self.citc = citc
         self.label = label
         myself = getuser()
         if borg_user is None:
@@ -35,16 +34,13 @@ class Launcher():
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
 
     def build(self):
-        bash_cmd = 'cd %s && ' % self.citc
-        bash_cmd += 'rabbit --verifiable build -c opt %s' % self.label
-        bash_cmd += ' --config=libc++-preview' # bpy needs it
+        bash_cmd = 'rabbit --verifiable build -c opt %s' % self.label
         retcode, _, _ = call(bash_cmd)
         assert retcode == 0, "Build failed"
 
     def blaze_run(self, param_dict=None, print_instead=False):
         logger_name = thisfile + '->Launcher:blaze_run()'
-        bash_cmd = 'cd %s && ' % self.citc
-        bash_cmd += 'blaze run %s' % self.label
+        bash_cmd = 'blaze run -c opt %s' % self.label
         if param_dict is not None:
             bash_cmd += ' --'
             for k, v in param_dict.items():
@@ -89,8 +85,7 @@ class Launcher():
         # Submit
         action = 'runlocal' if runlocal else 'reload'
         # FIXME: runlocal doesn't work for temporary MPM: b/74472376
-        bash_cmd = 'cd %s && ' % self.citc
-        bash_cmd += 'borgcfg %s %s --skip_confirmation --borguser %s' \
+        bash_cmd = 'borgcfg %s %s --skip_confirmation --borguser %s' \
             % (borg_f, action, self.borg_user)
         call(bash_cmd)
 
