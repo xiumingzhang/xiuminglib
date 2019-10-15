@@ -11,7 +11,7 @@ from ..imprt import preset_import
 def text_as_image(text, imsize=256, thickness=2, outpath=None):
     """Rasterizes a text string into an image.
 
-    The text will be drawn in black to the center of a white canvas.
+    The text will be drawn in white to the center of a black canvas.
     Text size gets automatically figured out based on the provided
     thickness and image size.
 
@@ -39,12 +39,13 @@ def text_as_image(text, imsize=256, thickness=2, outpath=None):
 
     # Unimportant constants not exposed to the user
     font_face = cv2.FONT_HERSHEY_SIMPLEX
-    color = (0, 0, 0)
+    base_bgr = (0, 0, 0) # black
+    text_bgr = (1, 1, 1) # white
 
     # Base canvas
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max
-    im = np.ones(imsize, dtype=dtype) * dtype_max
+    im = np.tile(base_bgr, imsize + (1,)).astype(dtype) * dtype_max
 
     # Figure out the correct font scale
     font_scale = 1 / 128 # real small
@@ -64,7 +65,8 @@ def text_as_image(text, imsize=256, thickness=2, outpath=None):
         (imsize[0] - text_size[0]) // 2,
         (imsize[1] - text_size[1]) // 2 + text_size[1])
     cv2.putText(
-        im, text, bottom_left_corner, font_face, font_scale, color, thickness)
+        im, text, bottom_left_corner, font_face, font_scale,
+        [x * dtype_max for x in text_bgr], thickness)
 
     # Write
     outdir = dirname(outpath)
