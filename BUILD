@@ -1,9 +1,13 @@
-# For blaze on Google's infrastructure.
+# For blaze on Google's infrastructure
 
 py_library(
     name = "xiuminglib",
-    srcs = glob(["xiuminglib/**/*.py"]),
-    data = glob(["data/**/*"]),
+    srcs = glob([
+        "xiuminglib/**/*.py",
+    ]),
+    data = glob([
+        "data/**/*",
+    ]),
     srcs_version = "PY3",
     deps = [
         # bpy not in third_party, so has to be wrapped into an MPM package
@@ -21,8 +25,12 @@ py_library(
 
 py_library(
     name = "exr",
-    srcs = glob(["xiuminglib/**/*.py"]),
-    data = glob(["data/**/*"]),
+    srcs = glob([
+        "xiuminglib/**/*.py",
+    ]),
+    data = glob([
+        "data/**/*",
+    ]),
     srcs_version = "PY3",
     deps = [
         # bpy not in third_party, so has to be wrapped into an MPM package

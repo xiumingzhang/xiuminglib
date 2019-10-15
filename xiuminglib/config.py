@@ -44,8 +44,7 @@ def to_import_at_init(lib_dir, incl_subpkg=True):
     for f in sorted(glob(join(lib_dir, '*'))):
         base = basename(f)
         if not base.endswith('.pyc') and \
-                base != '__init__.py' and \
-                base != '__pycache__':
+                base not in ('__init__.py', '__pycache__'):
             if base.endswith('.py'):
                 # Modules for sure will be imported
                 base = base[:-3]
