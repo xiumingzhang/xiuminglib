@@ -13,8 +13,8 @@ Subpackages
 
     xiuminglib.blender
     xiuminglib.geometry
-    xiuminglib.google
     xiuminglib.io
+    xiuminglib.launch
     xiuminglib.vis
 
 Submodules
