@@ -8,7 +8,7 @@ from .. import const, os as xm_os
 from ..imprt import preset_import
 
 
-def text_as_image(text, imsize=256, thickness=2, outpath=None):
+def text_as_image(text, imsize=256, thickness=2, outpath=None, quiet=False):
     """Rasterizes a text string into an image.
 
     The text will be drawn in white to the center of a black canvas.
@@ -21,6 +21,7 @@ def text_as_image(text, imsize=256, thickness=2, outpath=None):
         thickness (float, optional): Text thickness.
         outpath (str, optional): Where to dump the result to. ``None``
             means ``os.path.join(const.Dir.tmp, 'text_as_image.png')``.
+        quiet (bool, optional): Whether to refrain from logging.
 
     Writes
         - An image of the text.
@@ -73,5 +74,6 @@ def text_as_image(text, imsize=256, thickness=2, outpath=None):
     xm_os.makedirs(outdir)
     cv2.imwrite(outpath, im)
 
-    logger.name = logger_name
-    logger.info("Text rasterized into image to:\n%s", outpath)
+    if not quiet:
+        logger.name = logger_name
+        logger.info("Text rasterized into image to:\n%s", outpath)

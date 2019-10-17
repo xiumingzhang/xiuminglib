@@ -28,7 +28,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     Writes
         - An image of the matrix.
     """
-    from ..imgproc import gamma_correct
+    from ..img import gamma_correct
     cv2 = preset_import('cv2')
 
     logger_name = thisfile + '->matrix_as_image()'
