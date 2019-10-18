@@ -17,7 +17,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
 
     Args:
         arr (numpy.ndarray): Array to be transformed into an image. Can be
-            H-by-W (grayscale) or H-by-W-by-3 (RGB or RGBA).
+            H-by-W (grayscale) or H-by-W-by-3/4 (RGB or RGBA).
         outpath (str, optional): Where to visualize the result to. ``None``
             means ``os.path.join(const.Dir.tmp, 'matrix_as_image.png')``.
         gamma (float, optional): For gamma correction.

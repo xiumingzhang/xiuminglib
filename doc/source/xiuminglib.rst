@@ -52,10 +52,10 @@ xiuminglib.decor module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.imgproc module
--------------------------
+xiuminglib.img module
+---------------------
 
-.. automodule:: xiuminglib.imgproc
+.. automodule:: xiuminglib.img
     :members:
     :undoc-members:
     :show-inheritance:
@@ -92,10 +92,10 @@ xiuminglib.os module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.sigproc module
--------------------------
+xiuminglib.sig module
+---------------------
 
-.. automodule:: xiuminglib.sigproc
+.. automodule:: xiuminglib.sig
     :members:
     :undoc-members:
     :show-inheritance:
@@ -104,6 +104,14 @@ xiuminglib.tracker module
 -------------------------
 
 .. automodule:: xiuminglib.tracker
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.vid module
+---------------------
+
+.. automodule:: xiuminglib.vid
     :members:
     :undoc-members:
     :show-inheritance:
