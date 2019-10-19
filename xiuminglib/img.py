@@ -506,3 +506,45 @@ def rgb2lum(im):
     """
     lum = 0.2126 * im[:, :, 0] + 0.7152 * im[:, :, 1] + 0.0722 * im[:, :, 2]
     return lum
+
+
+def linear2srgb(im):
+    """Converts an image from linear to sRGB color space.
+
+    Args:
+        im (numpy.ndarray): Of type ``float`` (all pixels must be
+            :math:`[0, 1]`), or ``uint``.
+
+    Raises:
+        TypeError: Input image is of neither float nor unsigned integer type.
+
+    Returns:
+        numpy.ndarray: Converted image in sRGB color space.
+    """
+    srgb_linear_thres = 0.0031308
+    srgb_linear_coeff = 12.92
+    srgb_exponential_coeff = 1.055
+    srgb_exponent = 2.4
+
+    dtype = im.dtype
+    if dtype.kind == 'f':
+        # Floats
+        assert (im >= 0).all() and (im <= 1).all(), \
+            "Input is float image, so all its pixels must be in [0, 1]"
+    elif dtype.kind == 'u':
+        # Unsigned integers
+        im = im.astype(float) / np.iinfo(dtype).max
+    else:
+        raise TypeError(dtype)
+    # Guaranteed to be [0, 1] floats
+
+    linear_ind = im <= srgb_linear_thres
+    nonlinear_ind = im > srgb_linear_thres
+    im[linear_ind] = im[linear_ind] * srgb_linear_coeff
+    im[nonlinear_ind] = srgb_exponential_coeff * (
+        np.power(im[nonlinear_ind], 1 / srgb_exponent)
+    ) - (srgb_exponential_coeff - 1)
+
+    if dtype.kind == 'u':
+        im = (im * np.iinfo(dtype).max).astype(dtype)
+    return im
