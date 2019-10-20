@@ -15,22 +15,23 @@ def images2video(imgs, fps=24, outpath=None):
         imgs (list(numpy.ndarray)): Each image should be of type ``uint8`` or
             ``uint16`` and of shape H-by-W (grayscale) or H-by-W-by-3 (color).
         fps (int, optional): Frame rate.
-        outpath (str, optional): Where to write the video to (a .avi file).
-            ``None`` means ``os.path.join(const.Dir.tmp, 'images2video.avi')``.
+        outpath (str, optional): Where to write the video to (a .mp4 file).
+            ``None`` means ``os.path.join(const.Dir.tmp, 'images2video.mp4')``.
 
     Writes
         - A video of the images.
     """
-    from cv2 import VideoWriter, VideoWriter_fourcc
+    from cv2 import VideoWriter # , VideoWriter_fourcc
 
     logger_name = thisfile + '->images2video()'
 
     if outpath is None:
-        outpath = join(const.Dir.tmp, 'images2video.avi')
+        outpath = join(const.Dir.tmp, 'images2video.mp4')
 
     h, w = imgs[0].shape[:2]
 
-    fourcc = VideoWriter_fourcc(*'MP42')
+    # fourcc = VideoWriter_fourcc(*'X264') # .avi
+    fourcc = 0x00000021 # .mp4
     vw = VideoWriter(outpath, fourcc, fps, (w, h))
 
     for frame in imgs:
