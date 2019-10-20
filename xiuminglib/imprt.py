@@ -10,10 +10,14 @@ def preset_import(name):
     to specified presets/profiles (e.g., ignoring ``ModuleNotFoundError``).
     """
     if name == 'cv2':
-        # BUILD dep:
-        # "//third_party/py/cvx2",
         try:
+            # BUILD dep:
+            # "//third_party/py/cvx2",
             from cvx2 import latest as mod
+            # Or
+            # BUILD dep:
+            # "//third_party/OpenCVX:cvx2",
+            # from google3.third_party.OpenCVX import cvx2 as cv2
         except ModuleNotFoundError:
             mod = import_module_404ok('cv2')
         # TODO: Below is cleaner, but doesn't work
@@ -38,12 +42,12 @@ def preset_import(name):
 
     if name in ('Vector', 'Matrix', 'Quaternion'):
         mod = import_module_404ok('mathutils')
-        cls = get_class(mod, name)
+        cls = _get_module_class(mod, name)
         return cls
 
     if name == 'BVHTree':
         mod = import_module_404ok('mathutils.bvhtree')
-        cls = get_class(mod, name)
+        cls = _get_module_class(mod, name)
         return cls
 
     raise NotImplementedError(name)
@@ -63,7 +67,7 @@ def import_module_404ok(*args, **kwargs):
     return mod
 
 
-def get_class(mod, clsname):
+def _get_module_class(mod, clsname):
     if mod is None:
         return None
     return getattr(mod, clsname)
