@@ -8,25 +8,26 @@ from .imprt import preset_import
 cv2 = preset_import('cv2')
 
 
-def images2video(imgs, fps=24, outpath=None):
+def make_from_images(imgs, fps=24, outpath=None):
     """Writes a list of images into a grayscale or color video.
 
     Args:
         imgs (list(numpy.ndarray)): Each image should be of type ``uint8`` or
-            ``uint16`` and of shape H-by-W (grayscale) or H-by-W-by-3 (color).
+            ``uint16`` and of shape H-by-W (grayscale) or H-by-W-by-3 (RGB).
         fps (int, optional): Frame rate.
         outpath (str, optional): Where to write the video to (a .mp4 file).
-            ``None`` means ``os.path.join(const.Dir.tmp, 'images2video.mp4')``.
+            ``None`` means
+            ``os.path.join(const.Dir.tmp, 'make_from_images.mp4')``.
 
     Writes
         - A video of the images.
     """
     from cv2 import VideoWriter # , VideoWriter_fourcc
 
-    logger_name = thisfile + '->images2video()'
+    logger_name = thisfile + '->make_from_images()'
 
     if outpath is None:
-        outpath = join(const.Dir.tmp, 'images2video.mp4')
+        outpath = join(const.Dir.tmp, 'make_from_images.mp4')
 
     h, w = imgs[0].shape[:2]
 
@@ -36,6 +37,8 @@ def images2video(imgs, fps=24, outpath=None):
 
     for frame in imgs:
         assert frame.shape[:2] == (h, w), "All frames must have the same shape"
+        if frame.ndim == 3:
+            frame = frame[:, :, ::-1] # cv2 uses BGR
         vw.write(frame)
 
     vw.release()
