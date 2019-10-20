@@ -519,7 +519,8 @@ def linear2srgb(im):
         TypeError: Input image is of neither float nor unsigned integer type.
 
     Returns:
-        numpy.ndarray: Converted image in sRGB color space.
+        numpy.ndarray: Converted image in sRGB color space, of the same type
+        as input.
     """
     srgb_linear_thres = 0.0031308
     srgb_linear_coeff = 12.92
