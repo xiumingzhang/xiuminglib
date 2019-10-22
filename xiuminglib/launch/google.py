@@ -128,6 +128,8 @@ class Launcher():
                 v = "'%s'" % v
             elif isinstance(v, int):
                 v = "%d" % v
+            elif isinstance(v, float):
+                v = "%f" % v
             elif isinstance(v, list):
                 v = "'" + ",".join(str(x) for x in v) + "'"
             else:
