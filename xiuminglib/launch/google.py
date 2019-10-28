@@ -11,9 +11,18 @@ logger, thisfile = create_logger(abspath(__file__))
 
 
 class Launcher():
-    def __init__(self, label, borg_user=None, borg_submitters=24,
+    def __init__(self, label, print_instead=False,
+                 borg_user=None, borg_submitters=24,
                  local_ram_fs_dir_size='4096M'):
+        logger_name = thisfile + '->Launcher:__init__()'
         self.label = label
+        self.pkg_bin = label.split(':')[-1]
+        if self.pkg_bin.endswith('_mpm'):
+            self.pkg_bin = self.pkg_bin[:-4]
+        logger.name = logger_name
+        logger.warning(("Package binary derived to be `%s`, so make sure "
+                        "`BUILD` is consistent with this"), self.pkg_bin)
+        self.print_instead = print_instead
         myself = getuser()
         if borg_user is None:
             borg_user = myself
@@ -33,35 +42,34 @@ class Launcher():
         # Requirements
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
 
-    def blaze_run(self, param_dict=None, print_instead=False):
+    def blaze_run(self, param_dict=None):
         logger_name = thisfile + '->Launcher:blaze_run()'
         bash_cmd = 'blaze run -c opt %s' % self.label
         if param_dict is not None:
             bash_cmd += ' --'
             for k, v in param_dict.items():
                 bash_cmd += ' --%s %s' % (k, v)
-        if print_instead:
+        if self.print_instead:
             logger.name = logger_name
-            logger.info("Run:\n%s", bash_cmd)
+            logger.info("To blaze-run the job, run:\n\t%s", bash_cmd)
         else:
             call(bash_cmd)
             # FIXME: sometimes stdout can't catch the printouts (e.g., tqdm)
 
     def build_for_borg(self):
+        logger_name = thisfile + '->Launcher:build_for_borg()'
         bash_cmd = 'rabbit --verifiable build -c opt %s' % self.label
-        retcode, _, _ = call(bash_cmd)
-        assert retcode == 0, "Build failed"
+        if self.print_instead:
+            logger.name = logger_name
+            logger.info("To build for Borg, run:\n\t%s", bash_cmd)
+        else:
+            retcode, _, _ = call(bash_cmd)
+            assert retcode == 0, "Build failed"
 
     def submit_to_borg(self, job_ids, param_dicts, runlocal=False):
-        logger_name = thisfile + '->Launcher:submit_to_borg()'
         assert isinstance(job_ids, list) and isinstance(param_dicts, list), \
             "If submitting just one job, make both arguments single-item lists"
         n_jobs = len(job_ids)
-        if not self.label.endswith(':main_mpm'):
-            logger.name = logger_name
-            logger.warning(
-                ("Submitting to Borg, but label is not `main_mpm` "
-                 "(assumed in generating .borg file)"))
         assert n_jobs == len(param_dicts)
         # If just one job or no parallel workers
         if n_jobs == 1 or self.borg_submitters == 0:
@@ -80,17 +88,22 @@ class Launcher():
             pool.join()
 
     def _borg_run(self, args):
+        logger_name = thisfile + '->Launcher:_borg_run()'
         job_id, param_dict, runlocal = args
-        borg_f = self.gen_borg_file(job_id, param_dict)
+        borg_f = self.__gen_borg_file(job_id, param_dict)
         # Submit
         action = 'runlocal' if runlocal else 'reload'
         # FIXME: runlocal doesn't work for temporary MPM: b/74472376
         bash_cmd = 'borgcfg %s %s --skip_confirmation --borguser %s' \
             % (borg_f, action, self.borg_user)
-        call(bash_cmd)
+        if self.print_instead:
+            logger.name = logger_name
+            logger.info("To launch the job on Borg, run:\n\t%s", bash_cmd)
+        else:
+            call(bash_cmd)
 
-    def gen_borg_file(self, job_id, param_dict):
-        borg_file_str = self._format_borg_file_str(job_id, param_dict)
+    def __gen_borg_file(self, job_id, param_dict):
+        borg_file_str = self.___format_borg_file_str(job_id, param_dict)
         out_dir = join(const.Dir.tmp, '%f' % time())
         makedirs(out_dir)
         borg_f = join(out_dir, '%s.borg' % job_id)
@@ -98,7 +111,7 @@ class Launcher():
             h.write(borg_file_str)
         return borg_f
 
-    def _format_borg_file_str(self, job_id, param_dict):
+    def ___format_borg_file_str(self, job_id, param_dict):
         tab = ' ' * 4
         file_str = '''job %s = {
     // What cell should we run in?
@@ -118,11 +131,11 @@ class Launcher():
     }
 
     // What program are we going to run?
-    package_binary = 'bin/main'
+    package_binary = 'bin/%s'
 
     // What command line parameters should we pass to this program?
     args = {
-    ''' % (job_id, self.cell, self.label)
+    ''' % (job_id, self.cell, self.label, self.pkg_bin)
         for i, (k, v) in enumerate(param_dict.items()):
             if isinstance(v, str):
                 v = "'%s'" % v
