@@ -58,7 +58,8 @@ class Launcher():
 
     def build_for_borg(self):
         logger_name = thisfile + '->Launcher:build_for_borg()'
-        bash_cmd = 'rabbit --verifiable build -c opt %s' % self.label
+        bash_cmd = 'rabbit build -c opt %s' % self.label
+        # FIXME: --verifiable leads to "MPM failed to find the .pkgdef file"
         if self.print_instead:
             logger.name = logger_name
             logger.info("To build for Borg, run:\n\t%s", bash_cmd)
