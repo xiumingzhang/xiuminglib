@@ -157,10 +157,14 @@ class Launcher():
     // What resources does this program need to run?
     requirements = {
         autopilot = true,
+        autopilot_params {
+            // Let autopilot increase limits past the Borg pickiness limit
+            scheduling_strategy = "NO_SCHEDULING_SLO",
+        }
         // ram = 1024M,
         // use_ram_soft_limit = true,
         local_ram_fs_dir { d1 = { size = %s } },
-        cpu = 12,
+        // cpu = 12,
     }
 
     // How latency-sensitive is this program?
