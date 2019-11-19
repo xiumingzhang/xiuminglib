@@ -7,7 +7,8 @@ from . import const
 from .imprt import preset_import
 
 
-def make_from_images(imgs, fps=24, outpath=None, matplotlib=True):
+def make_from_images(imgs, fps=24, outpath=None,
+                     matplotlib=True, dpi=96, bitrate=7200):
     """Writes a list of images into a grayscale or color video.
 
     Args:
@@ -19,6 +20,8 @@ def make_from_images(imgs, fps=24, outpath=None, matplotlib=True):
             ``os.path.join(const.Dir.tmp, 'make_from_images.mp4')``.
         matplotlib (bool, optional): Whether to use ``matplotlib``.
             If ``False``, use ``cv2``.
+        dpi (int, optional): Dots per inch when using ``matplotlib``.
+        bitrate (int, optional): Bit rate when using ``matplotlib``.
 
     Writes
         - A video of the images.
@@ -35,9 +38,6 @@ def make_from_images(imgs, fps=24, outpath=None, matplotlib=True):
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         from matplotlib import animation
-
-        dpi = 96 # assumed
-        bitrate = 7200 * 2
 
         w_in, h_in = w / dpi, h / dpi
         fig = plt.figure(figsize=(w_in, h_in))
