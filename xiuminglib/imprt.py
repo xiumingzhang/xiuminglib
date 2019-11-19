@@ -4,6 +4,12 @@ from importlib import import_module
 from .config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
+# For < Python 3.6
+try:
+    ModuleNotFoundError
+except NameError:
+    ModuleNotFoundError = ImportError
+
 
 def preset_import(name):
     """A unified importer for both regular and ``google3`` modules, according
