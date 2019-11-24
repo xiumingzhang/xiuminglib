@@ -10,13 +10,24 @@ from ..os import makedirs, call
 from ..imprt import preset_import
 
 
-def make_apng(imgs, interval=1, outpath=None):
-    """Writes a list of images into an animated PNG.
+def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
+    """Writes a list of (optionally labeled) images into an animated PNG.
 
     Args:
         imgs (list(numpy.ndarray or str)): An image is either a path or an
-            array (mixing ok). If array, should be of type ``uint`` and of
-            shape H-by-W (grayscale) or H-by-W-by-3 (RGB).
+            array (mixing ok, but arrays will need to be written to a temporary
+            directory). If array, should be of type ``uint`` and of shape H-by-W
+            (grayscale) or H-by-W-by-3 (RGB).
+        labels (list(str), optional): Labels used to annotate the images.
+        label_style (dict, optional): Style dictionary used by
+            ``cv2.putText()``, with the default being::
+
+                {
+                    'bottom_left_corner': (100, 100),
+                    'font_scale': 6,
+                    'text_bgr': (1, 0, 0),
+                    'thickness': 6,
+                }
         interval (float, optional): Flipping interval in seconds.
         outpath (str, optional): Where to write the output to (a .apng file).
             ``None`` means
@@ -37,16 +48,46 @@ def make_apng(imgs, interval=1, outpath=None):
         outpath += '.apng'
     makedirs(dirname(outpath))
 
-    # If some images are not provided as paths
-    if not all(isinstance(x, str) for x in imgs):
+    if labels is not None or not all(isinstance(x, str) for x in imgs):
+        # Some IO is inevitable
         cv2 = preset_import('cv2')
         tmpdir = join(const.Dir.tmp, 'make_apng_tmp')
         makedirs(tmpdir)
 
+    if label_style is None:
+        label_style = {
+            'bottom_left_corner': (100, 100),
+            'font_scale': 6,
+            'text_bgr': (1, 0, 0),
+            'thickness': 6}
+
+    def put_text(img, text):
+        img_dtype_max = np.iinfo(img.dtype).max
+        color = [img_dtype_max * x for x in label_style['text_bgr']]
+        cv2.putText(img, text,
+                    label_style['bottom_left_corner'],
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    label_style['font_scale'],
+                    color,
+                    label_style['thickness'])
+
+    def write_to_tmp(img):
+        tmpf = join(tmpdir, '%f.png' % time())
+        cv2.imwrite(tmpf, img)
+        return tmpf
+
     img_paths = []
-    for img in imgs:
+    for img_i, img in enumerate(imgs):
         if isinstance(img, str):
-            img_paths.append(img)
+            # Path
+            if labels is None:
+                img_paths.append(img)
+            else:
+                img = cv2.imread(img)
+                put_text(img, labels[img_i])
+                tmpf = write_to_tmp(img)
+                img_paths.append(tmpf)
+
         elif isinstance(img, np.ndarray):
             # Need to write to disk, because ffmpeg takes paths
             assert np.issubdtype(img.dtype, np.unsignedinteger), \
@@ -57,9 +98,11 @@ def make_apng(imgs, interval=1, outpath=None):
                 pass
             else:
                 raise ValueError(img.ndim)
-            tmpf = join(tmpdir, '%f.png' % time())
-            cv2.imwrite(tmpf, img)
+            if labels is not None:
+                put_text(img, labels[img_i])
+            tmpf = write_to_tmp(img)
             img_paths.append(tmpf)
+
         else:
             raise TypeError(type(img))
 
