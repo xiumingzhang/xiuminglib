@@ -49,4 +49,12 @@ xiuminglib.vis.uv module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.vis.video module
+---------------------------
+
+.. automodule:: xiuminglib.vis.video
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 

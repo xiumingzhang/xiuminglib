@@ -108,12 +108,4 @@ xiuminglib.tracker module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.vid module
----------------------
-
-.. automodule:: xiuminglib.vid
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
