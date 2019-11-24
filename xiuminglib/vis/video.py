@@ -7,8 +7,8 @@ from . import const
 from .imprt import preset_import
 
 
-def make_from_images(imgs, fps=24, outpath=None,
-                     matplotlib=True, dpi=96, bitrate=7200):
+def make_video(imgs, fps=24, outpath=None,
+               matplotlib=True, dpi=96, bitrate=7200):
     """Writes a list of images into a grayscale or color video.
 
     Args:
@@ -17,7 +17,7 @@ def make_from_images(imgs, fps=24, outpath=None,
         fps (int, optional): Frame rate.
         outpath (str, optional): Where to write the video to (a .mp4 file).
             ``None`` means
-            ``os.path.join(const.Dir.tmp, 'make_from_images.mp4')``.
+            ``os.path.join(const.Dir.tmp, 'make_video.mp4')``.
         matplotlib (bool, optional): Whether to use ``matplotlib``.
             If ``False``, use ``cv2``.
         dpi (int, optional): Dots per inch when using ``matplotlib``.
@@ -26,10 +26,10 @@ def make_from_images(imgs, fps=24, outpath=None,
     Writes
         - A video of the images.
     """
-    logger_name = thisfile + '->make_from_images()'
+    logger_name = thisfile + '->make_video()'
 
     if outpath is None:
-        outpath = join(const.Dir.tmp, 'make_from_images.mp4')
+        outpath = join(const.Dir.tmp, 'make_video.mp4')
 
     h, w = imgs[0].shape[:2]
 
