@@ -1,6 +1,6 @@
 from os.path import dirname
 
-from ..os import makedirs
+#from ..os import makedirs
 
 
 class HTML():
@@ -45,6 +45,7 @@ class HTML():
 </html>
 '''
         self.children = {}
+        self.pages = {}
         if not index_file.endswith('.html'):
             index_file += '.html'
         self.index_file = index_file
@@ -55,7 +56,8 @@ class HTML():
 '''.format(level=level,
            text=text)
 
-    def add_table(self, name=None, header=None, width='100%', border=6):
+    def add_table(self, name=None, header=None, width='100%', border=6,
+                  page=None):
         """Adds a table to the HTML's children.
 
         Args:
@@ -80,6 +82,8 @@ class HTML():
             assert name not in self.children, \
                 "A child already took the name '%s'" % name
         self.children[name] = table
+        if page is not None:
+            self.pages[name] = page
         return table
 
     def save(self):
@@ -88,9 +92,20 @@ class HTML():
         Once called, this method also calls all children's :func:`close`,
         so that everything (e.g., a table) is properly closed.
         """
-        makedirs(dirname(self.index_file))
-        for _, child in self.children.items():
+        #makedirs(dirname(self.index_file))
+        for childname, child in self.children.items():
             self.body += child.close()
+        if self.pages:
+            self.head += '''
+    <p>Pages:
+'''
+        for _, page in self.pages.items():
+            self.head += '''
+        &nbsp;&nbsp;<a href="aaaa" style="color:inherit;">{page}</a>
+'''.format(page=page)
+        self.head += '''
+    </p>
+'''
         html_str = self.head + self.body + self.tail
         with open(self.index_file, 'w') as h:
             h.write(html_str)
@@ -185,16 +200,22 @@ if __name__ == '__main__':
     n_row = 2
 
     html = HTML('/usr/local/google/home/xiuming/Desktop/test.html')
-    html.add_header("Hello, world!")
-    img_table = html.add_table(header=["Column %d" % x for x in range(n_col)])
+    html.add_header("Hello, World!")
 
+    # Fake data
     medias, media_types, caps = ['Some text'], ['text'], [None]
     for col_i in range(1, n_col):
         medias.append('image%02d.png' % col_i)
         media_types.append('image')
         caps.append('Caption %d' % col_i)
 
+    table_header = ["Column %d" % x for x in range(n_col)]
+    img_table = html.add_table(header=table_header, page=1)
     for row_i in range(n_row):
+        img_table.add_row(medias, media_types, caps)
+
+    img_table = html.add_table(header=table_header, page=2)
+    for row_i in range(n_row - 1):
         img_table.add_row(medias, media_types, caps)
 
     html.save()
