@@ -66,7 +66,7 @@ class HTML():
             border (int, optional): Border width.
 
         Returns:
-            xm.vis.html.Table: Table added.
+            :class:`vis.html.Table`: Table added.
         """
         table = Table(header=header, width=width, border=border)
         if name is None:
