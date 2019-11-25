@@ -25,6 +25,14 @@ xiuminglib.vis.geometry module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.vis.html module
+--------------------------
+
+.. automodule:: xiuminglib.vis.html
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.vis.matrix module
 ----------------------------
 

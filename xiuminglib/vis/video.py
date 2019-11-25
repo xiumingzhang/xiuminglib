@@ -20,7 +20,7 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
             (grayscale) or H-by-W-by-3 (RGB).
         labels (list(str), optional): Labels used to annotate the images.
         label_style (dict, optional): Style dictionary used by
-            :func:`cv2.putText()`, with the default being:
+            :func:`cv2.putText`, with the default being::
 
                 {
                     'bottom_left_corner': (100, 100),
