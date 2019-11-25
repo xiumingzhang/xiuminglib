@@ -1,5 +1,4 @@
-
-s.path import dirname
+from os.path import dirname
 
 from ..os import makedirs
 
@@ -185,16 +184,18 @@ if __name__ == '__main__':
     n_col = 6
     n_row = 2
 
-    html = HTML('/usr/local/google/home/xiuming/Desktop/test.html')
-    html.add_header("Hello, world!")
-    img_table = html.add_table(header=["Column %d" % x for x in range(n_col)])
-
+    # Fake data
     medias, media_types, caps = ['Some text'], ['text'], [None]
     for col_i in range(1, n_col):
         medias.append('image%02d.png' % col_i)
         media_types.append('image')
         caps.append('Caption %d' % col_i)
 
+    html = HTML('/usr/local/google/home/xiuming/Desktop/test.html')
+    html.add_header("Hello, world!")
+
+    # Table
+    img_table = html.add_table(header=["Column %d" % x for x in range(n_col)])
     for row_i in range(n_row):
         img_table.add_row(medias, media_types, caps)
 
