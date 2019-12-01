@@ -42,13 +42,18 @@ class Launcher():
         # Requirements
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
 
-    def blaze_run(self, param_dict=None):
+    def blaze_run(self, blaze_dict=None, param_dict=None):
         logger_name = thisfile + '->Launcher:blaze_run()'
         bash_cmd = 'blaze run -c opt %s' % self.label
+        # Blaze parameters
+        if blaze_dict is not None:
+            for k, v in blaze_dict.items():
+                bash_cmd += ' --%s=%s' % (k, v)
+        # Job parameters
         if param_dict is not None:
             bash_cmd += ' --'
             for k, v in param_dict.items():
-                bash_cmd += ' --%s %s' % (k, v)
+                bash_cmd += ' --%s=%s' % (k, v)
         if self.print_instead:
             logger.name = logger_name
             logger.info("To blaze-run the job, run:\n\t%s", bash_cmd)
@@ -67,7 +72,7 @@ class Launcher():
             retcode, _, _ = call(bash_cmd)
             assert retcode == 0, "Build failed"
 
-    def submit_to_borg(self, job_ids, param_dicts, runlocal=False):
+    def submit_to_borg(self, job_ids, param_dicts):
         assert isinstance(job_ids, list) and isinstance(param_dicts, list), \
             "If submitting just one job, make both arguments single-item lists"
         n_jobs = len(job_ids)
@@ -76,25 +81,25 @@ class Launcher():
         if n_jobs == 1 or self.borg_submitters == 0:
             for job_id, param_dict in tqdm(zip(job_ids, param_dicts),
                                            total=n_jobs):
-                self._borg_run((job_id, param_dict, runlocal))
+                self._borg_run((job_id, param_dict))
         # Multiple jobs are submitted by a pool of workers
         else:
             from multiprocessing import Pool
             pool = Pool(self.borg_submitters)
             list(tqdm(pool.imap_unordered(
                 self._borg_run,
-                [(i, x, runlocal) for i, x in zip(job_ids, param_dicts)]
+                [(i, x) for i, x in zip(job_ids, param_dicts)]
             ), total=len(job_ids)))
             pool.close()
             pool.join()
 
     def _borg_run(self, args):
         logger_name = thisfile + '->Launcher:_borg_run()'
-        job_id, param_dict, runlocal = args
+        job_id, param_dict = args
         borg_f = self.__gen_borg_file(job_id, param_dict)
         # Submit
-        action = 'runlocal' if runlocal else 'reload'
-        # FIXME: runlocal doesn't work for temporary MPM: b/74472376
+        action = 'reload'
+        # NOTE: runlocal doesn't work for temporary MPM: b/74472376
         bash_cmd = 'borgcfg %s %s --skip_confirmation --borguser %s' \
             % (borg_f, action, self.borg_user)
         if self.print_instead:
