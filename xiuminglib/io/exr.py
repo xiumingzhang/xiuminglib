@@ -46,7 +46,9 @@ class EXR():
         """
         logger_name = thisfile + '->EXR:load()'
         assert self.exr_f is not None, "You need to set exr_f first"
+        assert OpenEXR is not None, "Import failed: OpenEXR"
         f = OpenEXR.InputFile(self.exr_f)
+        assert Imath is not None, "Import failed: Imath"
         pix_type = Imath.PixelType(Imath.PixelType.FLOAT)
         data_win = f.header()['dataWindow']
         win_size = (data_win.max.y - data_win.min.y + 1,

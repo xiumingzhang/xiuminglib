@@ -32,6 +32,13 @@ def preset_import(name):
         #    mod = import_module_404ok('cv2')
         return mod
 
+    if name == 'gfile':	
+        # BUILD deps:	
+        # "//pyglib:gfile",	
+        # "//file/colossus/cns",	
+        mod = import_module_404ok('google3.pyglib.gfile')	
+        return mod	
+
     if name in ('bpy', 'bmesh', 'OpenEXR', 'Imath'):
         # BUILD deps:
         # "//third_party/py/Imath",
