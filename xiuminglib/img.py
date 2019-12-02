@@ -207,6 +207,7 @@ def grid_query_unstruct(uvs, values, grid_res, method=None):
 
             .. code-block:: python
 
+                # Default
                 method = {
                     'func': 'griddata',
                     # Which SciPy function to call.
