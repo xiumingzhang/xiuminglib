@@ -16,6 +16,7 @@ class Launcher():
                  local_ram_fs_dir_size='4096M'):
         logger_name = thisfile + '->Launcher:__init__()'
         self.label = label
+        assert ':' in label, "Must specify target explicitly"
         self.pkg_bin = label.split(':')[-1]
         if self.pkg_bin.endswith('_mpm'):
             self.pkg_bin = self.pkg_bin[:-4]
