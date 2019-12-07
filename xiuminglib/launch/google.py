@@ -14,34 +14,46 @@ class Launcher():
     def __init__(self, label, print_instead=False,
                  borg_user=None, borg_submitters=24,
                  local_ram_fs_dir_size='4096M'):
-        logger_name = thisfile + '->Launcher:__init__()'
         self.label = label
-        assert ':' in label, "Must specify target explicitly"
-        self.pkg_bin = label.split(':')[-1]
-        if self.pkg_bin.endswith('_mpm'):
-            self.pkg_bin = self.pkg_bin[:-4]
-        logger.name = logger_name
-        logger.warning(("Package binary derived to be `%s`, so make sure "
-                        "`BUILD` is consistent with this"), self.pkg_bin)
+        self.pkg_bin = self._derive_bin()
         self.print_instead = print_instead
-        myself = getuser()
+        self.myself = getuser()
         if borg_user is None:
-            borg_user = myself
+            borg_user = self.myself
         self.borg_user = borg_user
         self.borg_submitters = borg_submitters
         # Deriving other values
-        self.priority = 0 if borg_user == myself else 115
-        if borg_user == myself:
-            cell = 'qu'
-        elif borg_user == 'gcam-eng':
-            cell = 'ok'
-        elif borg_user == 'gcam-gpu':
-            cell = 'is'
-        else:
-            raise NotImplementedError(borg_user)
-        self.cell = cell
+        self.priority = self._select_priority()
+        self.cell = self._select_cell()
         # Requirements
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
+
+    def _derive_bin(self):
+        logger_name = thisfile + '->Launcher:_derive_bin()'
+        assert ':' in self.label, "Must specify target explicitly"
+        pkg_bin = self.label.split(':')[-1]
+        if pkg_bin.endswith('_mpm'):
+            pkg_bin = self.pkg_bin[:-4]
+        logger.name = logger_name
+        logger.warning(("Package binary derived to be `%s`, so make sure "
+                        "BUILD is consistent with this"), pkg_bin)
+        return pkg_bin
+
+    def _select_priority(self):
+        if self.borg_user == self.myself:
+            return 0
+        return 115
+
+    def _select_cell(self):
+        if self.borg_user == self.myself:
+            cell = 'qu'
+        elif self.borg_user == 'gcam-eng':
+            cell = 'ok'
+        elif self.borg_user == 'gcam-gpu':
+            cell = 'is'
+        else:
+            raise NotImplementedError(self.borg_user)
+        return cell
 
     def blaze_run(self, blaze_dict=None, param_dict=None):
         logger_name = thisfile + '->Launcher:blaze_run()'
@@ -57,18 +69,20 @@ class Launcher():
                 bash_cmd += ' --%s=%s' % (k, v)
         if self.print_instead:
             logger.name = logger_name
-            logger.info("To blaze-run the job, run:\n\t%s", bash_cmd)
+            logger.info("To blaze-run the job, run:\n\t%s\n", bash_cmd)
         else:
             call(bash_cmd)
             # FIXME: sometimes stdout can't catch the printouts (e.g., tqdm)
 
     def build_for_borg(self):
         logger_name = thisfile + '->Launcher:build_for_borg()'
+        assert self.label.endswith('_mpm'), \
+            "Label must be MPM, because .borg generation assumes temporary MPM"
         bash_cmd = 'rabbit build -c opt %s' % self.label
         # FIXME: --verifiable leads to "MPM failed to find the .pkgdef file"
         if self.print_instead:
             logger.name = logger_name
-            logger.info("To build for Borg, run:\n\t%s", bash_cmd)
+            logger.info("To build for Borg, run:\n\t%s\n", bash_cmd)
         else:
             retcode, _, _ = call(bash_cmd)
             assert retcode == 0, "Build failed"
@@ -78,8 +92,8 @@ class Launcher():
             "If submitting just one job, make both arguments single-item lists"
         n_jobs = len(job_ids)
         assert n_jobs == len(param_dicts)
-        # If just one job or no parallel workers
-        if n_jobs == 1 or self.borg_submitters == 0:
+        # If just one job or no parallel workers or printing only
+        if n_jobs == 1 or self.borg_submitters == 0 or self.print_instead:
             for job_id, param_dict in tqdm(zip(job_ids, param_dicts),
                                            total=n_jobs):
                 self._borg_run((job_id, param_dict))
@@ -95,6 +109,8 @@ class Launcher():
             pool.join()
 
     def _borg_run(self, args):
+        """.borg generation assumed temporary MPM.
+        """
         logger_name = thisfile + '->Launcher:_borg_run()'
         job_id, param_dict = args
         borg_f = self.__gen_borg_file(job_id, param_dict)
@@ -105,7 +121,7 @@ class Launcher():
             % (borg_f, action, self.borg_user)
         if self.print_instead:
             logger.name = logger_name
-            logger.info("To launch the job on Borg, run:\n\t%s", bash_cmd)
+            logger.info("To launch the job on Borg, run:\n\t%s\n", bash_cmd)
         else:
             call(bash_cmd)
 
