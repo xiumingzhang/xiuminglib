@@ -37,8 +37,7 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     """
     def glob_cns_cli(pattern):
         cmd = 'fileutil ls -d %s' % pattern # -d to avoid recursively
-        retcode, stdout, _ = call(cmd, quiet=True)
-        assert retcode == 0, "`fileutil ls` failed"
+        stdout = _call_assert_success(cmd, quiet=True)
         return [x for x in stdout.split('\n') if x != '']
 
     if _is_cnspath(directory):
@@ -161,9 +160,8 @@ def _select_gfs_user(writeto):
         writeto_folder = dirname(writeto)
 
     if gfile is None:
-        retcode, stdout, _ = call(
+        stdout = _call_assert_success(
             'fileutil ls -l -d %s' % writeto_folder, quiet=True)
-        assert retcode == 0
         assert stdout.count('\n') == 1, \
             "`fileuti ls` results should have one line only"
         owner = stdout.strip().split(' ')[2]
@@ -220,8 +218,7 @@ def cp(src, dst, cns_parallel_copy=10):
         # Destination directory may be owned by a Ganpati group
         if _is_cnspath(dst):
             cmd += ' --gfs_user %s' % _select_gfs_user(dst)
-        retcode, _, _ = call(cmd)
-        assert retcode == 0, "`fileutil cp` failed"
+        _ = _call_assert_success(cmd)
 
     else:
         with gfile.AsUser(_select_gfs_user(dst)):
@@ -254,8 +251,7 @@ def rm(path):
     else:
         # Falls back to filter CLI
         cmd = 'fileutil rm -R -f %s' % path # works for file and directory
-        retcode, _, _ = call(cmd, quiet=True)
-        assert retcode == 0, "`fileutil rm` failed"
+        _ = _call_assert_success(cmd, quiet=True)
 
 
 def makedirs(directory, rm_if_exists=False):
@@ -264,7 +260,7 @@ def makedirs(directory, rm_if_exists=False):
 
     Google Colossus-compatible: it tries to use ``gfile`` first for speed. This
     will fail if Blaze is not used, in which case it then falls back to using
-    ``fileutil`` as external process calls.
+    ``fileutil`` CLI as external process calls.
 
     Args:
         directory (str)
@@ -275,13 +271,11 @@ def makedirs(directory, rm_if_exists=False):
 
     def exists_cns_cli(directory):
         cmd = 'fileutil test -d %s' % directory
-        retcode, _, _ = call(cmd, quiet=True)
-        return retcode == 0
+        _ = _call_assert_success(cmd, quiet=True)
 
     def mkdir_cns_cli(directory):
         cmd = 'fileutil mkdir -p %s' % directory
-        retcode, _, _ = call(cmd, quiet=True)
-        assert retcode == 0, "`fileutil mkdir` failed"
+        _ = _call_assert_success(cmd, quiet=True)
 
     if _is_cnspath(directory):
         # Is a CNS path
@@ -405,3 +399,9 @@ def call(cmd, cwd=None, wait=True, quiet=False):
 
     retcode = process.returncode
     return retcode, stdout, stderr
+
+
+def _call_assert_success(cmd, **kwargs):
+    retcode, stdout, _ = call(cmd, **kwargs)
+    assert retcode == 0, "External process call failed:\n\t%s" % cmd
+    return stdout
