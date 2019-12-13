@@ -12,7 +12,7 @@ logger, thisfile = create_logger(abspath(__file__))
 
 class Launcher():
     def __init__(self, label, print_instead=False,
-                 borg_user=None, borg_submitters=24,
+                 borg_user=None, borg_submitters=24, borg_cell=None,
                  local_ram_fs_dir_size='4096M'):
         self.label = label
         self.pkg_bin = self._derive_bin()
@@ -24,7 +24,10 @@ class Launcher():
         self.borg_submitters = borg_submitters
         # Deriving other values
         self.priority = self._select_priority()
-        self.cell = self._select_cell()
+        if borg_cell is None:
+            self.cell = self._select_cell()
+        else:
+            self.cell = borg_cell
         # Requirements
         self.local_ram_fs_dir_size = local_ram_fs_dir_size
 
@@ -50,7 +53,7 @@ class Launcher():
         elif self.borg_user == 'gcam-eng':
             cell = 'ok'
         elif self.borg_user == 'gcam-gpu':
-            cell = 'is'
+            cell = 'jf' # 'is'
         else:
             raise NotImplementedError(self.borg_user)
         return cell
