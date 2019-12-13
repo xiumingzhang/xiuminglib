@@ -33,7 +33,7 @@ class Launcher():
         assert ':' in self.label, "Must specify target explicitly"
         pkg_bin = self.label.split(':')[-1]
         if pkg_bin.endswith('_mpm'):
-            pkg_bin = self.pkg_bin[:-4]
+            pkg_bin = pkg_bin[:-4]
         logger.name = logger_name
         logger.warning(("Package binary derived to be `%s`, so make sure "
                         "BUILD is consistent with this"), pkg_bin)
