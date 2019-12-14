@@ -53,7 +53,7 @@ class Launcher():
         elif self.borg_user == 'gcam-eng':
             cell = 'ok'
         elif self.borg_user == 'gcam-gpu':
-            cell = 'jf' # 'is'
+            cell = 'is'
         else:
             raise NotImplementedError(self.borg_user)
         return cell
@@ -70,6 +70,8 @@ class Launcher():
             bash_cmd += ' --'
             for k, v in param_dict.items():
                 bash_cmd += ' --%s=%s' % (k, v)
+        # To avoid IO permission issues
+        bash_cmd += ' --gfs_user=%s' % self.borg_user
         if self.print_instead:
             logger.name = logger_name
             logger.info("To blaze-run the job, run:\n\t%s\n", bash_cmd)
