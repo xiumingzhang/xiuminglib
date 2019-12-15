@@ -99,8 +99,9 @@ class Launcher():
         assert n_jobs == len(param_dicts)
         # If just one job or no parallel workers or printing only
         if n_jobs == 1 or self.borg_submitters == 0 or self.print_instead:
-            for job_id, param_dict in tqdm(zip(job_ids, param_dicts),
-                                           total=n_jobs):
+            for job_id, param_dict in tqdm(
+                    zip(job_ids, param_dicts), total=n_jobs,
+                    desc="Submitting jobs to Borg"):
                 self._borg_run((job_id, param_dict))
         # Multiple jobs are submitted by a pool of workers
         else:
@@ -109,7 +110,7 @@ class Launcher():
             list(tqdm(pool.imap_unordered(
                 self._borg_run,
                 [(i, x) for i, x in zip(job_ids, param_dicts)]
-            ), total=len(job_ids)))
+            ), total=len(job_ids), desc="Submitting jobs to Borg"))
             pool.close()
             pool.join()
 
