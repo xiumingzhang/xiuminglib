@@ -261,7 +261,7 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
     return outpath
 
 
-def render(outpath, cam=None, obj_names=None, text=None):
+def render(outpath, cam=None, obj_names=None, alpha=True, text=None):
     """Renders current scene with cameras in scene.
 
     Args:
@@ -272,6 +272,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
         obj_names (str or list(str), optional): Name(s) of object(s) of
             interest. If ``None``, all objects are of interest and will
             appear in the render.
+        alpha (bool, optional): Whether to render the alpha channel.
         text (dict, optional): What text to be overlaid on image and how,
             following the format::
 
@@ -298,7 +299,7 @@ def render(outpath, cam=None, obj_names=None, text=None):
     # Render
     exr = outpath.endswith('.exr')
     outpath = _render(scene, outnode, result_socket, outpath,
-                      exr=exr, alpha=False)
+                      exr=exr, alpha=alpha)
 
     # Optionally overlay text
     if text is not None:
