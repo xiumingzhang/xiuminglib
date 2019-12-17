@@ -450,7 +450,7 @@ def render_normal(outpath, cam=None, obj_names=None,
     See :func:`xiuminglib.io.exr.EXR.extract_normal` for how to extract data.
 
     Args:
-        outpath (str): The .exr path (so data are raw values, not pixel
+        outpath (str): The .exr path (so data are raw values, not integer
             values) we save the normal map to.
         cam (bpy_types.Object, optional): Camera through which scene is
             rendered. If ``None``, there must be only one camera in scene.

@@ -91,7 +91,7 @@ def colossus_interface(somefunc):
             logger.debug("\n%s\n\tcopied to\n%s", src, dst)
         except FileNotFoundError:
             logger.name = logger_name
-            logger.warning(("Source doesn't exist yet:\n%s\n"
+            logger.warning(("Source doesn't exist yet:\n\t%s\n"
                             "OK if this will be the output"), src)
 
     def wrapper(*arg, **kwargs):

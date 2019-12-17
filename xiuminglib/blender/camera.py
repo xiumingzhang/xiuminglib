@@ -587,9 +587,10 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
     cam_mat, _, _ = get_camera_matrix(cam, keep_disparity=True)
     cam_mat_inv = cam_mat.inverted() # pixel space to world
 
-    # Construct BVH trees for objects of interest
-    trees = {}
+    # Precompute BVH trees and world-to-object transformations
+    trees, world2objs = {}, {}
     for obj_name in obj_names:
+        world2objs[obj_name] = objs[obj_name].matrix_world.inverted()
         obj = objs[obj_name]
         bm = get_bmesh(obj)
         trees[obj_name] = BVHTree.FromBMesh(bm)
@@ -598,6 +599,8 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
     intersect_objnames = [None] * xys.shape[0]
     intersect_facei = [None] * xys.shape[0]
     intersect_normals = [None] * xys.shape[0]
+
+    ray_from_world = cam.location
 
     # TODO: vectorize for performance
     for i in range(xys.shape[0]):
@@ -609,7 +612,6 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         xyzw = cam_mat_inv * Vector(xy1d) # world
 
         # Ray start and direction in world coordinates
-        ray_from_world = cam.location
         ray_to_world = from_homo(xyzw)
 
         first_intersect = None
@@ -621,7 +623,7 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         # Test intersections with each object of interest
         for obj_name, tree in trees.items():
             obj2world = objs[obj_name].matrix_world
-            world2obj = obj2world.inverted()
+            world2obj = world2objs[obj_name]
 
             # Ray start and direction in local coordinates
             ray_from = world2obj * ray_from_world
