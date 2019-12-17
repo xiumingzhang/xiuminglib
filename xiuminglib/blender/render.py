@@ -1,4 +1,5 @@
 from os.path import abspath, dirname, join
+from glob import glob
 from shutil import move
 from time import time
 
@@ -230,11 +231,11 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
             outnode.layer_slots.new(k)
             node_tree.links.new(v, outnode.inputs[k])
 
-        render_f = outnode.base_path + '0001.exr'
+        render_f = join(outnode.base_path, '????.exr')
     else:
         node_tree.links.new(result_socket, outnode.inputs['Image'])
 
-        render_f = join(outnode.base_path, 'Image0001' + ext)
+        render_f = join(outnode.base_path, 'Image????' + ext)
 
     outnode.format.file_format = file_format
     outnode.format.color_depth = color_depth
@@ -244,6 +245,14 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
 
     # Render
     bpy.ops.render.render(write_still=True)
+
+    # Depending on the scene state, the render filename may be anything
+    # matching the pattern
+    fs = glob(render_f)
+    assert len(fs) == 1, \
+        ("There should be only one file matching:\n\t{p}\n"
+         "but found {n}").format(p=render_f, n=len(fs))
+    render_f = fs[0]
 
     # Move from temporary directory to the desired location
     if not outpath.endswith(ext):
