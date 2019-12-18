@@ -1,6 +1,8 @@
 from os.path import join, abspath
 from getpass import getuser
 from time import time
+from random import choices
+from string import ascii_uppercase, digits
 
 from tqdm import tqdm
 
@@ -133,7 +135,9 @@ class Launcher():
 
     def __gen_borg_file(self, job_id, param_dict):
         borg_file_str = self.___format_borg_file_str(job_id, param_dict)
-        out_dir = join(const.Dir.tmp, '%f' % time())
+        out_dir = join(const.Dir.tmp, '{t}_{s}'.format(
+            s=''.join(choices(ascii_uppercase + digits, k=10)),
+            t=time()))
         makedirs(out_dir)
         borg_f = join(out_dir, '%s.borg' % job_id)
         with open(borg_f, 'w') as h:

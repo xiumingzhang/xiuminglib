@@ -86,7 +86,7 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         cv2.imwrite(outpath, im[:, :, ::-1])
 
     logger.name = logger_name
-    logger.info("Matrix visualized as image to:\n%s", outpath)
+    logger.info("Matrix visualized as image to:\n\t%s", outpath)
 
 
 def matrix_as_heatmap_complex(*args, **kwargs):
@@ -220,4 +220,4 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     plt.close('all')
 
     logger.name = logger_name
-    logger.info("Matrix visualized as heatmap to:\n%s", outpath)
+    logger.info("Matrix visualized as heatmap to:\n\t%s", outpath)
