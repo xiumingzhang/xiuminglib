@@ -136,7 +136,7 @@ class Launcher():
     def __gen_borg_file(self, job_id, param_dict):
         borg_file_str = self.___format_borg_file_str(job_id, param_dict)
         out_dir = join(const.Dir.tmp, '{t}_{s}'.format(
-            s=''.join(choices(ascii_uppercase + digits, k=10)),
+            s=''.join(choices(ascii_uppercase + digits, k=16)),
             t=time()))
         makedirs(out_dir)
         borg_f = join(out_dir, '%s.borg' % job_id)
