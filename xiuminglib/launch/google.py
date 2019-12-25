@@ -271,6 +271,9 @@ class Launcher():
     }}
 
     scheduling = {{
+        max_task_failures = -1
+        max_dead_tasks = -1
+
         priority = {priority},
     '''.format(local_ram_fs_dir_size=self.local_ram_fs_dir_size,
                user=self.borg_user, priority=self.priority)
