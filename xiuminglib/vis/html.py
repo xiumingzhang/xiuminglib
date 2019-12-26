@@ -7,7 +7,6 @@ class HTML():
     """HTML Builder.
 
     Args:
-        index_file (str): Path to the generated ``index.html``.
         title (str, optional): Page title.
         bgcolor (str, optional): Background color. Supports at least color names
             (like, ``'black'``) and Hex colors (like ``'#FFFFFF'``).
@@ -20,9 +19,8 @@ class HTML():
         tail (str): Concatenating the three gives the complete file contents,
             as a string.
         children (dict): Child elements, such as a table.
-        index_file (str): Output file.
     """
-    def __init__(self, index_file, title="Results", bgcolor='black',
+    def __init__(self, title="Results", bgcolor='black',
                  text_font='roboto', text_color='white'):
         # Start string
         self.head = '''<!DOCTYPE html>
@@ -45,9 +43,6 @@ class HTML():
 </html>
 '''
         self.children = {}
-        if not index_file.endswith('.html'):
-            index_file += '.html'
-        self.index_file = index_file
 
     def add_header(self, text, level=1):
         self.body += '''
@@ -82,17 +77,25 @@ class HTML():
         self.children[name] = table
         return table
 
-    def save(self):
+    def save(self, index_file):
         """Saves the generated HTML string to the index file.
 
         Once called, this method also calls all children's :func:`close`,
         so that everything (e.g., a table) is properly closed.
+
+        Args:
+            index_file (str): Path to the generated index.html.
+
+        Writes
+            - An HTML index file.
         """
-        makedirs(dirname(self.index_file))
+        if not index_file.endswith('.html'):
+            index_file += '.html'
+        makedirs(dirname(index_file))
         for _, child in self.children.items():
             self.body += child.close()
         html_str = self.head + self.body + self.tail
-        with open(self.index_file, 'w') as h:
+        with open(index_file, 'w') as h:
             h.write(html_str)
 
 
