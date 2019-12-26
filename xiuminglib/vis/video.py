@@ -10,7 +10,8 @@ from ..os import makedirs, call
 from ..imprt import preset_import
 
 
-def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
+def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None,
+              ffmpeg_bin='ffmpeg'):
     """Writes a list of (optionally labeled) images into an animated PNG.
 
     Args:
@@ -32,6 +33,8 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
         outpath (str, optional): Where to write the output to (a .apng file).
             ``None`` means
             ``os.path.join(const.Dir.tmp, 'make_apng.apng')``.
+        ffmpeg_bin (str, optional): Path to the ffmpeg binary; useful when
+            running on Borg.
 
     Raises:
         TypeError: If any input image is neither a string nor an array.
@@ -108,7 +111,8 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
         else:
             raise TypeError(type(img))
 
-    cmd = 'ffmpeg -r %f ' % interval
+    cmd = '{ffmpeg_bin} -r {interval} '.format(
+        ffmpeg_bin=ffmpeg_bin, interval=interval)
     cmd += '-i concat:"'
     for img_path in img_paths[:2]:
         cmd += img_path + '|'
@@ -120,7 +124,7 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
     call(cmd)
 
     logger.name = logger_name
-    logger.info("Images written as an animated PNG to:\n%s", outpath)
+    logger.info("Images written as an animated PNG to:\n\t%s", outpath)
 
 
 def make_video(imgs, fps=24, outpath=None,
