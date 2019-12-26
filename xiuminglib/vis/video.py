@@ -64,12 +64,14 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
     def put_text(img, text):
         img_dtype_max = np.iinfo(img.dtype).max
         color = [img_dtype_max * x for x in label_style['text_bgr']]
-        cv2.putText(img, text,
+        img_ = img.copy() # Lord knows why this is needed...
+        cv2.putText(img_, text,
                     label_style['bottom_left_corner'],
                     cv2.FONT_HERSHEY_SIMPLEX,
                     label_style['font_scale'],
                     color,
                     label_style['thickness'])
+        return img_
 
     def write_to_tmp(img):
         tmpf = join(tmpdir, '%f.png' % time())
@@ -84,7 +86,7 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
                 img_paths.append(img)
             else:
                 img = cv2.imread(img)
-                put_text(img, labels[img_i])
+                img = put_text(img, labels[img_i])
                 tmpf = write_to_tmp(img)
                 img_paths.append(tmpf)
 
@@ -99,7 +101,7 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None):
             else:
                 raise ValueError(img.ndim)
             if labels is not None:
-                put_text(img, labels[img_i])
+                img = put_text(img, labels[img_i])
             tmpf = write_to_tmp(img)
             img_paths.append(tmpf)
 
