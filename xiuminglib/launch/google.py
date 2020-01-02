@@ -288,8 +288,8 @@ class Launcher():
     }
 }'''
         else:
-            file_str += '''{tab}}}
-    }}'''.format(tab=tab)
+            file_str += '''}
+}'''
         return file_str
 
 
