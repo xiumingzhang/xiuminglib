@@ -15,8 +15,8 @@ logger, thisfile = create_logger(abspath(__file__))
 
 
 class Launcher():
-    def __init__(self, label, print_instead=False,
-                 borg_user=None, borg_submitters=24, borg_cell=None,
+    def __init__(self, label, print_instead=False, borg_submitters=24,
+                 borg_user=None, borg_cell=None, borg_priority=None,
                  local_ram_fs_dir_size='4096M'):
         self.label = label
         self.pkg_bin = self._derive_bin()
@@ -27,7 +27,10 @@ class Launcher():
         self.borg_user = borg_user
         self.borg_submitters = borg_submitters
         # Deriving other values
-        self.priority = self._select_priority()
+        if borg_priority is None:
+            self.priority = self._select_priority()
+        else:
+            self.priority = borg_priority
         if borg_cell is None:
             self.cell = self._select_cell()
         else:
@@ -277,16 +280,16 @@ class Launcher():
         priority = {priority},
     '''.format(local_ram_fs_dir_size=self.local_ram_fs_dir_size,
                user=self.borg_user, priority=self.priority)
-        if self.priority == 0:
-            file_str += '''{tab}}}
-    }}'''.format(tab=tab)
-        else: # e.g., P115 needs a batch strategy
+        if self.priority == 115:
             file_str += '''
         batch_quota {
             strategy = 'RUN_SOON'
         }
     }
 }'''
+        else:
+            file_str += '''{tab}}}
+    }}'''.format(tab=tab)
         return file_str
 
 
