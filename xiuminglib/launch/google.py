@@ -260,7 +260,7 @@ class Launcher():
         }}
         // ram = 1024M,
         // use_ram_soft_limit = true,
-        // local_ram_fs_dir {{ d1 = {{ size = {local_ram_fs_dir_size} }} }},
+        // local_ram_fs_dir {{ d1 = {{ size = 4096M }} }},
         // cpu = 12,
     }}
 
