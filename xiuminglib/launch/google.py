@@ -16,8 +16,7 @@ logger, thisfile = create_logger(abspath(__file__))
 
 class Launcher():
     def __init__(self, label, print_instead=False, borg_submitters=24,
-                 borg_user=None, borg_cell=None, borg_priority=None,
-                 local_ram_fs_dir_size='4096M'):
+                 borg_user=None, borg_cell=None, borg_priority=None):
         self.label = label
         self.pkg_bin = self._derive_bin()
         self.print_instead = print_instead
@@ -35,8 +34,6 @@ class Launcher():
             self.cell = self._select_cell()
         else:
             self.cell = borg_cell
-        # Requirements
-        self.local_ram_fs_dir_size = local_ram_fs_dir_size
 
     def _derive_bin(self):
         logger_name = thisfile + '->Launcher:_derive_bin()'
@@ -257,11 +254,13 @@ class Launcher():
         autopilot = true,
         autopilot_params {{
             // Let autopilot increase limits past the Borg pickiness limit
-            scheduling_strategy = 'NO_SCHEDULING_SLO',
+            // scheduling_strategy = 'NO_SCHEDULING_SLO',
+            // Resources are capped to the Borg pickiness limit
+            scheduling_strategy = 'FAST_SCHEDULING',
         }}
         // ram = 1024M,
         // use_ram_soft_limit = true,
-        local_ram_fs_dir {{ d1 = {{ size = {local_ram_fs_dir_size} }} }},
+        // local_ram_fs_dir {{ d1 = {{ size = {local_ram_fs_dir_size} }} }},
         // cpu = 12,
     }}
 
@@ -279,8 +278,7 @@ class Launcher():
         max_dead_tasks = -1
 
         priority = {priority},
-    '''.format(local_ram_fs_dir_size=self.local_ram_fs_dir_size,
-               user=self.borg_user, priority=self.priority)
+    '''.format(user=self.borg_user, priority=self.priority)
         if self.priority == 115:
             file_str += '''
         batch_quota {
