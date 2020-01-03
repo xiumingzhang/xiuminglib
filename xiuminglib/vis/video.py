@@ -141,7 +141,8 @@ def make_video(imgs, fps=24, outpath=None,
         matplotlib (bool, optional): Whether to use ``matplotlib``.
             If ``False``, use ``cv2``.
         dpi (int, optional): Dots per inch when using ``matplotlib``.
-        bitrate (int, optional): Bit rate when using ``matplotlib``.
+        bitrate (int, optional): Bit rate in kilobits per second when using
+            ``matplotlib``.
 
     Writes
         - A video of the images.
