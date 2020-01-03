@@ -14,6 +14,10 @@ def _is_cnspath(path):
     return isinstance(path, str) and path.startswith('/cns/')
 
 
+def _is_bspath(path):
+    return isinstance(path, str) and path.startswith('/bigstore/')
+
+
 def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     """Globs and then sorts filenames, possibly ending with multiple
     extensions, in a directory.
@@ -40,11 +44,24 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
         _, stdout, _ = call(cmd, quiet=True)
         return [x for x in stdout.split('\n') if x != '']
 
+    def glob_bs_cli(pattern):
+        cmd = '/google/data/ro/projects/cloud/bigstore/fileutil_bs ls -d %s' \
+            % pattern # -d to avoid recursively
+        _, stdout, _ = call(cmd, quiet=True)
+        return [x for x in stdout.split('\n') if x != '']
+
     if _is_cnspath(directory):
         # Is a CNS path
         gfile = preset_import('gfile')
         if gfile is None:
             glob_func = glob_cns_cli
+        else:
+            glob_func = gfile.Glob
+    elif _is_bspath(directory):
+        # Is a Bigstore path
+        gfile = preset_import('gfile')
+        if gfile is None:
+            glob_func = glob_bs_cli
         else:
             glob_func = gfile.Glob
     else:

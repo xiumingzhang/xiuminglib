@@ -133,6 +133,7 @@ class Launcher():
             "If submitting just one job, make both arguments single-item lists"
         assert len(job_ids) == len(param_dicts), \
             "Numbers of job IDs and parameter dictionaries must be equal"
+        assert job_ids, "No jobs"
         # Divide tasks into jobs
         job_names, shared_params, job_specific_params, job_n_tasks = \
             self._divide_jobs(job_ids, param_dicts, n_tasks_per_job)

@@ -60,9 +60,9 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None,
     if label_style is None:
         label_style = {
             'bottom_left_corner': (100, 100),
-            'font_scale': 6,
+            'font_scale': 1.5,
             'text_bgr': (1, 0, 0),
-            'thickness': 6}
+            'thickness': 2}
 
     def put_text(img, text):
         img_dtype_max = np.iinfo(img.dtype).max
