@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from ..os import call, makedirs
 from .. import const
+from ..interact import ask_to_proceed
 from ..config import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
@@ -134,9 +135,14 @@ class Launcher():
         # Divide tasks into jobs
         job_names, shared_params, job_specific_params, job_n_tasks = \
             self._divide_jobs(job_ids, param_dicts, n_tasks_per_job)
+        n_jobs = len(job_names)
+        # Ask for confirmation
+        ask_to_proceed(
+            ("About to submit {n} jobs:\n\t{names},\nwith constant parameters:"
+             "\n\t{shared}").format(
+                 n=n_jobs, names=job_names, shared=shared_params))
         # Sequential submissions, if just one job, or no parallel workers,
         # or printing only
-        n_jobs = len(job_names)
         if n_jobs == 1 or self.borg_submitters == 0 or self.print_instead:
             for job_name, job_specific, n_tasks in tqdm(
                     zip(job_names, job_specific_params, job_n_tasks),
@@ -163,8 +169,9 @@ class Launcher():
         # Submit
         action = 'reload'
         # NOTE: runlocal doesn't work for temporary MPM: b/74472376
-        bash_cmd = 'borgcfg {f} {a} --skip_confirmation --borguser {u}'.format(
-            f=borg_f, a=action, u=self.borg_user)
+        bash_cmd = ('borgcfg {f} {a} --borguser {u} --skip_confirmation '
+                    '--strict_confirmation_threshold=65536').format(
+                        f=borg_f, a=action, u=self.borg_user)
         if self.print_instead:
             logger.name = logger_name
             logger.info("To launch the job on Borg, run:\n\t%s\n", bash_cmd)
