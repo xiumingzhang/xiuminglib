@@ -37,7 +37,7 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
     """
     def glob_cns_cli(pattern):
         cmd = 'fileutil ls -d %s' % pattern # -d to avoid recursively
-        stdout = _call_assert_success(cmd, quiet=True)
+        _, stdout, _ = call(cmd, quiet=True)
         return [x for x in stdout.split('\n') if x != '']
 
     if _is_cnspath(directory):

@@ -128,7 +128,7 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None,
 
 
 def make_video(imgs, fps=24, outpath=None,
-               matplotlib=True, dpi=96, bitrate=7200):
+               matplotlib=True, dpi=96, bitrate=-1):
     """Writes a list of images into a grayscale or color video.
 
     Args:
@@ -142,7 +142,7 @@ def make_video(imgs, fps=24, outpath=None,
             If ``False``, use ``cv2``.
         dpi (int, optional): Dots per inch when using ``matplotlib``.
         bitrate (int, optional): Bit rate in kilobits per second when using
-            ``matplotlib``.
+            ``matplotlib``; reasonable values include 7200.
 
     Writes
         - A video of the images.
