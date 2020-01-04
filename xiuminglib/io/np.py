@@ -5,7 +5,7 @@ from .. import config, os as xm_os
 logger, thisfile = config.create_logger(abspath(__file__))
 
 
-def load_or_save(data_f, fallback=None):
+def load_or_save_np(data_f, fallback=None):
     """Loads the data file if it exists. Otherwise, if fallback is provided,
     call fallback and save its return to disk.
 
@@ -28,7 +28,7 @@ def load_or_save(data_f, fallback=None):
     Writes
         - Return by the fallback, if provided.
     """
-    logger_name = thisfile + '->load_or_save()'
+    logger_name = thisfile + '->load_or_save_np()'
 
     # Decide data file type
     ext = data_f.split('.')[-1].lower()
