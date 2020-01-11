@@ -87,20 +87,6 @@ def is_identity(mat, eps=None):
     return np.allclose(mat, np.eye(mat.shape[0]), atol=eps)
 
 
-def main(func_name):
-    """Unit tests that can also serve as example usage."""
-    if func_name == 'is_symmetric':
-        mat = np.random.random((10, 9))
-        print(is_symmetric(mat))
-        mat = np.random.random((10, 10))
-        print(is_symmetric(mat))
-        mat = np.random.random((10, 10))
-        mat = mat + mat.T
-        print(is_symmetric(mat))
-    else:
-        raise NotImplementedError("Unit tests for %s" % func_name)
-
-
 def angle_between(vec1, vec2, radian=True):
     r"""Computes the angle between two vectors.
 
@@ -161,6 +147,28 @@ def normalize(vecs, axis=0):
         vecs_2d, norms.reshape(shape_for_broadcast)) # normalize
 
     return vecs_normalized.reshape(vecs.shape)
+
+
+def project_onto(pts, basis):
+    """Projects points onto a basis vector.
+    """
+    w = np.dot(pts, basis) / (np.linalg.norm(basis) ** 2)
+    proj = np.tile(w.reshape((-1, 1)), (1, len(basis))) * basis
+    return proj
+
+
+def main(func_name):
+    """Unit tests that can also serve as example usage."""
+    if func_name == 'is_symmetric':
+        mat = np.random.random((10, 9))
+        print(is_symmetric(mat))
+        mat = np.random.random((10, 10))
+        print(is_symmetric(mat))
+        mat = np.random.random((10, 10))
+        mat = mat + mat.T
+        print(is_symmetric(mat))
+    else:
+        raise NotImplementedError("Unit tests for %s" % func_name)
 
 
 if __name__ == '__main__':
