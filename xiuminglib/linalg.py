@@ -155,7 +155,7 @@ def project_onto(pts, basis):
     Args:
         pts (array_like): 1D array for one vector; 2D N-by-M array for N
             M-D points.
-        basis (array_like): A 1D M-array specifying which basis vector to
+        basis (array_like): 1D M-array specifying which basis vector to
             project to.
 
     Returns:
