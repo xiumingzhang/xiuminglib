@@ -151,9 +151,27 @@ def normalize(vecs, axis=0):
 
 def project_onto(pts, basis):
     """Projects points onto a basis vector.
+
+    Args:
+        pts (array_like): 1D array for one vector; 2D N-by-M array for N
+            M-D points.
+        basis (array_like): A 1D M-array specifying which basis vector to
+            project to.
+
+    Returns:
+        numpy.ndarray: Projected point(s) of the same shape.
     """
-    w = np.dot(pts, basis) / (np.linalg.norm(basis) ** 2)
-    proj = np.tile(w.reshape((-1, 1)), (1, len(basis))) * basis
+    pts = np.array(pts)
+    if pts.ndim == 1:
+        pts = np.reshape(pts, (1, -1))
+    # Guaranteed N-by-M
+    basis = np.array(basis)
+
+    w = np.dot(pts, basis) / (np.linalg.norm(basis) ** 2) # length N
+    w = np.tile(w.reshape((-1, 1)), (1, len(basis))) # N-by-M
+
+    proj = w * basis # N-by-M
+
     return proj
 
 
