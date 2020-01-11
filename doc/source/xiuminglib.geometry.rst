@@ -33,10 +33,10 @@ xiuminglib.geometry.proj module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.geometry.ptcld module
---------------------------------
+xiuminglib.geometry.pt module
+-----------------------------
 
-.. automodule:: xiuminglib.geometry.ptcld
+.. automodule:: xiuminglib.geometry.pt
     :members:
     :undoc-members:
     :show-inheritance:

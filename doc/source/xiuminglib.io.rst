@@ -17,10 +17,10 @@ xiuminglib.io.exr module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.io.general module
-----------------------------
+xiuminglib.io.np module
+-----------------------
 
-.. automodule:: xiuminglib.io.general
+.. automodule:: xiuminglib.io.np
     :members:
     :undoc-members:
     :show-inheritance:
