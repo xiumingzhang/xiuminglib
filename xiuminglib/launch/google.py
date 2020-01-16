@@ -116,7 +116,8 @@ class Launcher():
                         if k not in task_specific_params:
                             task_specific_params[k] = []
                         task_specific_params[k].append(v)
-            # Sanity check: different parameters say the same number of tasks
+            # Sanity check: different parameters should say the same number
+            # of tasks
             n_tasks = [len(v) for _, v in task_specific_params.items()]
             assert len(set(n_tasks)) == 1, \
                 "Value lists for task parameters must be of the same length"
@@ -133,8 +134,14 @@ class Launcher():
             "Numbers of job IDs and parameter dictionaries must be equal"
         assert job_ids, "No jobs"
         # Divide tasks into jobs
-        job_names, shared_params, job_specific_params, job_n_tasks = \
-            self._divide_jobs(job_ids, param_dicts, n_tasks_per_job)
+        if len(job_ids) == 1:
+            job_names = job_ids
+            shared_params = param_dicts[0]
+            job_specific_params = [{}]
+            job_n_tasks = [0]
+        else:
+            job_names, shared_params, job_specific_params, job_n_tasks = \
+                self._divide_jobs(job_ids, param_dicts, n_tasks_per_job)
         n_jobs = len(job_names)
         # Ask for confirmation
         ask_to_proceed(
@@ -179,6 +186,7 @@ class Launcher():
             call(bash_cmd)
 
     def __gen_borg_file(self, job_name, shared_params, task_params, n_tasks):
+        logger_name = thisfile + '->Launcher:__gen_borg_file()'
         borg_file_str = self.___format_borg_file_str(
             job_name, shared_params, task_params, n_tasks)
         out_dir = join(const.Dir.tmp, '{t}_{s}'.format(s=_random_str(16),
@@ -187,6 +195,8 @@ class Launcher():
         borg_f = join(out_dir, '%s.borg' % job_name)
         with open(borg_f, 'w') as h:
             h.write(borg_file_str)
+        logger.name = logger_name
+        logger.info("Generated .borg at\n\t%s", borg_f)
         return borg_f
 
     @staticmethod
@@ -233,9 +243,7 @@ class Launcher():
         # Add shared parameters
         for i, (k, v) in enumerate(shared_params.items()):
             v = self.____to_str(v)
-            str_ = '{tab}{flag} = {val},\n'
-            if i == 0:
-                str_ = '{tab}' + str_
+            str_ = '{tab}{tab}{flag} = {val},\n'
             file_str += str_.format(tab=tab, flag=k, val=v)
         # Add placeholders for task-specific parameters
         for k, _ in task_params.items():
@@ -243,18 +251,20 @@ class Launcher():
             file_str += '{tab}{tab}{flag} = {val},\n'.format(
                 tab=tab, flag=k, val=v)
         file_str += '{tab}}}'.format(tab=tab)
-        # Fill in task-specific parameters
-        file_str += '''
+        # Fill in task-specific parameters, if any
+        if n_tasks > 0:
+            file_str += '''
 
     replicas = {replicas}
 
     task_args {{'''.format(replicas=n_tasks)
-        for k, vlist in task_params.items():
-            file_str += '\n{tab}{tab}{flag} = {val_list}'.format(
-                tab=tab, flag=k, val_list=vlist)
-        # The rest
+            for k, vlist in task_params.items():
+                file_str += '\n{tab}{tab}{flag} = {val_list}'.format(
+                    tab=tab, flag=k, val_list=vlist)
+            # The rest
+            file_str += '''
+    }'''
         file_str += '''
-    }}
 
     // What resources does this program need to run?
     requirements = {{
