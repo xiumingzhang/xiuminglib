@@ -4,12 +4,17 @@ from os.path import abspath, join, dirname
 
 class Dir:
     tmp = environ.get('TMP_DIR', '/tmp/')
+
     mstatus = join(
         environ.get('MSTATUS_BACKEND_DIR', '/tmp/machine-status'), 'runtime')
+
     data = abspath(join(dirname(__file__), '..', 'data'))
 
 
 class Path:
+    cpustatus = environ.get('CPU_STATUS_FILE', '/tmp/cpu/machine_status.txt')
+    gpustatus = environ.get('GPU_STATUS_FILE', '/tmp/gpu/{machine_name}')
+
     # Textures
     checker = join(Dir.data, 'textures/checker.png')
 
