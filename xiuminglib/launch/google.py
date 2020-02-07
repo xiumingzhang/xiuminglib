@@ -1,7 +1,6 @@
 from os.path import join, abspath, commonprefix
 from getpass import getuser
 from time import time
-from random import choices
 from string import ascii_uppercase, digits
 from math import ceil
 from multiprocessing import Pool
@@ -310,4 +309,6 @@ class Launcher():
 
 
 def _random_str(l):
+    from random import choices # requires >= 3.6
+
     return ''.join(choices(ascii_uppercase + digits, k=l))
