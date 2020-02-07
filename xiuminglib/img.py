@@ -9,6 +9,42 @@ from .imprt import preset_import
 cv2 = preset_import('cv2')
 
 
+def resize(arr, new_h=None, new_w=None):
+    """Resizes an image, with the option of maintaining the aspect ratio.
+
+    Args:
+        arr (numpy.ndarray): Image to binarize. If multiple-channel, each
+            channel is resized independently.
+        new_h (int, optional): Target height. If ``None``, will be calculated
+            according to the target width, assuming the same aspect ratio.
+        new_w (int, optional): Target width. If ``None``, will be calculated
+            according to the target height, assuming the same aspect ratio.
+
+    Raises:
+        ValueError: If both ``new_h`` and ``new_w`` are ``None``.
+
+    Returns:
+        numpy.ndarray: Resized image.
+    """
+    logger_name = thisfile + '->resize()'
+
+    h, w = arr.shape[:2]
+    if new_h is not None and new_w is not None:
+        if int(h / w * new_w) != new_h:
+            logger.name = logger_name
+            logger.warning(
+                ("Aspect ratio changed in resizing: original size is %s; "
+                 "new size is %s"), (h, w), (new_h, new_w))
+    elif new_h is None and new_w is not None:
+        new_h = int(h / w * new_w)
+    elif new_h is not None and new_w is None:
+        new_w = int(w / h * new_h)
+    else:
+        raise ValueError("At least one of new height or width must be given")
+
+    return cv2.resize(arr, (new_w, new_h))
+
+
 def binarize(im, threshold=None):
     """Binarizes images.
 
