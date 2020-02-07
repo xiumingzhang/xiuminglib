@@ -254,10 +254,11 @@ def rm(path):
     """
     if not _is_cnspath(path):
         # Quickly do the job and return
-        if isdir(path):
-            rmtree(path)
-        else:
-            os.remove(path)
+        if exists(path):
+            if isdir(path):
+                rmtree(path)
+            else:
+                os.remove(path)
         return
 
     # OK, a CNS path
