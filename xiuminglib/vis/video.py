@@ -154,6 +154,9 @@ def make_video(imgs, fps=24, outpath=None,
     makedirs(dirname(outpath))
 
     h, w = imgs[0].shape[:2]
+    for frame in imgs[1:]:
+        assert frame.shape[:2] == (h, w), \
+            "All frames must have the same shape"
 
     if matplotlib:
         import matplotlib
@@ -175,6 +178,9 @@ def make_video(imgs, fps=24, outpath=None,
 
         anim = animation.ArtistAnimation(fig, [(img_plt(x),) for x in imgs])
         anim.save(outpath, writer=writer)
+        # If obscure error like "ValueError: Invalid file object: <_io.Buff..."
+        # occurs, consider upgrading matplotlib so that it prints out the real,
+        # underlying ffmpeg error
 
     else:
         cv2 = preset_import('cv2')
@@ -184,8 +190,6 @@ def make_video(imgs, fps=24, outpath=None,
         vw = cv2.VideoWriter(outpath, fourcc, fps, (w, h))
 
         for frame in imgs:
-            assert frame.shape[:2] == (h, w), \
-                "All frames must have the same shape"
             if frame.ndim == 3:
                 frame = frame[:, :, ::-1] # cv2 uses BGR
             vw.write(frame)
