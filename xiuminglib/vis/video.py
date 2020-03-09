@@ -182,6 +182,8 @@ def make_video(imgs, fps=24, outpath=None,
         # occurs, consider upgrading matplotlib so that it prints out the real,
         # underlying ffmpeg error
 
+        plt.close('all')
+
     else:
         cv2 = preset_import('cv2')
 
