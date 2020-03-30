@@ -5,17 +5,12 @@ from glob import glob
 import logging
 from platform import system
 
-logging_warn = logging.WARN
-# so that won't need to import a package just for its constants
 
-
-def create_logger(file_abspath, level=logging.INFO,
-                  path_starts_from='xiuminglib'):
+def create_logger(file_abspath, path_starts_from='xiuminglib'):
     """Creates a logger for functions in the library.
 
     Args:
         file_abspath (str): Absolute path to the file that uses the logger.
-        level (int, optional): Logging level.
         path_starts_from (str, optional): Truncates ``thisfile`` so that it
             starts from this.
 
@@ -25,7 +20,6 @@ def create_logger(file_abspath, level=logging.INFO,
             - **thisfile** (*str*) -- Partial path to the user file (e.g.,
               starting from package name).
     """
-    logging.basicConfig(level=level)
     logger = logging.getLogger()
     folder_names = file_abspath.split('/')
     if path_starts_from in folder_names:
