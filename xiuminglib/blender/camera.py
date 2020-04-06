@@ -505,7 +505,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     # Load z-buffer as array
     exr_path = outpath + '%04d' % scene.frame_current + '.exr'
     im = cv2.imread(exr_path, cv2.IMREAD_UNCHANGED)
-    assert (np.array_equal(im[:, :, 0], im[:, :, 1]) and \
+    assert (np.array_equal(im[:, :, 0], im[:, :, 1]) and
             np.array_equal(im[:, :, 0], im[:, :, 2])), \
         ("BGR channels of the z-buffer should be all the same, "
          "but they are not")
@@ -555,6 +555,10 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
 
     Returns:
         tuple:
+            - **ray_tos** (*mathutils.Vector or list(mathutils.Vector)*) --
+              Location(s) at which each ray points in the world coordinates,
+              regardless of ``world_coords``. This and the (shared) ray origin
+              (``cam.location``) determine the rays.
             - **xyzs** (*mathutils.Vector or list(mathutils.Vector)*) --
               Intersection coordinates specified in either the world or the
               object's local coordinates, depending on ``world_coords``.
@@ -595,6 +599,7 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         bm = get_bmesh(obj)
         trees[obj_name] = BVHTree.FromBMesh(bm)
 
+    ray_tos = [None] * xys.shape[0]
     xyzs = [None] * xys.shape[0]
     intersect_objnames = [None] * xys.shape[0]
     intersect_facei = [None] * xys.shape[0]
@@ -613,6 +618,7 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
 
         # Ray start and direction in world coordinates
         ray_to_world = from_homo(xyzw)
+        ray_tos[i] = ray_to_world
 
         first_intersect = None
         first_intersect_objname = None
@@ -653,11 +659,16 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         intersect_facei[i] = first_intersect_facei
         intersect_normals[i] = first_intersect_normal
 
+    assert None not in ray_tos, \
+        ("No matter whether a ray is a hit or not, we must have a "
+         "\"look-at\" for it")
+
     logger.name = logger_name
     logger.info("Backprojection done with camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
-    ret = (xyzs, intersect_objnames, intersect_facei, intersect_normals)
+    ret = (
+        ray_tos, xyzs, intersect_objnames, intersect_facei, intersect_normals)
     if xys.shape[0] == 1:
         return tuple(x[0] for x in ret)
     return ret

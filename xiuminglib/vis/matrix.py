@@ -167,9 +167,16 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     if outpath is None:
         outpath = join(const.Dir.tmp, 'matrix_as_heatmap.png')
 
-    if mat.ndim != 2:
-        raise ValueError(
-            "'mat' must have exactly 2 dimensions, but has %d" % mat.ndim)
+    if mat.ndim == 2:
+        pass
+    elif mat.ndim == 3:
+        if mat.shape[2] == 1:
+            mat = np.squeeze(mat)
+        else:
+            raise ValueError(
+                "If `mat` is 3D, the 3rd dimension must have a single channel")
+    else:
+        raise ValueError("`mat` must be 2D or \"nominally\" 3D")
     mat = mat.astype(float)
 
     # Figure
