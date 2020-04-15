@@ -164,13 +164,19 @@ def _render_prepare(cam, obj_names):
     if cam is None:
         cams = [o for o in bpy.data.objects if o.type == 'CAMERA']
         assert (len(cams) == 1), \
-            "With cam not provided, there must be exactly one camera"
+            "With `cam` not provided, there must be exactly one camera"
         cam = cams[0]
 
     if isinstance(obj_names, str):
         obj_names = [obj_names]
     elif obj_names is None:
         obj_names = [o.name for o in bpy.data.objects if o.type == 'MESH']
+    # Should be a list of strings by now
+
+    for x in obj_names:
+        assert isinstance(x, str), \
+            ("Objects should be specified by their names (strings), not "
+             "objects themselves")
 
     scene = bpy.context.scene
 
@@ -435,8 +441,8 @@ def render_alpha(outpath, cam=None, obj_names=None, samples=1000):
     scene.cycles.film_transparent = film_transparent_old
 
     logger.name = logger_name
-    logger.info("Mask image of %s rendered through '%s'",
-                obj_names, cam_name)
+    logger.info(
+        "Foreground alpha of %s rendered through '%s'", obj_names, cam_name)
     logger.warning(
         "Node trees and renderability of these objects have changed")
 
