@@ -394,7 +394,7 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
     logger.warning("The scene node tree has changed")
 
 
-def render_mask(outpath, cam=None, obj_names=None, samples=1000):
+def render_alpha(outpath, cam=None, obj_names=None, samples=1000):
     r"""Renders binary or soft mask of objects from the specified camera.
 
     Args:
@@ -410,7 +410,7 @@ def render_mask(outpath, cam=None, obj_names=None, samples=1000):
         - A 16-bit three-channel .png mask, where bright indicates
           foreground.
     """
-    logger_name = thisfile + '->render_mask()'
+    logger_name = thisfile + '->render_alpha()'
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
