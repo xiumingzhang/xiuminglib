@@ -30,6 +30,37 @@ def normalize_uint(arr):
     return arr_
 
 
+def alpha_blend(arr1, alpha, arr2=None):
+    r"""Alpha-blends two arrays, or masks one array.
+
+    Args:
+        arr1 (numpy.ndarray): Input array.
+        alpha (numpy.ndarray): Alpha map whose values are :math:`\in [0,1]`.
+        arr2 (numpy.ndarray): Input array. If ``None``, ``arr1`` will be
+            blended with an all-zero array, equivalent to masking ``arr1``.
+
+    Raises:
+        NotImplementedError: If ``alpha`` and ``arr1`` have different shapes,
+            and shape matching is not implemented.
+
+    Returns:
+        numpy.ndarray: Blended array of type ``float``.
+    """
+    arr1 = arr1.astype(float)
+    if arr2 is None:
+        arr2 = np.zeros(arr1.shape, dtype=arr1.dtype)
+
+    if alpha.shape != arr1.shape:
+        if alpha.ndim == 2 and arr1.ndim == 3:
+            alpha = np.dstack([alpha] * arr1.shape[2])
+        else:
+            raise NotImplementedError(
+                "{arr_s} and {alpha_s}".format(
+                    alpha_s=alpha.shape, arr_s=arr1.shape))
+    blend = np.multiply(arr1, alpha) + np.multiply(arr2, 1 - alpha)
+    return blend
+
+
 def resize(arr, new_h=None, new_w=None):
     """Resizes an image, with the option of maintaining the aspect ratio.
 
