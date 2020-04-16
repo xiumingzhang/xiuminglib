@@ -9,6 +9,27 @@ from .imprt import preset_import
 cv2 = preset_import('cv2')
 
 
+def normalize_uint(arr):
+    r"""Normalizes the input ``uint`` array such that its ``dtype`` maximum
+    becomes :math:`1`.
+
+    Args:
+        arr (numpy.ndarray): Input array of type ``uint``.
+
+    Raises:
+        TypeError: If input array is not of a correct ``uint`` type.
+
+    Returns:
+        numpy.ndarray: Normalized array of type ``float``.
+    """
+    if arr.dtype not in (np.uint8, np.uint16):
+        raise TypeError(arr.dtype)
+    maxv = np.iinfo(arr.dtype).max
+    arr = arr.astype(float)
+    arr_ = arr / maxv
+    return arr_
+
+
 def resize(arr, new_h=None, new_w=None):
     """Resizes an image, with the option of maintaining the aspect ratio.
 
