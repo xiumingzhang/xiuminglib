@@ -20,13 +20,16 @@ def create_logger(file_abspath, path_starts_from='xiuminglib'):
             - **thisfile** (*str*) -- Partial path to the user file (e.g.,
               starting from package name).
     """
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger()
+
     folder_names = file_abspath.split('/')
     if path_starts_from in folder_names:
         start_idx = folder_names.index(path_starts_from)
     else:
         start_idx = 0
     thisfile = '/'.join(folder_names[start_idx:])
+
     return logger, thisfile
 
 
