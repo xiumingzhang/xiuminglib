@@ -10,7 +10,7 @@ from tqdm import tqdm
 from ..os import call, makedirs
 from .. import const
 from ..interact import ask_to_proceed
-from ..config import create_logger
+from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 
@@ -76,6 +76,8 @@ class Launcher():
                 bash_cmd += ' --{flag}={val}'.format(flag=k, val=v)
         # To avoid IO permission issues
         bash_cmd += ' --gfs_user=%s' % self.borg_user
+        # To use my own account for Bigstore
+        bash_cmd += ' --bigstore_anonymous'
         if self.print_instead:
             logger.name = logger_name
             logger.info("To blaze-run the job, run:\n\t%s\n", bash_cmd)

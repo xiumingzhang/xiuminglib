@@ -1,7 +1,7 @@
 from os.path import abspath
 import numpy as np
 
-from ..config import create_logger
+from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 

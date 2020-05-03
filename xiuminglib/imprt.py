@@ -1,7 +1,7 @@
 from os.path import abspath
 from importlib import import_module
 
-from .config import create_logger
+from .log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 # For < Python 3.6

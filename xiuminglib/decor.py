@@ -25,7 +25,7 @@ from os.path import abspath, join, dirname, getmtime
 
 from .os import _is_cnspath, _no_trailing_slash, cp, rm
 
-from .config import create_logger
+from .log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 

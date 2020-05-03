@@ -4,7 +4,7 @@ from os.path import dirname, abspath, join
 from pickle import dump
 import numpy as np
 
-from ..config import create_logger
+from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .. import const, os as xm_os

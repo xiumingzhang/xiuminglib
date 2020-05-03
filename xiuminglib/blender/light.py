@@ -11,7 +11,7 @@ from ..imprt import preset_import
 bpy = preset_import('bpy')
 Vector = preset_import('Vector')
 
-from ..config import create_logger
+from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 

@@ -3,7 +3,7 @@ from glob import glob
 from shutil import move
 from time import time
 
-from ..config import create_logger
+from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .. import os as xm_os

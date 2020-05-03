@@ -8,8 +8,8 @@ bmesh = preset_import('bmesh')
 Matrix = preset_import('Matrix')
 Vector = preset_import('Vector')
 
-from .. import config, os as xm_os
-logger, thisfile = config.create_logger(abspath(__file__))
+from .. import log, os as xm_os
+logger, thisfile = log.create_logger(abspath(__file__))
 
 
 def get_object(otype, any_ok=False):

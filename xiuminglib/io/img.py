@@ -2,8 +2,8 @@ from os.path import abspath, dirname
 import numpy as np
 from PIL import Image
 
-from .. import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from .. import log
+logger, thisfile = log.create_logger(abspath(__file__))
 
 from ..os import makedirs
 

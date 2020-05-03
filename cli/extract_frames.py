@@ -10,8 +10,8 @@ from os import makedirs
 from os.path import exists, join, abspath
 from cv2 import imwrite, VideoCapture
 
-from xiuminglib import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from xiuminglib import log
+logger, thisfile = log.create_logger(abspath(__file__))
 logger.name = thisfile
 
 

@@ -14,8 +14,8 @@ from random import choice
 from string import ascii_letters, digits
 import cv2
 
-from xiuminglib import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from xiuminglib import log
+logger, thisfile = log.create_logger(abspath(__file__))
 logger.name = thisfile
 
 

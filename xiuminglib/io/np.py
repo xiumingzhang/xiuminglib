@@ -1,8 +1,8 @@
 from os.path import abspath, exists, dirname
 import numpy as np
 
-from .. import config, os as xm_os
-logger, thisfile = config.create_logger(abspath(__file__))
+from .. import log, os as xm_os
+logger, thisfile = log.create_logger(abspath(__file__))
 
 
 def load_or_save_np(data_f, fallback=None):

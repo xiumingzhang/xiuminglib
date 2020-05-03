@@ -1,8 +1,8 @@
 from os.path import abspath, join
 import numpy as np
 
-from .. import config
-logger, thisfile = config.create_logger(abspath(__file__))
+from .. import log
+logger, thisfile = log.create_logger(abspath(__file__))
 
 from ..imprt import preset_import
 Imath = preset_import('Imath')

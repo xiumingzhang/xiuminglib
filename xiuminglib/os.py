@@ -3,7 +3,7 @@ from os.path import abspath, join, exists, isdir, dirname
 from shutil import rmtree, copy2, copytree
 from glob import glob
 
-from .config import create_logger
+from .log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .imprt import preset_import

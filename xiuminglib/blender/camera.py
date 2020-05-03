@@ -13,7 +13,7 @@ BVHTree = preset_import('BVHTree')
 
 from .object import get_bmesh, raycast
 
-from ..config import create_logger
+from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from ..geometry.proj import from_homo

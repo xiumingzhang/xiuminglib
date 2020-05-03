@@ -4,8 +4,8 @@ from os.path import abspath, dirname, exists
 from ..imprt import preset_import
 bpy = preset_import('bpy')
 
-from .. import config, os as xm_os
-logger, thisfile = config.create_logger(abspath(__file__))
+from .. import log, os as xm_os
+logger, thisfile = log.create_logger(abspath(__file__))
 
 
 def save_blend(outpath=None, delete_overwritten=False):
