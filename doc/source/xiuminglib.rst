@@ -28,14 +28,6 @@ xiuminglib.camera module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.config module
-------------------------
-
-.. automodule:: xiuminglib.config
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 xiuminglib.const module
 -----------------------
 
@@ -80,6 +72,14 @@ xiuminglib.linalg module
 ------------------------
 
 .. automodule:: xiuminglib.linalg
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.log module
+---------------------
+
+.. automodule:: xiuminglib.log
     :members:
     :undoc-members:
     :show-inheritance:

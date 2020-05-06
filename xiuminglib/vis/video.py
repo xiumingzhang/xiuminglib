@@ -1,18 +1,21 @@
 from os.path import abspath, join, dirname
-from time import time
+from io import BytesIO
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 from .. import const
-from ..os import makedirs, call
+from ..io import img as imgio
+from ..os import makedirs
 from ..imprt import preset_import
 
 
-def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None,
-              ffmpeg_bin='ffmpeg'):
-    """Writes a list of (optionally labeled) images into an animated PNG.
+def make_apng(
+        imgs, labels=None, label_top_left_xy=(100, 100), font_size=100,
+        font_color=(1, 0, 0), font_ttf=None, duration=1, outpath=None):
+    r"""Writes a list of (optionally labeled) images into an animated PNG.
 
     Args:
         imgs (list(numpy.ndarray or str)): An image is either a path or an
@@ -20,25 +23,19 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None,
             directory). If array, should be of type ``uint`` and of shape H-by-W
             (grayscale) or H-by-W-by-3 (RGB).
         labels (list(str), optional): Labels used to annotate the images.
-        label_style (dict, optional): Style dictionary used by
-            :func:`cv2.putText`, with the default being::
-
-                {
-                    'bottom_left_corner': (100, 100),
-                    'font_scale': 6,
-                    'text_bgr': (1, 0, 0),
-                    'thickness': 6,
-                }
-        interval (float, optional): Flipping interval in seconds.
+        label_top_left_xy (tuple(int), optional): The XY coordinate of the
+            label's top left corner.
+        font_size (int, optional): Font size.
+        font_color (tuple(float), optional): Font RGB, normalized to
+            :math:`[0,1]`.
+        font_ttf (str, optional): Path to the .ttf font file. Defaults to Arial.
+        duration (float, optional): Duration of each frame in seconds.
         outpath (str, optional): Where to write the output to (a .apng file).
             ``None`` means
             ``os.path.join(const.Dir.tmp, 'make_apng.apng')``.
-        ffmpeg_bin (str, optional): Path to the ffmpeg binary; useful when
-            running on Borg.
 
     Raises:
         TypeError: If any input image is neither a string nor an array.
-        ValueError: If any input image is neither 2D (grayscale) nor 3D (color).
 
     Writes
         - An animated PNG of the images.
@@ -51,77 +48,49 @@ def make_apng(imgs, labels=None, label_style=None, interval=1, outpath=None,
         outpath += '.apng'
     makedirs(dirname(outpath))
 
-    if labels is not None or not all(isinstance(x, str) for x in imgs):
-        # Some IO is inevitable
-        cv2 = preset_import('cv2')
-        tmpdir = join(const.Dir.tmp, 'make_apng_tmp')
-        makedirs(tmpdir)
-
-    if label_style is None:
-        label_style = {
-            'bottom_left_corner': (100, 100),
-            'font_scale': 1.5,
-            'text_bgr': (1, 0, 0),
-            'thickness': 2}
+    # Font
+    if font_ttf is None:
+        font = ImageFont.truetype('arial.ttf', font_size)
+    else:
+        gfile = preset_import('gfile')
+        open_func = open if gfile is None else gfile.Open
+        with open_func(font_ttf, 'rb') as h:
+            font_bytes = BytesIO(h.read())
+        font = ImageFont.truetype(font_bytes, font_size)
 
     def put_text(img, text):
-        img_dtype_max = np.iinfo(img.dtype).max
-        color = [img_dtype_max * x for x in label_style['text_bgr']]
-        img_ = img.copy() # Lord knows why this is needed...
-        cv2.putText(img_, text,
-                    label_style['bottom_left_corner'],
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    label_style['font_scale'],
-                    color,
-                    label_style['thickness'])
-        return img_
+        dtype_max = np.iinfo(np.array(img).dtype).max
+        color = tuple(int(x * dtype_max) for x in font_color)
+        ImageDraw.Draw(img).text(label_top_left_xy, text, fill=color, font=font)
+        return img
 
-    def write_to_tmp(img):
-        tmpf = join(tmpdir, '%f.png' % time())
-        cv2.imwrite(tmpf, img)
-        return tmpf
-
-    img_paths = []
+    imgs_loaded = []
     for img_i, img in enumerate(imgs):
         if isinstance(img, str):
             # Path
-            if labels is None:
-                img_paths.append(img)
-            else:
-                img = cv2.imread(img)
-                img = put_text(img, labels[img_i])
-                tmpf = write_to_tmp(img)
-                img_paths.append(tmpf)
-
-        elif isinstance(img, np.ndarray):
-            # Need to write to disk, because ffmpeg takes paths
-            assert np.issubdtype(img.dtype, np.unsignedinteger), \
-                "If image is provided as an array, it has to be `uint`"
-            if img.ndim == 3:
-                img = img[:, :, ::-1] # BGR
-            elif img.ndim == 2:
-                pass
-            else:
-                raise ValueError(img.ndim)
+            img = imgio.load(img)
             if labels is not None:
                 img = put_text(img, labels[img_i])
-            tmpf = write_to_tmp(img)
-            img_paths.append(tmpf)
-
+            imgs_loaded.append(img)
+        elif isinstance(img, np.ndarray):
+            # Array
+            assert np.issubdtype(img.dtype, np.unsignedinteger), \
+                "If image is provided as an array, it has to be `uint`"
+            img = Image.fromarray(img)
+            if labels is not None:
+                img = put_text(img, labels[img_i])
+            imgs_loaded.append(img)
         else:
             raise TypeError(type(img))
 
-    cmd = '{ffmpeg_bin} -r {interval} '.format(
-        ffmpeg_bin=ffmpeg_bin, interval=interval)
-    cmd += '-i concat:"'
-    for img_path in img_paths[:2]:
-        cmd += img_path + '|'
-    cmd = cmd[:-1] + '"'
-    cmd += ' -plays 0 ' # loops infinitely
-    cmd += outpath
-    cmd += ' -y' # overwrites
+    duration = duration * 1000 # because in ms
 
-    call(cmd)
+    gfile = preset_import('gfile')
+    open_func = open if gfile is None else gfile.Open
+    with open_func(outpath, 'wb') as h:
+        imgs_loaded[0].save(
+            h, save_all=True, append_images=imgs_loaded[1:],
+            duration=duration)
 
     logger.name = logger_name
     logger.info("Images written as an animated PNG to:\n\t%s", outpath)
@@ -153,6 +122,7 @@ def make_video(imgs, fps=24, outpath=None,
         outpath = join(const.Dir.tmp, 'make_video.mp4')
     makedirs(dirname(outpath))
 
+    assert imgs, "Frame list is empty"
     h, w = imgs[0].shape[:2]
     for frame in imgs[1:]:
         assert frame.shape[:2] == (h, w), \

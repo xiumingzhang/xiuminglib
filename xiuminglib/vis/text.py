@@ -8,8 +8,9 @@ from .. import os as xm_os
 from ..imprt import preset_import
 
 
-def text_as_image(text, imsize=256, thickness=2, dtype='uint8',
-                  outpath=None, quiet=False):
+def text_as_image(
+        text, imsize=256, thickness=2, dtype='uint8', outpath=None,
+        quiet=False):
     """Rasterizes a text string into an image.
 
     The text will be drawn in white to the center of a black canvas.

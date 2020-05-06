@@ -5,30 +5,63 @@ from PIL import Image
 from .. import log
 logger, thisfile = log.create_logger(abspath(__file__))
 
+from ..imprt import preset_import
 from ..os import makedirs
 
 
-def load_as_array(path):
-    """Loads the image file as an array.
+def load(path, as_array=False):
+    """Loads an image.
 
     Args:
         path (str): Path to the image file.
+        as_array (bool, optional): Whether to return the image as an array.
+            Defaults to ``False``.
 
     Returns:
-        numpy.ndarray: Loaded image.
+        A PIL image type or numpy.ndarray: Loaded image.
     """
-    logger_name = thisfile + '->load_as_array()'
+    logger_name = thisfile + '->load()'
 
-    with open(path, 'rb') as h:
+    gfile = preset_import('gfile')
+    open_func = open if gfile is None else gfile.Open
+    with open_func(path, 'rb') as h:
         img = Image.open(h)
         img.load()
 
     logger.name = logger_name
     logger.debug("Image loaded from:\n\t%s", path)
-    return np.array(img)
+
+    if as_array:
+        return np.array(img)
+    return img
 
 
-def write_array(arr_0to1, outpath, img_dtype='uint8', clip=False):
+def write_img(arr_uint, outpath):
+    r"""Writes an ``uint`` array/image to disk.
+
+    Args:
+        arr_uint (numpy.ndarray): A ``uint`` array.
+        outpath (str): Output path.
+
+    Writes
+        - The resultant image.
+    """
+    logger_name = thisfile + '->write_img()'
+
+    img = Image.fromarray(arr_uint)
+
+    # Write to disk
+    gfile = preset_import('gfile')
+    open_func = open if gfile is None else gfile.Open
+    makedirs(dirname(outpath))
+    with open_func(outpath, 'wb') as h:
+        img.save(h)
+
+    logger.name = logger_name
+    logger.debug("Image written to:\n\t%s", outpath)
+
+
+def write_arr(arr_0to1, outpath, img_dtype='uint8', clip=False):
     r"""Writes an array to disk as an image.
 
     Args:
@@ -38,11 +71,12 @@ def write_array(arr_0to1, outpath, img_dtype='uint8', clip=False):
         clip (bool, optional): Whether to clip values to :math:`[0,1]`.
             Defaults to ``False``.
 
+    Writes
+        - The resultant image.
+
     Returns:
         numpy.ndarray: The resultant image array.
     """
-    logger_name = thisfile + '->write_array()'
-
     if clip:
         arr_0to1 = np.clip(arr_0to1, 0, 1)
     assert arr_0to1.min() >= 0 and arr_0to1.max() <= 1, \
@@ -50,13 +84,7 @@ def write_array(arr_0to1, outpath, img_dtype='uint8', clip=False):
 
     # Float array to image
     img_arr = (arr_0to1 * np.iinfo(img_dtype).max).astype(img_dtype)
-    img = Image.fromarray(img_arr)
 
-    # Write to disk
-    makedirs(dirname(outpath))
-    with open(outpath, 'wb') as h:
-        img.save(h)
+    write_img(img_arr, outpath)
 
-    logger.name = logger_name
-    logger.debug("Image written to:\n\t%s", outpath)
     return img_arr
