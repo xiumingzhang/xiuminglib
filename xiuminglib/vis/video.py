@@ -96,8 +96,8 @@ def make_apng(
     logger.info("Images written as an animated PNG to:\n\t%s", outpath)
 
 
-def make_video(imgs, fps=24, outpath=None,
-               matplotlib=True, dpi=96, bitrate=-1):
+def make_video(
+        imgs, fps=24, outpath=None, matplotlib=True, dpi=96, bitrate=-1):
     """Writes a list of images into a grayscale or color video.
 
     Args:
@@ -157,8 +157,14 @@ def make_video(imgs, fps=24, outpath=None,
     else:
         cv2 = preset_import('cv2')
 
-        # fourcc = cv2.VideoWriter_fourcc(*'X264') # .avi
-        fourcc = 0x00000021 # .mp4
+        # Codec (see http://www.fourcc.org/codecs.php)
+        if outpath.endswith('.mp4'):
+            fourcc = cv2.VideoWriter_fourcc(*'X264')
+            # fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+            # fourcc = 0x00000021
+        else:
+            raise NotImplementedError("Video type of\n\t%s" % outpath)
+
         vw = cv2.VideoWriter(outpath, fourcc, fps, (w, h))
 
         for frame in imgs:
