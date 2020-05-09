@@ -136,7 +136,7 @@ def make_video(
 
         w_in, h_in = w / dpi, h / dpi
         fig = plt.figure(figsize=(w_in, h_in))
-        Writer = animation.writers['ffmpeg']
+        Writer = animation.writers['ffmpeg'] # may require you to specify path
         writer = Writer(fps=fps, bitrate=bitrate)
 
         def img_plt(arr):
@@ -157,11 +157,14 @@ def make_video(
     else:
         cv2 = preset_import('cv2')
 
-        # Codec (see http://www.fourcc.org/codecs.php)
+        # TODO: debug codecs (see http://www.fourcc.org/codecs.php)
         if outpath.endswith('.mp4'):
-            fourcc = cv2.VideoWriter_fourcc(*'X264')
             # fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+            # fourcc = cv2.VideoWriter_fourcc(*'X264')
+            fourcc = cv2.VideoWriter_fourcc(*'H264')
             # fourcc = 0x00000021
+        elif outpath.endswith('.avi'):
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
         else:
             raise NotImplementedError("Video type of\n\t%s" % outpath)
 

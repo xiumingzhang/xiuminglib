@@ -4,7 +4,7 @@ import numpy as np
 from .imprt import preset_import
 cv2 = preset_import('cv2')
 
-from .vis.general import scatter_on_image
+from .vis.pt import scatter_on_img
 
 
 class LucasKanadeTracker():
@@ -119,8 +119,9 @@ class LucasKanadeTracker():
         for fi in range(0, len(self.frames) - 1):
             im = self.frames[fi + 1]
             pts = self.tracks[fi]
-            scatter_on_image(im, pts, size=6, bgr=marker_bgr,
-                             outpath=join(out_dir, '%04d.png' % (fi + 1)))
+            scatter_on_img(
+                im, pts, size=6, bgr=marker_bgr,
+                outpath=join(out_dir, '%04d.png' % (fi + 1)))
 
     @staticmethod
     def _my2klt(pts):

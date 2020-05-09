@@ -3,8 +3,8 @@ __all__ = [
     'geometry',
     'html',
     'matrix',
+    'pt',
     'text',
-    'uv',
     'video',
 ]
 

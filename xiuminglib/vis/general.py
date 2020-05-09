@@ -1,4 +1,6 @@
-"""This module should be imported before ``skimage`` to avoid the ``matplotlib`` backend problem."""
+"""This module should be imported before ``skimage`` to avoid the
+``matplotlib`` backend problem.
+"""
 
 from os.path import dirname, abspath, join
 from pickle import dump
@@ -11,32 +13,33 @@ from .. import const, os as xm_os
 from ..imprt import preset_import
 
 
-def pyplot_wrapper(*args,
-                   ci=None,
-                   func='plot',
-                   labels=None,
-                   legend_fontsize=20,
-                   legend_loc=0,
-                   figsize=(14, 14),
-                   figtitle=None,
-                   figtitle_fontsize=20,
-                   xlabel=None,
-                   xlabel_fontsize=20,
-                   ylabel=None,
-                   ylabel_fontsize=20,
-                   xticks=None,
-                   xticks_locations=None,
-                   xticks_fontsize=10,
-                   xticks_rotation=0,
-                   yticks=None,
-                   yticks_locations=None,
-                   yticks_fontsize=10,
-                   yticks_rotation=0,
-                   xlim=None,
-                   ylim=None,
-                   grid=True,
-                   outpath=None,
-                   **kwargs):
+def pyplot_wrapper(
+        *args,
+        ci=None,
+        func='plot',
+        labels=None,
+        legend_fontsize=20,
+        legend_loc=0,
+        figsize=(14, 14),
+        figtitle=None,
+        figtitle_fontsize=20,
+        xlabel=None,
+        xlabel_fontsize=20,
+        ylabel=None,
+        ylabel_fontsize=20,
+        xticks=None,
+        xticks_locations=None,
+        xticks_fontsize=10,
+        xticks_rotation=0,
+        yticks=None,
+        yticks_locations=None,
+        yticks_fontsize=10,
+        yticks_rotation=0,
+        xlim=None,
+        ylim=None,
+        grid=True,
+        outpath=None,
+        **kwargs):
     """Convinience wrapper for :mod:`matplotlib.pyplot` functions.
 
     It saves plots directly to the disk without displaying.
@@ -145,9 +148,9 @@ def pyplot_wrapper(*args,
     # Legend
     if labels is not None:
         n_plot_objs = len(plot_objs)
-        assert (len(labels) == n_plot_objs), \
-            ("Number of labels must equal number of plot objects; "
-             "use None for object without a label")
+        assert (len(labels) == n_plot_objs), (
+            "Number of labels must equal number of plot objects; "
+            "use None for object without a label")
         for i in range(n_plot_objs):
             plot_objs[i].set_label(labels[i])
         plt.legend(fontsize=legend_fontsize, loc=legend_loc)
@@ -193,84 +196,6 @@ def pyplot_wrapper(*args,
     plt.close('all')
 
 
-def scatter_on_image(im, pts, size=2, bgr=(0, 0, 255), outpath=None):
-    r"""Plots scatter on top of an image.
-
-    Args:
-        im (numpy.ndarray): Image to scatter on. H-by-W (grayscale) or
-            H-by-W-by-3 (RGB) arrays of type ``numpy.uint8`` or
-            ``numpy.uint16``.
-        pts (array_like): Coordinates of the scatter point(s), of length 2
-            for just one point or shape N-by-2 for multiple points.
-            Convention:
-
-            .. code-block:: none
-
-                +-----------> dim1
-                |
-                |
-                |
-                v dim0
-
-        size (float or array_like(float), optional): Size(s) of scatter
-            points. If *array_like*, must be of length N.
-        bgr (tuple or array_like(tuple), optional): BGR color(s) of scatter
-            points. Each element :math:`\in [0, 255]`. If *array_like*, must
-            be of shape N-by-3.
-        outpath (str, optional): Path to which the visualization is saved to.
-            ``None`` means ``os.path.join(const.Dir.tmp,
-            'scatter_on_image.png')``.
-
-    Writes
-        - The scatter plot overlaid over the image.
-    """
-    cv2 = preset_import('cv2')
-
-    logger_name = thisfile + '->scatter_on_image()'
-
-    if outpath is None:
-        outpath = join(const.Dir.tmp, 'scatter_on_image.png')
-
-    thickness = -1 # for filled circles
-
-    # Standardize inputs
-    if im.ndim == 2: # grayscale
-        im = np.dstack((im, im, im)) # to BGR
-    pts = np.array(pts)
-    if pts.ndim == 1:
-        pts = pts.reshape(-1, 2)
-    n_pts = pts.shape[0]
-
-    if im.dtype != 'uint8' and im.dtype != 'uint16':
-        logger.name = logger_name
-        logger.warning("Input image type may cause obscure cv2 errors")
-
-    if isinstance(size, int):
-        size = np.array([size] * n_pts)
-    else:
-        size = np.array(size)
-
-    bgr = np.array(bgr)
-    if bgr.ndim == 1:
-        bgr = np.tile(bgr, (n_pts, 1))
-
-    # FIXME: necessary, probably due to OpenCV bugs?
-    im = im.copy()
-
-    # Put on scatter points
-    for i in range(pts.shape[0]):
-        xy = tuple(pts[i, ::-1].astype(int))
-        color = (int(bgr[i, 0]), int(bgr[i, 1]), int(bgr[i, 2]))
-        cv2.circle(im, xy, size[i], color, thickness)
-
-    # Make directory, if necessary
-    outdir = dirname(outpath)
-    xm_os.makedirs(outdir)
-
-    # Write to disk
-    cv2.imwrite(outpath, im)
-
-
 def make_colormap(low, high):
     """Generates your own colormap for heatmap.
 
@@ -309,13 +234,18 @@ def _savefig(outpath, contents_only=False, dpi=None):
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
+    gfile = preset_import('gfile')
+    open_func = open if gfile is None else gfile.Open
+
     if contents_only:
         ax = plt.gca()
         ax.set_position([0, 0, 1, 1])
         ax.set_axis_off()
-        plt.savefig(outpath, dpi=dpi)
+        with open_func(outpath, 'wb') as h:
+            plt.savefig(h, dpi=dpi)
     else:
-        plt.savefig(outpath, bbox_inches='tight', dpi=dpi)
+        with open_func(outpath, 'wb') as h:
+            plt.savefig(h, bbox_inches='tight', dpi=dpi)
 
 
 def axes3d_wrapper(
@@ -497,10 +427,11 @@ def axes3d_wrapper(
             for elev, azim in views:
                 ax.view_init(elev, azim)
                 plt.draw()
-                _savefig(outpath.replace(
-                    '.png', '_elev%d_azim%d.png' % (elev, azim)))
+                _savefig(
+                    outpath.replace(
+                        '.png', '_elev%d_azim%d.png' % (elev, azim)))
     elif outpath.endswith('.pkl'):
-        # FIXME: can't laod
+        # FIXME: can't load
         with open(outpath, 'wb') as h:
             dump(ax, h)
     else:

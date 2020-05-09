@@ -41,18 +41,18 @@ xiuminglib.vis.matrix module
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.vis.text module
---------------------------
+xiuminglib.vis.pt module
+------------------------
 
-.. automodule:: xiuminglib.vis.text
+.. automodule:: xiuminglib.vis.pt
     :members:
     :undoc-members:
     :show-inheritance:
 
-xiuminglib.vis.uv module
-------------------------
+xiuminglib.vis.text module
+--------------------------
 
-.. automodule:: xiuminglib.vis.uv
+.. automodule:: xiuminglib.vis.text
     :members:
     :undoc-members:
     :show-inheritance:

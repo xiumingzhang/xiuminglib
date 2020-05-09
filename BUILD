@@ -10,10 +10,8 @@ py_library(
 )
 
 py_binary(
-    name = "xiuminglib_test",
-    srcs = [
-        "xiuminglib_test.py",
-    ],
+    name = "test",
+    srcs = ["test.py"],
     python_version = "PY3",
     deps = [
         "//experimental/users/xiuming/xiuminglib",

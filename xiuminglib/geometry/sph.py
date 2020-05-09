@@ -5,6 +5,50 @@ from ..log import create_logger
 logger, thisfile = create_logger(abspath(__file__))
 
 
+def uniform_sample_sph(n, r=1, convention='lat-lng'):
+    r"""Uniformly samples points on the sphere
+    [`source <https://mathworld.wolfram.com/SpherePointPicking.html>`_].
+
+    Args:
+        n (int): Total number of points to sample. Must be a square number.
+        r (float, optional): Radius of the sphere. Defaults to :math:`1`.
+        convention (str, optional): Convention for spherical coordinates.
+            See :func:`cart2sph` for conventions.
+
+    Raises:
+        ValueError: If number of points is not a perfect square.
+        NotImplementedError: If convention is neither ``'lat-lng'`` nor
+            ``'theta-phi'``.
+
+    Returns:
+        numpy.ndarray: Spherical coordinates :math:`(r, \theta_1, \theta_2)`
+        in radians.
+    """
+    n_ = np.sqrt(n)
+    if n_ != int(n_):
+        raise ValueError("%d is not perfect square" % n)
+    n_ = int(n_)
+
+    pts_r_theta_phi = []
+    for u in np.linspace(0, 1, n_):
+        for v in np.linspace(0, 1, n_):
+            phi = 2 * np.pi * u # [0, 2pi]
+            theta = np.arccos(2 * v - 1) # [0, pi]
+            pts_r_theta_phi.append((r, theta, phi))
+    pts_r_theta_phi = np.vstack(pts_r_theta_phi)
+
+    # Select output convention
+    if convention == 'lat-lng':
+        pts_sph = _convert_sph_conventions(
+            pts_r_theta_phi, 'theta-phi_to_lat-lng')
+    elif convention == 'theta-phi':
+        pts_sph = pts_r_theta_phi
+    else:
+        raise NotImplementedError(convention)
+
+    return pts_sph
+
+
 def cart2sph(pts_cart, convention='lat-lng'):
     r"""Converts 3D Cartesian coordinates to spherical coordinates.
 
@@ -168,11 +212,12 @@ def main(func_name):
     """Unit tests that can also serve as example usage."""
     if func_name in ('sph2cart', 'cart2sph'):
         # cart2sph() and sph2cart()
-        pts_car = np.array([[-1, 2, 3],
-                            [4, -5, 6],
-                            [3, 5, -8],
-                            [-2, -5, 2],
-                            [4, -2, -23]])
+        pts_car = np.array([
+            [-1, 2, 3],
+            [4, -5, 6],
+            [3, 5, -8],
+            [-2, -5, 2],
+            [4, -2, -23]])
         print(pts_car)
         pts_sph = cart2sph(pts_car)
         print(pts_sph)

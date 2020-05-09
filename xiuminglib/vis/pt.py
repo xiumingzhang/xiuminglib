@@ -1,10 +1,90 @@
-from os.path import join, dirname
+from os.path import join, dirname, abspath
+import numpy as np
 
 from .. import const, os as xm_os
 from .general import _savefig
 
+from ..log import create_logger
+logger, thisfile = create_logger(abspath(__file__))
+
 from ..imprt import preset_import
 cv2 = preset_import('cv2')
+
+
+def scatter_on_img(pts, im, size=2, bgr=(0, 0, 255), outpath=None):
+    r"""Plots scatter on top of an image or just a white canvas, if you are
+    being creative by feeding in just a white image.
+
+    Args:
+        pts (array_like): Pixel coordinates of the scatter point(s), of length 2
+            for just one point or shape N-by-2 for multiple points.
+            Convention:
+
+            .. code-block:: none
+
+                +-----------> dim1
+                |
+                |
+                |
+                v dim0
+
+        im (numpy.ndarray): Image to scatter on. H-by-W (grayscale) or
+            H-by-W-by-3 (RGB) arrays of ``unint`` type.
+        size (float or array_like(float), optional): Size(s) of scatter
+            points. If *array_like*, must be of length N.
+        bgr (tuple or array_like(tuple), optional): BGR color(s) of scatter
+            points. Each element :math:`\in [0, 255]`. If *array_like*, must
+            be of shape N-by-3.
+        outpath (str, optional): Path to which the visualization is saved to.
+            ``None`` means ``os.path.join(const.Dir.tmp,
+            'scatter_on_img.png')``.
+
+    Writes
+        - The scatter plot overlaid over the image.
+    """
+    logger_name = thisfile + '->scatter_on_img()'
+
+    if outpath is None:
+        outpath = join(const.Dir.tmp, 'scatter_on_img.png')
+
+    thickness = -1 # for filled circles
+
+    # Standardize inputs
+    if im.ndim == 2: # grayscale
+        im = np.dstack((im, im, im)) # to BGR
+    pts = np.array(pts)
+    if pts.ndim == 1:
+        pts = pts.reshape(-1, 2)
+    n_pts = pts.shape[0]
+
+    if im.dtype != 'uint8' and im.dtype != 'uint16':
+        logger.name = logger_name
+        logger.warning("Input image type may cause obscure cv2 errors")
+
+    if isinstance(size, int):
+        size = np.array([size] * n_pts)
+    else:
+        size = np.array(size)
+
+    bgr = np.array(bgr)
+    if bgr.ndim == 1:
+        bgr = np.tile(bgr, (n_pts, 1))
+
+    # FIXME: necessary, probably due to OpenCV bugs?
+    im = im.copy()
+
+    # Put on scatter points
+    for i in range(pts.shape[0]):
+        xy = tuple(pts[i, ::-1].astype(int))
+        color = (int(bgr[i, 0]), int(bgr[i, 1]), int(bgr[i, 2]))
+        cv2.circle(im, xy, size[i], color, thickness)
+
+    # Make directory, if necessary
+    outdir = dirname(outpath)
+    xm_os.makedirs(outdir)
+
+    # Write to disk
+    cv2.imwrite(outpath, im)
 
 
 def uv_on_texmap(uvs, texmap, ft=None, outpath=None, max_n_lines=None,
@@ -95,7 +175,6 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None, max_n_lines=None,
                     (x[ind[(i + 1) % n_verts]], y[ind[(i + 1) % n_verts]])
                 ]) # line start and end
         if max_n_lines is not None:
-            import numpy as np
             lines = [lines[i] for i in np.linspace(
                 0, len(lines) - 1, num=max_n_lines, dtype=int)]
         line_collection = LineCollection(
