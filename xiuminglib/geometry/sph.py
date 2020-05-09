@@ -22,7 +22,8 @@ def uniform_sample_sph(n, r=1, convention='lat-lng'):
 
     Returns:
         numpy.ndarray: Spherical coordinates :math:`(r, \theta_1, \theta_2)`
-        in radians.
+        in radians. The points are ordered such that all azimuths are looped
+        through first at each elevation.
     """
     n_ = np.sqrt(n)
     if n_ != int(n_):
@@ -32,8 +33,8 @@ def uniform_sample_sph(n, r=1, convention='lat-lng'):
     pts_r_theta_phi = []
     for u in np.linspace(0, 1, n_):
         for v in np.linspace(0, 1, n_):
-            phi = 2 * np.pi * u # [0, 2pi]
-            theta = np.arccos(2 * v - 1) # [0, pi]
+            theta = np.arccos(2 * u - 1) # [0, pi]
+            phi = 2 * np.pi * v # [0, 2pi]
             pts_r_theta_phi.append((r, theta, phi))
     pts_r_theta_phi = np.vstack(pts_r_theta_phi)
 
