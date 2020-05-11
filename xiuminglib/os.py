@@ -289,7 +289,12 @@ def makedirs(directory, rm_if_exists=False):
 
     def exists_cns_cli(directory):
         cmd = 'fileutil test -d %s' % directory
-        _ = _call_assert_success(cmd, quiet=True)
+        retcode, _, _ = call(cmd, quiet=True)
+        if retcode == 0:
+            return True
+        if retcode == 1:
+            return False
+        raise ValueError(retcode)
 
     def mkdir_cns_cli(directory):
         cmd = 'fileutil mkdir -p %s' % directory
@@ -315,7 +320,7 @@ def makedirs(directory, rm_if_exists=False):
             rm(directory)
             mkdir_func(directory)
             logger.name = logger_name
-            logger.info("Removed and then remade: %s", directory)
+            logger.info("Removed and then remade:\n\t%s", directory)
     else:
         mkdir_func(directory)
 
@@ -421,5 +426,7 @@ def call(cmd, cwd=None, wait=True, quiet=False):
 
 def _call_assert_success(cmd, **kwargs):
     retcode, stdout, _ = call(cmd, **kwargs)
-    assert retcode == 0, "External process call failed:\n\t%s" % cmd
+    assert retcode == 0, \
+        "External process call failed with exit code {code}:\n\t{cmd}".format(
+            cmd=cmd, code=retcode)
     return stdout
