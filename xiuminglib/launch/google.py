@@ -15,8 +15,9 @@ logger, thisfile = create_logger(abspath(__file__))
 
 
 class Launcher():
-    def __init__(self, label, print_instead=False, borg_submitters=24,
-                 borg_user=None, borg_cell=None, borg_priority=None):
+    def __init__(
+            self, label, print_instead=False, borg_submitters=24,
+            borg_user=None, borg_cell=None, borg_priority=None, gfs_user=None):
         self.label = label
         self.pkg_bin = self._derive_bin()
         self.print_instead = print_instead
@@ -24,6 +25,9 @@ class Launcher():
         if borg_user is None:
             borg_user = self.myself
         self.borg_user = borg_user
+        if gfs_user is None:
+            gfs_user = self.myself
+        self.gfs_user = gfs_user
         self.borg_submitters = borg_submitters
         # Deriving other values
         if borg_priority is None:
@@ -75,7 +79,7 @@ class Launcher():
             for k, v in param_dict.items():
                 bash_cmd += ' --{flag}={val}'.format(flag=k, val=v)
         # To avoid IO permission issues
-        bash_cmd += ' --gfs_user=%s' % self.borg_user
+        bash_cmd += ' --gfs_user=%s' % self.gfs_user
         # To use my own account for Bigstore
         bash_cmd += ' --bigstore_anonymous'
         if self.print_instead:

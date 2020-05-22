@@ -597,6 +597,19 @@ def rgb2lum(im):
     return lum
 
 
+# TODO: check correctness and write docstring
+def srgb2linear(srgb):
+    """Convert sRGB values to physically linear ones. The transformation is
+       uniform in RGB, so *srgb* can be of any shape.
+
+       *srgb* values should range between 0 and 1, inclusively.
+
+    """
+    gamma = ((srgb + 0.055) / 1.055)**2.4
+    scale = srgb / 12.92
+    return np.where(srgb > 0.04045, gamma, scale)
+
+
 def linear2srgb(im):
     """Converts an image from linear to sRGB color space.
 
