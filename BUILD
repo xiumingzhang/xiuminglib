@@ -23,7 +23,7 @@ py_binary(
         "//third_party/py/absl:app",
         "//third_party/py/IPython:ipython-libs",
         # "//third_party/py/absl/flags",
-        # "//third_party/py/numpy",
+        "//third_party/py/numpy",
         # "//third_party/py/tqdm",
     ],
 )

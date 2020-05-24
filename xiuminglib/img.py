@@ -25,8 +25,33 @@ def normalize_uint(arr):
     if arr.dtype not in (np.uint8, np.uint16):
         raise TypeError(arr.dtype)
     maxv = np.iinfo(arr.dtype).max
-    arr = arr.astype(float)
-    arr_ = arr / maxv
+    arr_ = arr.astype(float)
+    arr_ = arr_ / maxv
+    return arr_
+
+
+def denormalize_float(arr, uint_type='uint8'):
+    r"""De-normalizes the input ``float`` array such that :math:`1` becomes
+    the target ``uint`` maximum.
+
+    Args:
+        arr (numpy.ndarray): Input array of type ``float``.
+        uint_type (str, optional): Target ``uint`` type.
+
+    Raises:
+        TypeError: If target ``uint`` type is not valid, or input array is not
+            ``float``.
+        ValueError: If input array has values outside :math:`[0, 1]`.
+
+    Returns:
+        numpy.ndarray: De-normalized array of the target type.
+    """
+    _assert_float_0to1(arr)
+    if uint_type not in ('uint8', 'uint16'):
+        raise TypeError(uint_type)
+    maxv = np.iinfo(uint_type).max
+    arr_ = arr * maxv
+    arr_ = arr_.astype(uint_type)
     return arr_
 
 
@@ -597,57 +622,69 @@ def rgb2lum(im):
     return lum
 
 
-# TODO: check correctness and write docstring
-def srgb2linear(srgb):
-    """Convert sRGB values to physically linear ones. The transformation is
-       uniform in RGB, so *srgb* can be of any shape.
+def _assert_float_0to1(arr):
+    if arr.dtype.kind != 'f':
+        raise TypeError("Input must be float (is %s)" % arr.dtype)
+    if (arr < 0).any() or (arr > 1).any():
+        raise ValueError("Input image has pixels outside [0, 1]")
 
-       *srgb* values should range between 0 and 1, inclusively.
 
-    """
-    gamma = ((srgb + 0.055) / 1.055)**2.4
-    scale = srgb / 12.92
-    return np.where(srgb > 0.04045, gamma, scale)
+srgb_linear_thres = 0.0031308
+srgb_linear_coeff = 12.92
+srgb_exponential_coeff = 1.055
+srgb_exponent = 2.4
 
 
 def linear2srgb(im):
-    """Converts an image from linear to sRGB color space.
+    r"""Converts an image from linear RGB values to sRGB.
 
     Args:
-        im (numpy.ndarray): Of type ``float`` (all pixels must be
-            :math:`[0, 1]`), or ``uint``.
+        im (numpy.ndarray): Of type ``float``, and all pixels must be
+            :math:`\in [0, 1]`.
 
     Raises:
-        TypeError: Input image is of neither float nor unsigned integer type.
+        TypeError: If input image is not ``float``.
+        ValueError: If input image has values outside :math:`[0, 1]`.
 
     Returns:
-        numpy.ndarray: Converted image in sRGB color space, of the same type
-        as input.
+        numpy.ndarray: Converted image in sRGB.
     """
-    srgb_linear_thres = 0.0031308
-    srgb_linear_coeff = 12.92
-    srgb_exponential_coeff = 1.055
-    srgb_exponent = 2.4
-
-    dtype = im.dtype
-    if dtype.kind == 'f':
-        # Floats
-        assert (im >= 0).all() and (im <= 1).all(), \
-            "Input is float image, so all its pixels must be in [0, 1]"
-    elif dtype.kind == 'u':
-        # Unsigned integers
-        im = im.astype(float) / np.iinfo(dtype).max
-    else:
-        raise TypeError(dtype)
+    _assert_float_0to1(im)
+    im_ = deepcopy(im)
     # Guaranteed to be [0, 1] floats
 
-    linear_ind = im <= srgb_linear_thres
-    nonlinear_ind = im > srgb_linear_thres
-    im[linear_ind] = im[linear_ind] * srgb_linear_coeff
-    im[nonlinear_ind] = srgb_exponential_coeff * (
-        np.power(im[nonlinear_ind], 1 / srgb_exponent)
+    linear_ind = im_ <= srgb_linear_thres
+    nonlinear_ind = im_ > srgb_linear_thres
+    im_[linear_ind] = im_[linear_ind] * srgb_linear_coeff
+    im_[nonlinear_ind] = srgb_exponential_coeff * (
+        np.power(im_[nonlinear_ind], 1 / srgb_exponent)
     ) - (srgb_exponential_coeff - 1)
 
-    if dtype.kind == 'u':
-        im = (im * np.iinfo(dtype).max).astype(dtype)
-    return im
+    return im_
+
+
+def srgb2linear(im):
+    r"""Converts an image from sRGB values to linear RGB.
+
+    Args:
+        im (numpy.ndarray): Of type ``float``, and all pixels must be
+            :math:`\in [0, 1]`.
+
+    Raises:
+        TypeError: If input image is not ``float``.
+        ValueError: If input image has values outside :math:`[0, 1]`.
+
+    Returns:
+        numpy.ndarray: Converted image in linear RGB.
+    """
+    _assert_float_0to1(im)
+    im_ = deepcopy(im)
+    # Guaranteed to be [0, 1] floats
+
+    gamma = (
+        (im_ + srgb_exponential_coeff - 1) / srgb_exponential_coeff
+    ) ** srgb_exponent
+    scale = im_ / srgb_linear_coeff
+    im_ = np.where(im_ > srgb_linear_thres * srgb_linear_coeff, gamma, scale)
+
+    return im_
