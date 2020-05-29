@@ -11,10 +11,13 @@ except ModuleNotFoundError:
 
 
 def main(_):
+    ssim = xm.metric.SSIM(1)
     im1 = np.random.rand(256, 256, 3)
     im2 = np.random.rand(256, 256, 3)
-    ssim = xm.metric.SSIM(1)
-    score = ssim.compute(im1, im2)
+    print(ssim.compute(im1, im2))
+    im1 = np.random.rand(256, 256, 1)
+    im2 = np.random.rand(256, 256, 1)
+    print(ssim.compute(im1, im2))
 
     return
 

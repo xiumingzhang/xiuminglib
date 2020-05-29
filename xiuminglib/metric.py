@@ -24,6 +24,7 @@ class PSNR():
         Returns:
             float: SSIM score :math:`\in [0, 1]` (higher is better).
         """
+        from IPython import embed; embed()
 
 
 class SSIM():
@@ -38,12 +39,13 @@ class SSIM():
     """
     def __init__(self, drange):
         self.drange = drange
+        assert tf is not None, "TensorFlow import failed"
 
     def compute(self, im1, im2):
         r"""Computes the metric between a pair of images.
 
         Args:
-            im1 (numpy.ndarray): A grayscale or RGB image.
+            im1 (numpy.ndarray): An H-by-W-by-1/3 image.
             im2
 
         Returns:
@@ -57,5 +59,4 @@ class SSIM():
         im1 = tf.convert_to_tensor(im1)
         im2 = tf.convert_to_tensor(im2)
         similarity = tf.image.ssim(im1, im2, max_val=self.drange).numpy()
-        from IPython import embed; embed()
         return similarity
