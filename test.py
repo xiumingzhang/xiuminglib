@@ -8,6 +8,13 @@ from google3.experimental.users.xiuming.xiuminglib import xiuminglib as xm
 
 
 def main(_):
+    im1 = np.random.rand(256, 256, 3)
+    im2 = np.random.rand(256, 256, 3)
+    ssim = xm.metric.SSIM(1)
+    score = ssim.compute(im1, im2)
+
+    return
+
     im_linear = np.random.rand(256, 256, 3)
     im_srgb = xm.img.linear2srgb(im_linear)
     im_srgb_linear = xm.img.srgb2linear(im_srgb)

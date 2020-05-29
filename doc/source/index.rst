@@ -10,20 +10,20 @@ Welcome to xiuminglib's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-xiuminglib includes daily classes and functions that are useful for my computer vision/graphics research.
-Noteworthily, it contains many useful functions for 3D modeling and rendering with Blender.
+xiuminglib includes daily classes and functions that are useful for my computer
+vision/graphics research. Noteworthily, it contains useful functions for 3D
+modeling and rendering with Blender.
 
-The source code is available in `the repo <https://github.com/xiumingzhang/xiuminglib>`_. For issues or
+To get a sense of what it is capable of, scroll to the bottom for a tree of
+its modules and functions. The source code is available in
+`the repo <https://github.com/xiumingzhang/xiuminglib>`_. For issues or
 questions, please open an issue there.
-
-
-.. include:: modules.rst
 
 
 Installation
 ============
 
-Simply clone the repo and add it to your ``PYTHONPATH``:
+First, clone the repo and add it to your ``PYTHONPATH``:
 
 .. code-block:: bash
 
@@ -31,66 +31,76 @@ Simply clone the repo and add it to your ``PYTHONPATH``:
     git clone https://github.com/xiumingzhang/xiuminglib.git
     export PYTHONPATH="<your_local_dir>/xiuminglib/":"$PYTHONPATH"
 
-The library is being developed and tested with Python 3.6.3.
+Install the dependencies automatically with conda: simply create an environment
+with all the dependencies by running:
 
-Dependencies
-------------
+.. code-block:: bash
 
-Besides super standard packages (like NumPy), you need:
+    cd <your_local_dir>/xiuminglib/
+    conda env create -f environment.yml
+    conda activate xiuminglib
 
-    SciPy
-        If you use conda, it's as easy as ``conda install scipy``.
+If you do not need Blender functionalities, you are all set. Otherwise, you
+need to (manually) install Blender as a Python module, as instructed below.
 
-    OpenCV 3.3.0
-        Do ``conda install -c conda-forge opencv=3.3.0``. If any ``lib*.so*`` is missing at runtime,
-        the easiest fix is to ``conda install`` the missing library to the same environment, maybe
-        followed by some symlinking (like linking ``libjasper.so`` to ``libjasper.so.1``) inside
-        ``<anaconda_dir>/envs/<env_name>/lib``. This is cleaner and easier than ``apt-get``, which
-        may break other things and usually requires ``sudo``.
+If you want to avoid conda environments, also see the dependencies below and
+manually install each your own way.
 
-    Matplotlib 2.0.2
-        Some functions are known to be buggy with 3.0.0. If you use conda, do
-        ``conda install -c conda-forge matplotlib=2.0.2``.
+(Optional) Manual Dependency Installation
+-----------------------------------------
 
-Depending on what functions you want to use, you may also need to install:
+The library uses "on-demand" imports whenever possible, so that it will not fail
+on imports that you do not need.
+
+If you want Blender, you need to install it as a Python module manually
+(regardless of using conda or not):
 
     Blender 2.79
-        Note this is different from installing Blender as an application, which has Python bundled.
-        Rather, this is installing Blender as a Python module: you've succeeded if you find ``bpy.so``
-        in the build's bin folder and can ``import bpy`` in your Python (not the Blender-bundled
-        Python) after you add it to your ``PYTHONPATH``.
+        Note this is different from installing Blender as an application,
+        which has Python bundled. Rather, this is installing Blender as a
+        Python module: you have succeeded if you find ``bpy.so`` in the
+        build's bin folder and can ``import bpy`` in your Python (not the
+        Blender-bundled Python) after you add it to your ``PYTHONPATH``.
 
         Ubuntu
-            I did this "the hard way": first building all dependencies from source manually, and then
+            I did this "the hard way": first building all dependencies from
+            source manually, and then
             `building Blender from source <https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu>`_
-            with ``-DWITH_PYTHON_MODULE=ON`` for CMake, primarily because I wanted to build to an NFS
-            location so that a cluster of machines on the NFS can all use the build.
+            with ``-DWITH_PYTHON_MODULE=ON`` for CMake, primarily because I
+            wanted to build to an NFS location so that a cluster of machines on
+            the NFS can all use the build.
 
-            If you only need Blender on a local machine, for which you can ``sudo``, then dependency
-            installations are almost automatic -- just run ``install_deps.sh``, although when I did this,
-            I had to ``skip-osl`` to complete the run, for some reason I didn't take time to find out.
+            If you only need Blender on a local machine, for which you can
+            ``sudo``, then dependency installations are almost automatic -- just
+            run ``install_deps.sh``, although when I did this, I had to
+            ``skip-osl`` to complete the run, for some reason I did not take
+            time to find out.
 
-            Blender 2.80 made some API changes that are incompatible with this library, so please make sure
-            after ``git clone``, you check out
+            Blender 2.80 made some API changes that are incompatible with this
+            library, so please make sure after ``git clone``, you check out
             `the correct tag <https://git.blender.org/gitweb/gitweb.cgi/blender.git/tag/refs/tags/v2.79b>`_
-            with ``git checkout v2.79b``, followed by ``git submodule update`` to ensure the submodules are of
-            the correct versions.
+            with ``git checkout v2.79b``, followed by ``git submodule update``
+            to ensure the submodules are of the correct versions.
 
-            If ``import bpy`` throws ``Segmentation fault``, try again with Python 3.6.3.
+            If ``import bpy`` throws ``Segmentation fault``, try again with
+            Python 3.6.3.
 
         macOS
-            `This instruction <https://wiki.blender.org/wiki/Building_Blender/Mac>`_ wasn't very helpful, so
-            below documents each step I took to finally get it working (though with some non-fatal warnings).
+            `This instruction <https://wiki.blender.org/wiki/Building_Blender/Mac>`_
+            was not very helpful, so below documents each step I took to
+            finally get it working (though with some non-fatal warnings).
 
-            First, install Xcode 9.4 to build against the old ``libstdc++`` (instead of `Xcode 10+ that
-            forces the use of the newer <https://stackoverflow.com/a/42034101/2106753>`_ ``libc++``).
-            Then, ``brew install`` CMake.
+            First, install Xcode 9.4 to build against the old ``libstdc++``
+            (instead of
+            `Xcode 10+ that forces the use of the newer <https://stackoverflow.com/a/42034101/2106753>`_
+            ``libc++``). Then, ``brew install`` CMake.
 
-            Install `Python Framework 3.6.3
-            <https://www.python.org/ftp/python/3.6.3/python-3.6.3-macosx10.6.pkg>`_. I tried to use
-            an Anaconda Python, but to no avail.
+            Install
+            `Python Framework 3.6.3 <https://www.python.org/ftp/python/3.6.3/python-3.6.3-macosx10.6.pkg>`_.
+            I tried to use an Anaconda Python, but to no avail.
 
-            Clone the Blender repo., check out v2.79b, and make sure submodules are consistent.
+            Clone the Blender repo., check out v2.79b, and make sure submodules
+            are consistent.
 
             .. code-block:: bash
 
@@ -101,7 +111,8 @@ Depending on what functions you want to use, you may also need to install:
                 git submodule foreach git checkout master
                 git submodule foreach git pull --rebase origin master
 
-            Download the pre-built libraries, and move them to the correct place.
+            Download the pre-built libraries, and move them to the correct
+            place.
 
             .. code-block:: bash
 
@@ -109,12 +120,16 @@ Depending on what functions you want to use, you may also need to install:
                 svn export https://svn.blender.org/svnroot/bf-blender/tags/blender-2.79-release/lib/darwin-9.x.universal/
                 mkdir lib && mv darwin-9.x.universal lib/
 
-            Edit ``~/blender-git/blender/build_files/cmake/platform/platform_apple.cmake`` to replace
-            ``set(PYTHON_VERSION 3.5)`` with ``set(PYTHON_VERSION 3.6)``.
+            Edit
+            ``~/blender-git/blender/build_files/cmake/platform/platform_apple.cmake``
+            to replace ``set(PYTHON_VERSION 3.5)`` with
+            ``set(PYTHON_VERSION 3.6)``.
 
-            Make ``bpy.so`` by running ``cd ~/blender-git/blender && make bpy``. You *may* also need
-            ``cd ~/blender-git/build_darwin_bpy && make install``. Upon success, ``bpy.so``
-            is in ``~/blender-git/build_darwin_bpy/bin/``, and so is ``2.79/``.
+            Make ``bpy.so`` by running
+            ``cd ~/blender-git/blender && make bpy``. You *may* also need
+            ``cd ~/blender-git/build_darwin_bpy && make install``. Upon
+            success, ``bpy.so`` is in ``~/blender-git/build_darwin_bpy/bin/``,
+            and so is ``2.79/``.
 
             For ``scripts/modules`` to be found during import, do
 
@@ -123,7 +138,8 @@ Depending on what functions you want to use, you may also need to install:
                 mkdir ~/blender-git/build_darwin_bpy/Resources
                 cp -r ~/blender-git/build_darwin_bpy/bin/2.79 ~/blender-git/build_darwin_bpy/Resources/
 
-            Add the bin folder to ``PYTHONPATH`` with ``export PYTHONPATH="~/blender-git/build_darwin_bpy/bin/":"$PYTHONPATH"``.
+            Add the bin folder to ``PYTHONPATH`` with
+            ``export PYTHONPATH="~/blender-git/build_darwin_bpy/bin/":"$PYTHONPATH"``.
 
             Verify your success with
 
@@ -184,14 +200,51 @@ Depending on what functions you want to use, you may also need to install:
                     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
                 AttributeError: 'RNA_Types' object has no attribute 'TOPBAR_MT_file_import'
 
-    Trimesh
-        See `their installation guide <https://github.com/mikedh/trimesh/blob/master/docs/install.rst>`_.
+Only if you are not automatically installing the dependencies, you need to
+install the following dependencies manually one by one:
+
+    NumPy
+        `The package for scientific computing <https://numpy.org/>`_.
+
+    SciPy
+        `The scientific computing ecosystem <https://www.scipy.org/>`_.
+
+    Matplotlib 2.0.2
+        Some functions are known to be buggy with 3.0.0.
+
+    tqdm
+        `A progress bar <https://tqdm.github.io/>`_.
+
+    Pillow
+        `The friendly PIL fork <https://pillow.readthedocs.io/en/stable/>`_.
+
+    Sphinx 2.0.1 & RTD Theme
+        These are required only by documentation building. Feel free to skip
+        them if you do not care. The RTD theme package is called
+        ``sphinx_rtd_theme``.
+
+    OpenCV
+        ``pip install opencv-python`` seems to work better than
+        ``conda install``. If any ``lib*.so*`` is missing at runtime (which
+        happens often with ``conda install``), the easiest fix is to install
+        the missing library to the same environment, maybe followed by some
+        symlinking (like linking ``libjasper.so`` to ``libjasper.so.1``)
+        inside ``<python_dir>/envs/<env_name>/lib``. This may be cleaner
+        and easier than ``apt-get``, which may break other things and usually
+        requires ``sudo``.
 
     OpenEXR
-        ``pip install OpenEXR`` worked for me, but ``conda install -c conda-forge openexr`` didn't.
-        You may need to install ``sudo apt-get install libopenexr-dev`` first if you don't have it yet.
+        ``pip install OpenEXR`` worked for me, but
+        ``conda install -c conda-forge openexr`` did not. You may need to
+        ``sudo apt-get install libopenexr-dev`` first if you do not have
+        ``libopenexr`` yet.
 
-The library uses "on-demand" imports whenever possible, so that it won't fail on imports that you don't need.
+    Trimesh
+        See
+        `their installation guide <https://github.com/mikedh/trimesh/blob/master/docs/install.rst>`_.
+
+    TensorFlow
+        See `this installation guide <https://www.tensorflow.org/install>`_.
 
 
 Indices and tables
@@ -200,3 +253,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. include:: modules.rst

@@ -84,6 +84,14 @@ xiuminglib.log module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.metric module
+------------------------
+
+.. automodule:: xiuminglib.metric
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.os module
 --------------------
 

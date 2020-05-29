@@ -15,7 +15,7 @@ def preset_import(name):
     """A unified importer for both regular and ``google3`` modules, according
     to specified presets/profiles (e.g., ignoring ``ModuleNotFoundError``).
     """
-    if name == 'cv2':
+    if name in ('cv2', 'opencv'):
         try:
             # BUILD dep:
             # "//third_party/py/cvx2",
@@ -30,6 +30,10 @@ def preset_import(name):
         # mod = import_module_404ok('cvx2.latest')
         # if mod is None:
         #    mod = import_module_404ok('cv2')
+        return mod
+
+    if name in ('tf', 'tensorflow'):
+        mod = import_module_404ok('tensorflow')
         return mod
 
     if name == 'gfile':
