@@ -201,13 +201,15 @@ If you want Blender, you need to install it as a Python module manually
                 AttributeError: 'RNA_Types' object has no attribute 'TOPBAR_MT_file_import'
 
 Only if you are not automatically installing the dependencies, you need to
-install the following dependencies manually one by one:
+manually install whatever you need:
 
     NumPy
-        `The package for scientific computing <https://numpy.org/>`_.
+        `The package for scientific computing <https://numpy.org/>`_ that should
+        be already available as part of your Python distribution.
 
     SciPy
-        `The scientific computing ecosystem <https://www.scipy.org/>`_.
+        `The scientific computing ecosystem <https://www.scipy.org/>`_ that may
+        or may not be pre-installed already.
 
     Matplotlib 2.0.2
         Some functions are known to be buggy with 3.0.0.
@@ -217,11 +219,6 @@ install the following dependencies manually one by one:
 
     Pillow
         `The friendly PIL fork <https://pillow.readthedocs.io/en/stable/>`_.
-
-    Sphinx 2.0.1 & RTD Theme
-        These are required only by documentation building. Feel free to skip
-        them if you do not care. The RTD theme package is called
-        ``sphinx_rtd_theme``.
 
     OpenCV
         ``pip install opencv-python`` seems to work better than
@@ -245,6 +242,15 @@ install the following dependencies manually one by one:
 
     TensorFlow
         See `this installation guide <https://www.tensorflow.org/install>`_.
+
+    IPython
+        This is required only for debugging purposes (e.g., inserting
+        breakpoints with its ``embed()``). Skip it if you do not care.
+
+    Sphinx 2.0.1 & RTD Theme
+        These are required only by documentation building. Feel free to skip
+        them if you do not care. The RTD theme package is called
+        ``sphinx_rtd_theme``.
 
 
 Indices and tables

@@ -4,7 +4,10 @@ import numpy as np
 
 from absl import app
 
-from google3.experimental.users.xiuming.xiuminglib import xiuminglib as xm
+try:
+    from google3.experimental.users.xiuming.xiuminglib import xiuminglib as xm
+except ModuleNotFoundError:
+    import xiuminglib as xm
 
 
 def main(_):

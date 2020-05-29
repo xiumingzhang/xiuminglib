@@ -13,6 +13,8 @@ __all__ = [
     'imprt',
     'interact',
     'linalg',
+    'metric',
+    'os',
     'os',
     'sig',
     'tracker',

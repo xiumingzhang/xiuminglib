@@ -8,11 +8,12 @@ dependencies:
   - matplotlib=2.0.2
   - pillow
   - tqdm
-  - sphinx=2.0.1
-  - sphinx_rtd_theme
   - trimesh
   - tensorflow-gpu
   - pip
   - pip:
     - opencv-python
     - OpenEXR
+  - sphinx=2.0.1
+  - sphinx_rtd_theme
+  - ipython
