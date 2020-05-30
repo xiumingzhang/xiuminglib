@@ -11,16 +11,16 @@ except ModuleNotFoundError:
 
 
 def main(_):
-    dtype = 'uint8'
+    dtype = 'uint16'
     n_ch = 3
     ims = 256
-    ssim = xm.metric.SSIM(1)
-    im1 = np.random.rand(256, 256, 3)
-    im2 = np.random.rand(256, 256, 3)
+    ssim = xm.metric.SSIM(dtype)
+    dtype_max = np.iinfo(dtype).max
+    im1 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
+    im2 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
     print(ssim.compute(im1, im2))
 
     return
-
     dtype = 'uint8'
     n_ch = 3
     ims = 256
