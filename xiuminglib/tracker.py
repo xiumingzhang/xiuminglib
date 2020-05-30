@@ -10,24 +10,6 @@ from .vis.pt import scatter_on_img
 class LucasKanadeTracker():
     """Lucas Kanade Tracker.
 
-    Args:
-        frames (list(numpy.array)): Frame images in order. Arrays are either
-            H-by-W or H-by-W-by-3, and will be converted to grayscale.
-        pts (array_like): Points to track in the first frame. Of shape N-by-2.
-
-            .. code-block:: none
-
-                +------------>
-                |       pts[:, 1]
-                |
-                |
-                v pts[:, 0]
-
-        backtrack_thres (float, optional): Largest pixel deviation in the
-            :math:`x` or :math:`y` direction of a successful backtrack.
-        lk_params (dict, optional): Keyword parameters for
-            :func:`cv2.calcOpticalFlowPyrLK`.
-
     Attributes:
         frames (list(numpy.array)): Grayscale.
         pts (numpy.array)
@@ -50,6 +32,25 @@ class LucasKanadeTracker():
             Arrays should be Boolean.
     """
     def __init__(self, frames, pts, backtrack_thres=1, lk_params=None):
+        """
+        Args:
+            frames (list(numpy.array)): Frame images in order. Arrays are either
+                H-by-W or H-by-W-by-3, and will be converted to grayscale.
+            pts (array_like): Points to track in the first frame. Of shape N-by-2.
+
+                .. code-block:: none
+
+                    +------------>
+                    |       pts[:, 1]
+                    |
+                    |
+                    v pts[:, 0]
+
+            backtrack_thres (float, optional): Largest pixel deviation in the
+                :math:`x` or :math:`y` direction of a successful backtrack.
+            lk_params (dict, optional): Keyword parameters for
+                :func:`cv2.calcOpticalFlowPyrLK`.
+        """
         frames_gs = []
         for img in frames:
             if img.ndim == 3:

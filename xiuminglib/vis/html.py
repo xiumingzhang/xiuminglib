@@ -6,13 +6,6 @@ from ..os import makedirs
 class HTML():
     """HTML Builder.
 
-    Args:
-        title (str, optional): Page title.
-        bgcolor (str, optional): Background color. Supports at least color names
-            (like, ``'black'``) and Hex colors (like ``'#FFFFFF'``).
-        text_font (str, optional): Supported values include ``'arial'``, etc.
-        text_color (str, optional): Text color.
-
     Attributes:
         head (str)
         body (str)
@@ -20,8 +13,18 @@ class HTML():
             as a string.
         children (dict): Child elements, such as a table.
     """
-    def __init__(self, title="Results", bgcolor='black',
-                 text_font='roboto', text_color='white'):
+    def __init__(
+            self, title="Results", bgcolor='black', text_font='roboto',
+            text_color='white'):
+        """
+        Args:
+            title (str, optional): Page title.
+            bgcolor (str, optional): Background color. Supports at least color
+                names (like, ``'black'``) and Hex colors (like ``'#FFFFFF'``).
+            text_font (str, optional): Supported values include ``'arial'``,
+                etc.
+            text_color (str, optional): Text color.
+        """
         # Start string
         self.head = '''<!DOCTYPE html>
 <html>
@@ -102,11 +105,6 @@ class HTML():
 class Table():
     """HTML Table.
 
-    Args:
-        header (list(str), optional): Table headers.
-        width (str, optional): Table width.
-        border (int, optional): Border width.
-
     Attributes:
         head (str)
         body (str)
@@ -115,6 +113,12 @@ class Table():
         td (str): ``td`` start string that specifies a uniform style.
     """
     def __init__(self, header=None, width='100%', border=6):
+        """
+        Args:
+            header (list(str), optional): Table headers.
+            width (str, optional): Table width.
+            border (int, optional): Border width.
+        """
         self.head = '''
     <table style="width:{width}" border="{border}">
 '''.format(width=width, border=border)

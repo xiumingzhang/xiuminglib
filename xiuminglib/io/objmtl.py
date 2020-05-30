@@ -14,24 +14,6 @@ class Obj(object):
 
     Face, vertex, or other indices here all start from 1.
 
-    Args:
-        o (str, optional): Object name.
-        v (numpy.ndarray, optional): Vertex coordinates.
-        f (list, optional): Faces' vertex indices (1-indexed), e.g., ``[[1, 2, 3], [4, 5, 6],
-            [7, 8, 9, 10], ...]``.
-        vn (numpy.ndarray, optional): Vertex normals of shape N-by-3, normalized or unnormalized.
-        fn (list, optional): Faces' vertex normal indices, e.g., ``[[1, 1, 1], [],
-            [2, 2, 2, 2], ...]``. Must be of the same length as ``f``.
-        vt (numpy.ndarray, optional): Vertex texture coordinates of shape N-by-2. Coordinates
-            must be normalized to :math:`[0, 1]`.
-        ft (list, optional): Faces' texture vertex indices, e.g., ``[[1, 2, 3], [4, 5, 6], [],
-            ...]``. Must be of the same length as ``f``.
-        s (bool, optional): Group smoothing.
-        mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``.
-        usemtl (str, optional): Material name (defined in .mtl file).
-        diffuse_map_path (str, optional): Path to diffuse texture map.
-        diffuse_map_scale (float, optional): Scale of diffuse texture map.
-
     Attributes:
         o (str)
         v (numpy.ndarray)
@@ -48,6 +30,25 @@ class Obj(object):
     """
     def __init__(self, o=None, v=None, f=None, vn=None, fn=None, vt=None, ft=None,
                  s=False, mtllib=None, usemtl=None, diffuse_map_path=None, diffuse_map_scale=1):
+        """
+        Args:
+            o (str, optional): Object name.
+            v (numpy.ndarray, optional): Vertex coordinates.
+            f (list, optional): Faces' vertex indices (1-indexed), e.g., ``[[1, 2, 3], [4, 5, 6],
+                [7, 8, 9, 10], ...]``.
+            vn (numpy.ndarray, optional): Vertex normals of shape N-by-3, normalized or unnormalized.
+            fn (list, optional): Faces' vertex normal indices, e.g., ``[[1, 1, 1], [],
+                [2, 2, 2, 2], ...]``. Must be of the same length as ``f``.
+            vt (numpy.ndarray, optional): Vertex texture coordinates of shape N-by-2. Coordinates
+                must be normalized to :math:`[0, 1]`.
+            ft (list, optional): Faces' texture vertex indices, e.g., ``[[1, 2, 3], [4, 5, 6], [],
+                ...]``. Must be of the same length as ``f``.
+            s (bool, optional): Group smoothing.
+            mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``.
+            usemtl (str, optional): Material name (defined in .mtl file).
+            diffuse_map_path (str, optional): Path to diffuse texture map.
+            diffuse_map_scale (float, optional): Scale of diffuse texture map.
+        """
         self.mtllib = mtllib
         self.o = o
         # Vertices
@@ -345,23 +346,6 @@ class Obj(object):
 class Mtl(object):
     r"""Wavefront .mtl object.
 
-    Args:
-        obj (Obj): ``Obj`` object for which this ``Mtl`` object is created.
-        Ns (float, optional): Specular exponent, normally :math:`\in[0, 1000]`.
-        Ka (tuple, optional): Ambient reflectivity, each float normally :math:`\in[0, 1]`.
-            Values outside increase or decrease relectivity accordingly.
-        Kd (tuple, optional): Diffuse reflectivity. Same range as ``Ka``.
-        Ks (tuple, optional): Specular reflectivity. Same range as ``Ka``.
-        Ni (float, optional): Optical density, a.k.a. index of refraction :math:`\in[0.001, 10]`.
-            1 means light doesn't bend as it passes through. Increasing it increases the amount of bending.
-            Glass has an index of refraction of about 1.5. Values of less than 1.0 produce bizarre results
-            and are not recommended.
-        d (float, optional): Amount this material dissolves into the background :math:`\in[0, 1]`.
-            1.0 is fully opaque (default), and 0 is fully dissolved (completely transparent).
-            Unlike a real transparent material, the dissolve does not depend upon material thickness,
-            nor does it have any spectral character. Dissolve works on all illumination models.
-        illum (int, optional): Illumination model :math:`\in[0, 1, ..., 10]`.
-
     Attributes:
         mtlfile (str): Material file name, set to ``obj.mtllib``.
         newmtl (str): Material name, set to ``obj.usemtl``.
@@ -377,6 +361,24 @@ class Mtl(object):
     """
     def __init__(self, obj, Ns=96.078431, Ka=(1, 1, 1), Kd=(0.64, 0.64, 0.64),
                  Ks=(0.5, 0.5, 0.5), Ni=1, d=1, illum=2): # flake8: noqa
+        """
+        Args:
+            obj (Obj): ``Obj`` object for which this ``Mtl`` object is created.
+            Ns (float, optional): Specular exponent, normally :math:`\in[0, 1000]`.
+            Ka (tuple, optional): Ambient reflectivity, each float normally :math:`\in[0, 1]`.
+                Values outside increase or decrease relectivity accordingly.
+            Kd (tuple, optional): Diffuse reflectivity. Same range as ``Ka``.
+            Ks (tuple, optional): Specular reflectivity. Same range as ``Ka``.
+            Ni (float, optional): Optical density, a.k.a. index of refraction :math:`\in[0.001, 10]`.
+                1 means light doesn't bend as it passes through. Increasing it increases the amount of bending.
+                Glass has an index of refraction of about 1.5. Values of less than 1.0 produce bizarre results
+                and are not recommended.
+            d (float, optional): Amount this material dissolves into the background :math:`\in[0, 1]`.
+                1.0 is fully opaque (default), and 0 is fully dissolved (completely transparent).
+                Unlike a real transparent material, the dissolve does not depend upon material thickness,
+                nor does it have any spectral character. Dissolve works on all illumination models.
+            illum (int, optional): Illumination model :math:`\in[0, 1, ..., 10]`.
+        """
         self.mtlfile = obj.mtllib
         self.newmtl = obj.usemtl
         self.map_Kd_path = obj.diffuse_map_path

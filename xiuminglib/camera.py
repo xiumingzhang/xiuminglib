@@ -4,15 +4,6 @@ import numpy as np
 class PerspCamera(object):
     r"""Perspective camera in 35mm format.
 
-    Args:
-        f (float, optional): 35mm format-equivalent focal length in mm.
-        im_res (array_like, optional): Image height and width in pixels.
-        loc (array_like, optional): Camera location in object space.
-        lookat (array_like, optional): Where the camera points to in object space,
-            so default :math:`(0, 0, 0)` is the object center.
-        up (array_like, optional): Vector in object space that, when projected,
-            points upward in image.
-
     Attributes:
         f_mm (float): See ``f``.
         im_h (float): See ``im_res``.
@@ -23,12 +14,25 @@ class PerspCamera(object):
 
     Note:
         - Sensor width of the 35mm format is actually 36mm.
-        - This class assumes unit pixel aspect ratio (i.e., :math:`f_x = f_y`) and
-          no skewing between the sensor plane and optical axis.
-        - The active sensor size may be smaller than ``sensor_size``, depending on ``im_res``.
+        - This class assumes unit pixel aspect ratio (i.e., :math:`f_x = f_y`)
+          and no skewing between the sensor plane and optical axis.
+        - The active sensor size may be smaller than ``sensor_size``, depending
+          on ``im_res``.
         - ``aov`` is a hardware property, having nothing to do with ``im_res``.
     """
-    def __init__(self, f=50., im_res=(256, 256), loc=(1, 1, 1), lookat=(0, 0, 0), up=(0, 1, 0)):
+    def __init__(
+            self, f=50., im_res=(256, 256), loc=(1, 1, 1), lookat=(0, 0, 0),
+            up=(0, 1, 0)):
+        """
+        Args:
+            f (float, optional): 35mm format-equivalent focal length in mm.
+            im_res (array_like, optional): Image height and width in pixels.
+            loc (array_like, optional): Camera location in object space.
+            lookat (array_like, optional): Where the camera points to in
+                object space, so default :math:`(0, 0, 0)` is the object center.
+            up (array_like, optional): Vector in object space that, when
+                projected, points upward in image.
+        """
         self.f_mm = f
         self.im_h, self.im_w = im_res
         self.loc = np.array(loc)

@@ -21,14 +21,15 @@ class EXR():
     EXR files are produced by :mod:`xiuminglib.blender.render` and hence
     follow certain formats.
 
-    Args:
-        exr_path (str, optional): Path to the EXR file.
-
     Attributes:
         exr_f (str): Path to the EXR file.
         data (dict): Data loaded.
     """
     def __init__(self, exr_path=None):
+        """
+        Args:
+            exr_path (str, optional): Path to the EXR file.
+        """
         self.exr_f = exr_path
         if exr_path is None:
             self.data = None
