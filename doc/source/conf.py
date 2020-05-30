@@ -45,6 +45,11 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 
+# Napoleon settings
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -59,7 +64,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'xiuminglib'
-copyright = '2019, Xiuming Zhang'
+copyright = '2020, Xiuming Zhang'
 author = 'Xiuming Zhang'
 
 # The version info for the project you're documenting, acts as replacement for

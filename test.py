@@ -15,20 +15,14 @@ def main(_):
     n_ch = 3
     ims = 256
     ssim = xm.metric.SSIM(dtype)
-    dtype_max = np.iinfo(dtype).max
-    im1 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
-    im2 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
-    print(ssim.compute(im1, im2))
-
-    return
-    dtype = 'uint8'
-    n_ch = 3
-    ims = 256
     psnr = xm.metric.PSNR(dtype)
+    lpips = xm.metric.LPIPS(dtype)
     dtype_max = np.iinfo(dtype).max
     im1 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
     im2 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
-    print(psnr.compute(im1, im2))
+    print(ssim(im1, im2))
+    print(psnr(im1, im2))
+    print(lpips(im1, im2))
 
     return
 
