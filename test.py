@@ -11,13 +11,24 @@ except ModuleNotFoundError:
 
 
 def main(_):
+    dtype = 'uint8'
+    n_ch = 3
+    ims = 256
     ssim = xm.metric.SSIM(1)
     im1 = np.random.rand(256, 256, 3)
     im2 = np.random.rand(256, 256, 3)
     print(ssim.compute(im1, im2))
-    im1 = np.random.rand(256, 256, 1)
-    im2 = np.random.rand(256, 256, 1)
-    print(ssim.compute(im1, im2))
+
+    return
+
+    dtype = 'uint8'
+    n_ch = 3
+    ims = 256
+    psnr = xm.metric.PSNR(dtype)
+    dtype_max = np.iinfo(dtype).max
+    im1 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
+    im2 = (np.random.rand(ims, ims, n_ch) * dtype_max).astype(dtype)
+    print(psnr.compute(im1, im2))
 
     return
 

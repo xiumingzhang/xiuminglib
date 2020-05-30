@@ -6,5 +6,3 @@ scipy
 matplotlib==2.0.2
 pillow
 tqdm
-
-sphinx==2.0.1
