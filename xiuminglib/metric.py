@@ -1,3 +1,5 @@
+# pylint: disable=arguments-differ
+
 from os.path import abspath
 import numpy as np
 
@@ -16,14 +18,16 @@ class Base():
     """The base metric.
 
     Attributes:
-        dtype (str): Data type, with which data dynamic range is derived.
+        dtype (numpy.dtype): Data type, with which data dynamic range is
+            derived.
         drange (float): Dynamic range, i.e., difference between the maximum and
             minimum allowed.
     """
     def __init__(self, dtype):
         """
         Args:
-            dtype (str): Data type, from which dynamic range will be derived.
+            dtype (str or numpy.dtype): Data type, from which dynamic range will
+                be derived.
         """
         self.dtype = np.dtype(dtype)
         if self.dtype.kind == 'f':
@@ -56,16 +60,23 @@ class Base():
             "The two images are not even of the same shape"
 
     @staticmethod
-    def _assert_ch(im):
-        assert im.ndim == 3, \
-            "Input must be 3D (H-by-W-by-C), but is %dD" % im.ndim
-        assert im.shape[2] in (1, 3), \
-            "Input must have either 1 or 3 channels, but has %d" % im.shape[2]
+    def _ensure_3d(im):
+        if im.ndim == 2:
+            return np.expand_dims(im, -1)
+        if im.ndim == 3:
+            assert im.shape[2] in (1, 3), (
+                "If 3D, input must have either 1 or 3 channels, but has %d"
+            ) % im.shape[2]
+            return im
+        raise ValueError(
+            "Input must be 2D (H-by-W) or 3D (H-by-W-by-C), but is %dD"
+            % im.ndim)
 
     def __call__(self, im1, im2, **kwargs):
         """
         Args:
-            im1 (numpy.ndarray): An H-by-W-by-3 (or 1) image.
+            im1 (numpy.ndarray): An image of shape H-by-W, H-by-W-by-1,
+                or H-by-W-by-3.
             im2
 
         Returns:
@@ -86,7 +97,8 @@ class PSNR(Base):
         Args:
             im1
             im2
-            mask (numpy.ndarray, optional): An H-by-W-by-1 mask.
+            mask (numpy.ndarray, optional): An H-by-W logical array indicating
+                pixels that contribute to the computation.
 
         Returns:
             float: PSNR in dB.
@@ -95,23 +107,27 @@ class PSNR(Base):
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
         im2 = im2.astype(float)
+        im1 = self._ensure_3d(im1)
+        im2 = self._ensure_3d(im2)
         self._assert_same_shape(im1, im2)
-        self._assert_ch(im1)
-        self._assert_ch(im2)
         self._assert_drange(im1)
         self._assert_drange(im2)
         # To luma
         if im1.shape[2] == 3:
-            im1 = rgb2lum(im1)
-            im2 = rgb2lum(im2)
-        # Guaranteed to be H-by-W-by-1 now
+            im1 = np.expand_dims(rgb2lum(im1), -1)
+            im2 = np.expand_dims(rgb2lum(im2), -1)
+        # Inputs guaranteed to be HxWx1 now
         if mask is None:
             mask = np.ones(im1.shape)
-        mask = mask.astype(bool)
+        elif mask.ndim == 2:
+            mask = np.expand_dims(mask, -1)
+        # Mask guaranteed to be 3D
         assert mask.shape == im1.shape, (
             "Mask must be of shape {input_shape}, but is of shape "
-            "{actual}"
-        ).format(input_shape=im1.shape, actual=mask.shape)
+            "{mask_shape}"
+        ).format(input_shape=im1.shape, mask_shape=mask.shape)
+        # Mask guaranteed to be HxWx1 now
+        mask = mask.astype(bool) # in case it's not logical yet
         se = np.square(im1[mask] - im2[mask])
         mse = np.sum(se) / np.sum(mask)
         psnr = 10 * np.log10((self.drange ** 2) / mse) # dB
@@ -135,16 +151,16 @@ class SSIM(Base):
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
         im2 = im2.astype(float)
+        im1 = self._ensure_3d(im1)
+        im2 = self._ensure_3d(im2)
         self._assert_same_shape(im1, im2)
-        self._assert_ch(im1)
-        self._assert_ch(im2)
         self._assert_drange(im1)
         self._assert_drange(im2)
         # To luma
         if im1.shape[2] == 3:
-            im1 = rgb2lum(im1)
-            im2 = rgb2lum(im2)
-        # Guaranteed to be H-by-W-by-1 now
+            im1 = np.expand_dims(rgb2lum(im1), -1)
+            im2 = np.expand_dims(rgb2lum(im2), -1)
+        # Guaranteed to be HxWx1 now
         im1 = tf.convert_to_tensor(im1)
         im2 = tf.convert_to_tensor(im2)
         similarity = tf.image.ssim(im1, im2, max_val=self.drange).numpy()
@@ -162,7 +178,8 @@ class LPIPS(Base):
         data dynamic range becomes the maximum value allowed.
 
     Attributes:
-        dtype (str): Data type, with which data dynamic range is derived.
+        dtype (numpy.dtype): Data type, with which data dynamic range is
+            derived.
         drange (float): Dynamic range, i.e., difference between the maximum and
             minimum allowed.
         lpips_func (tf.function): The LPIPS network packed into a function.
@@ -170,7 +187,8 @@ class LPIPS(Base):
     def __init__(self, dtype, weight_pb=None):
         """
         Args:
-            dtype (str): Data type, from which maximum allowed will be derived.
+            dtype (str or numpy.dtype): Data type, from which maximum allowed
+                will be derived.
             weight_pb (str, optional): Path to the network weight protobuf.
                 Defaults to the bundled ``net-lin_alex_v0.1.pb``.
         """
@@ -197,31 +215,27 @@ class LPIPS(Base):
             tf.nest.map_structure(import_graph.as_graph_element, outputs))
 
     def __call__(self, im1, im2):
-        """
-        Args:
-            im1 (numpy.ndarray): An H-by-W-by-3 image.
-            im2
-
-        Returns:
-            float: The LPIPS metric computed (lower is better).
-        """
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
         im2 = im2.astype(float)
+        im1 = self._ensure_3d(im1)
+        im2 = self._ensure_3d(im2)
         self._assert_same_shape(im1, im2)
-        self._assert_ch(im1)
-        self._assert_ch(im2)
         self._assert_drange(im1)
         self._assert_drange(im2)
+        if im1.shape[2] == 1:
+            im1 = np.dstack([im1] * 3)
+            im2 = np.dstack([im2] * 3)
+        # Guaranteed to be HxWx3 now
         maxv = self.drange + 0 # NOTE: assumes the minimum value allowed is 0
         im1t = tf.convert_to_tensor(
             np.expand_dims(im1, axis=0), dtype=float) / maxv * 2 - 1
         im2t = tf.convert_to_tensor(
             np.expand_dims(im2, axis=0), dtype=float) / maxv * 2 - 1
-        # Now 1xHxWxC and all values in [-1, 1]
+        # Now 1xHxWx3 and all values in [-1, 1]
         lpips = self.lpips_func(
-            tf.transpose(im1t, [0, 3, 1, 2]), # to NxCxHxW
+            tf.transpose(im1t, [0, 3, 1, 2]), # to 1x3xHxW
             tf.transpose(im2t, [0, 3, 1, 2])
         ).numpy().squeeze()[()]
         return lpips

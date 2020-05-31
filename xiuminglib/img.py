@@ -617,10 +617,9 @@ def rgb2lum(im):
         im (numpy.ndarray): H-by-W-3 array of RGB values.
 
     Returns:
-        numpy.ndarray: H-by-W-by-1 array of relative luminance or luma.
+        numpy.ndarray: H-by-W array of relative luminance or luma.
     """
     lum = 0.2126 * im[:, :, 0] + 0.7152 * im[:, :, 1] + 0.0722 * im[:, :, 2]
-    lum = np.expand_dims(lum, -1)
     return lum
 
 
