@@ -1,6 +1,6 @@
 # xiuminglib
 
-My Library
+Functions and classes that I keep re-using in my vision and graphics research.
 
 
 ## Documentation: Installation and Usage
