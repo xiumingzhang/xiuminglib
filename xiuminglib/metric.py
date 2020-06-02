@@ -14,6 +14,25 @@ tf = preset_import('tf')
 gfile = preset_import('gfile')
 
 
+def compute_ci(data, level=0.95):
+    r"""Computes confidence interval.
+
+    Args:
+        data (list(float)): Samples.
+        level (float, optional): Confidence level. Defaults to :math:`0.95`.
+
+    Returns:
+        float: One-sided interval (i.e., mean :math:`\pm` this number).
+    """
+    from scipy import stats
+
+    data = np.array(data).astype(float)
+    n = len(data)
+    se = stats.sem(data)
+
+    return se * stats.t.ppf((1 + level) / 2., n - 1)
+
+
 class Base():
     """The base metric.
 
