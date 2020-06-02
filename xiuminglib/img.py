@@ -636,12 +636,14 @@ srgb_exponential_coeff = 1.055
 srgb_exponent = 2.4
 
 
-def linear2srgb(im):
+def linear2srgb(im, clip=False):
     r"""Converts an image from linear RGB values to sRGB.
 
     Args:
         im (numpy.ndarray): Of type ``float``, and all pixels must be
             :math:`\in [0, 1]`.
+        clip (bool, optional): Whether to clip values to :math:`[0,1]`.
+            Defaults to ``False``.
 
     Raises:
         TypeError: If input image is not ``float``.
@@ -650,6 +652,8 @@ def linear2srgb(im):
     Returns:
         numpy.ndarray: Converted image in sRGB.
     """
+    if clip:
+        im = np.clip(im, 0, 1)
     _assert_float_0to1(im)
     im_ = deepcopy(im)
     # Guaranteed to be [0, 1] floats
@@ -664,12 +668,14 @@ def linear2srgb(im):
     return im_
 
 
-def srgb2linear(im):
+def srgb2linear(im, clip=False):
     r"""Converts an image from sRGB values to linear RGB.
 
     Args:
         im (numpy.ndarray): Of type ``float``, and all pixels must be
             :math:`\in [0, 1]`.
+        clip (bool, optional): Whether to clip values to :math:`[0,1]`.
+            Defaults to ``False``.
 
     Raises:
         TypeError: If input image is not ``float``.
@@ -678,6 +684,8 @@ def srgb2linear(im):
     Returns:
         numpy.ndarray: Converted image in linear RGB.
     """
+    if clip:
+        im = np.clip(im, 0, 1)
     _assert_float_0to1(im)
     im_ = deepcopy(im)
     # Guaranteed to be [0, 1] floats
