@@ -48,6 +48,9 @@ def write_img(arr_uint, outpath):
     """
     logger_name = thisfile + '->write_img()'
 
+    if arr_uint.ndim == 3 and arr_uint.shape[2] == 1:
+        arr_uint = np.dstack([arr_uint] * 3)
+
     img = Image.fromarray(arr_uint)
 
     # Write to disk
