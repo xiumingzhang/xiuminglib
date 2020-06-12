@@ -74,6 +74,8 @@ def make_apng(
             # Array
             assert np.issubdtype(img.dtype, np.unsignedinteger), \
                 "If image is provided as an array, it has to be `uint`"
+            if (img.ndim == 3 and img.shape[2] == 1) or img.ndim == 2:
+                img = np.dstack([img] * 3)
             img = Image.fromarray(img)
             if labels is not None:
                 img = put_text(img, labels[img_i])
