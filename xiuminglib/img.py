@@ -1,9 +1,8 @@
-from os.path import abspath
 from copy import deepcopy
 import numpy as np
 
-from .log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from .log import get_logger
+logger = get_logger()
 
 from .imprt import preset_import
 cv2 = preset_import('cv2')
@@ -103,15 +102,12 @@ def resize(arr, new_h=None, new_w=None):
     Returns:
         numpy.ndarray: Resized image.
     """
-    logger_name = thisfile + '->resize()'
-
     h, w = arr.shape[:2]
     if new_h is not None and new_w is not None:
         if int(h / w * new_w) != new_h:
-            logger.name = logger_name
-            logger.warning(
-                ("Aspect ratio changed in resizing: original size is %s; "
-                 "new size is %s"), (h, w), (new_h, new_w))
+            logger.warning((
+                "Aspect ratio changed in resizing: original size is %s; "
+                "new size is %s"), (h, w), (new_h, new_w))
     elif new_h is None and new_w is not None:
         new_h = int(h / w * new_w)
     elif new_h is not None and new_w is None:
@@ -239,8 +235,6 @@ def grid_query_img(im, query_x, query_y, method='bilinear'):
     """
     from scipy.interpolate import RectBivariateSpline, interp2d
 
-    logger_name = thisfile + '->grid_query_img()'
-
     # Figure out image size and number of channels
     if im.ndim == 3:
         h, w, c = im.shape
@@ -257,7 +251,6 @@ def grid_query_img(im, query_x, query_y, method='bilinear'):
 
     if query_x.min() < 0 or query_x.max() > w - 1 or \
             query_y.min() < 0 or query_y.max() > h - 1:
-        logger.name = logger_name
         logger.warning("Sure you want to query points outside 'im'?")
 
     def query(x, y, z, qx, qy, method):
@@ -275,7 +268,6 @@ def grid_query_img(im, query_x, query_y, method='bilinear'):
     if c == 1:
         # Single channel
         z = im
-        logger.name = logger_name
         logger.info("Interpolation (method: %s) started", method)
         interp_val = query(x, y, z, query_x, query_y, method)
         logger.info("... done")
@@ -285,7 +277,6 @@ def grid_query_img(im, query_x, query_y, method='bilinear'):
         interp_val = np.zeros((len(query_x), len(query_y), c))
         for i in range(c):
             z = im[:, :, i]
-            logger.name = logger_name
             logger.info(
                 "Interpolation (method: %s) started for channel %d/%d",
                 method, i + 1, c)
@@ -459,9 +450,6 @@ def find_local_extrema(im, want_maxima, kernel_size=3):
     """
     from scipy.ndimage.filters import minimum_filter, maximum_filter
 
-    logger_name = thisfile + '->find_local_extrema()'
-
-    logger.name = logger_name
     logger.error("find_local_extrema() not tested yet!")
 
     # Figure out image size and number of channels

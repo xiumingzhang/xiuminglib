@@ -1,10 +1,9 @@
 # pylint: disable=arguments-differ
 
-from os.path import abspath
 import numpy as np
 
-from .log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from .log import get_logger
+logger = get_logger()
 
 from .img import rgb2lum
 from .const import Path
@@ -51,7 +50,6 @@ class Base():
         self.dtype = np.dtype(dtype)
         if self.dtype.kind == 'f':
             self.drange = 1.
-            logger.name = thisfile + '->Base'
             logger.warning(
                 "Input type is float, so assuming dynamic range to be 1")
         elif self.dtype.kind == 'u':

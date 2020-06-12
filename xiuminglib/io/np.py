@@ -1,8 +1,8 @@
-from os.path import abspath, exists, dirname
+from os.path import exists, dirname
 import numpy as np
 
 from .. import log, os as xm_os
-logger, thisfile = log.create_logger(abspath(__file__))
+logger = log.get_logger()
 
 
 def load_or_save_np(data_f, fallback=None):
@@ -28,8 +28,6 @@ def load_or_save_np(data_f, fallback=None):
     Writes
         - Return by the fallback, if provided.
     """
-    logger_name = thisfile + '->load_or_save_np()'
-
     # Decide data file type
     ext = data_f.split('.')[-1].lower()
     if ext == 'npy':
@@ -58,6 +56,5 @@ def load_or_save_np(data_f, fallback=None):
             msg += "(fallback provided); fallback return now saved to: "
     msg += data_f
 
-    logger.name = logger_name
     logger.info(msg)
     return data

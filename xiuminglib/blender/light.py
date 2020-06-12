@@ -4,15 +4,15 @@ light to an object (and specifying an up vector), by using
 :func:`point_light_to`.
 """
 
-from os.path import abspath, basename
+from os.path import basename
 import numpy as np
 
 from ..imprt import preset_import
 bpy = preset_import('bpy')
 Vector = preset_import('Vector')
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 
 def point_light_to(light, target):
@@ -22,8 +22,6 @@ def point_light_to(light, target):
         light (bpy_types.Object): Light object.
         target (tuple(float)): Target location to which light rays point.
     """
-    logger_name = thisfile + '->point_light_to()'
-
     target = Vector(target)
 
     # Point it to target
@@ -36,7 +34,6 @@ def point_light_to(light, target):
     rot_quat = direction.to_track_quat('-Z', 'Y')
     light.rotation_euler = rot_quat.to_euler()
 
-    logger.name = logger_name
     logger.info("Lamp '%s' points to %s now", light.name, target)
 
 
@@ -57,8 +54,6 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     Returns:
         bpy_types.Object: Light added.
     """
-    logger_name = thisfile + '->add_light_sun()'
-
     bpy.ops.object.lamp_add(
         type='SUN', location=xyz, rotation=rot_vec_rad)
     sun = bpy.context.active_object
@@ -76,7 +71,6 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     else:
         raise NotImplementedError(engine)
 
-    logger.name = logger_name
     logger.info("Sun lamp (parallel light) added")
 
     return sun
@@ -98,8 +92,6 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     Returns:
         bpy_types.Object: Light added.
     """
-    logger_name = thisfile + '->add_light_area()'
-
     if (np.abs(rot_vec_rad) > 2 * np.pi).any():
         logger.warning(
             ("Some input value falls outside [-2pi, 2pi]. "
@@ -121,7 +113,6 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     else:
         raise NotImplementedError(engine)
 
-    logger.name = logger_name
     logger.info("Area light added")
 
     return area
@@ -139,8 +130,6 @@ def add_light_point(xyz=(0, 0, 0), name=None, size=0, energy=100):
     Returns:
         bpy_types.Object: Light added.
     """
-    logger_name = thisfile + '->add_light_point()'
-
     bpy.ops.object.lamp_add(type='POINT', location=xyz)
     point = bpy.context.active_object
 
@@ -157,7 +146,6 @@ def add_light_point(xyz=(0, 0, 0), name=None, size=0, energy=100):
     else:
         raise NotImplementedError(engine)
 
-    logger.name = logger_name
     logger.info("Omnidirectional point light added")
 
     return point
@@ -179,8 +167,6 @@ def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, shadow_soft_size=0.1,
     Returns:
         bpy_types.Object: Light added.
     """
-    logger_name = thisfile + '->add_light_spot()'
-
     bpy.ops.object.lamp_add(type='SPOT', location=xyz)
     spot = bpy.context.active_object
 
@@ -201,7 +187,6 @@ def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, shadow_soft_size=0.1,
     spot.data.spot_size = spot_size
     spot.data.spot_blend = spot_blend
 
-    logger.name = logger_name
     logger.info("Spotlight lamp added")
 
     return spot
@@ -221,8 +206,6 @@ def add_light_env(env=(1, 1, 1, 1), strength=1, rot_vec_rad=(0, 0, 0),
         scale (tuple(float), optional): If all changed simultaneously,
             then no effects.
     """
-    logger_name = thisfile + '->add_light_env()'
-
     engine = bpy.context.scene.render.engine
     assert engine == 'CYCLES', "Rendering engine is not Cycles"
 
@@ -247,8 +230,6 @@ def add_light_env(env=(1, 1, 1, 1), strength=1, rot_vec_rad=(0, 0, 0),
     if isinstance(env, tuple):
         # Color
         bg_node.inputs['Color'].default_value = env
-
-        logger.name = logger_name
         logger.warning(("Environment is pure color, "
                         "so rotation and scale have no effect"))
     else:
@@ -265,6 +246,4 @@ def add_light_env(env=(1, 1, 1, 1), strength=1, rot_vec_rad=(0, 0, 0),
         links.new(env_node.outputs['Color'], bg_node.inputs['Color'])
 
     bg_node.inputs['Strength'].default_value = strength
-
-    logger.name = logger_name
     logger.info("Environment light added")

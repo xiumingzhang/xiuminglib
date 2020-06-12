@@ -1,8 +1,7 @@
-from os.path import abspath
 from importlib import import_module
 
-from .log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from .log import get_logger
+logger = get_logger()
 
 # For < Python 3.6
 try:
@@ -67,12 +66,10 @@ def import_module_404ok(*args, **kwargs):
     """Returns ``None`` (instead of failing) in the case of
     ``ModuleNotFoundError``.
     """
-    logger_name = thisfile + '->import_module_404ok()'
     try:
         mod = import_module(*args, **kwargs)
     except (ModuleNotFoundError, ImportError) as e:
         mod = None
-        logger.name = logger_name
         logger.debug("Ignored: %s", str(e))
     return mod
 

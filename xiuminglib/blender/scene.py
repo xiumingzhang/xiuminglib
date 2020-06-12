@@ -1,11 +1,11 @@
 from os import remove
-from os.path import abspath, dirname, exists
+from os.path import dirname, exists
 
 from ..imprt import preset_import
 bpy = preset_import('bpy')
 
 from .. import log, os as xm_os
-logger, thisfile = log.create_logger(abspath(__file__))
+logger = log.get_logger()
 
 
 def save_blend(outpath=None, delete_overwritten=False):
@@ -20,8 +20,6 @@ def save_blend(outpath=None, delete_overwritten=False):
     Writes
         - A .blend file.
     """
-    logger_name = thisfile + '->save_blend()'
-
     if outpath is not None:
         # "Save as" scenario: delete and then save
         xm_os.makedirs(dirname(outpath))
@@ -32,7 +30,6 @@ def save_blend(outpath=None, delete_overwritten=False):
         # bpy.ops.file.autopack_toggle()
         bpy.ops.file.pack_all()
     except RuntimeError:
-        logger.name = logger_name
         logger.error("Failed to pack some files")
 
     if outpath is None:
@@ -45,7 +42,6 @@ def save_blend(outpath=None, delete_overwritten=False):
     else:
         bpy.ops.wm.save_as_mainfile(filepath=outpath)
 
-    logger.name = logger_name
     logger.info("Saved to %s", outpath)
 
 

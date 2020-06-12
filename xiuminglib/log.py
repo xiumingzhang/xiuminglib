@@ -2,31 +2,18 @@ import logging
 from platform import system
 
 
-def create_logger(file_abspath, path_starts_from='xiuminglib'):
+def get_logger(level=None):
     """Creates a logger for functions in the library.
 
     Args:
-        file_abspath (str): Absolute path to the file that uses the logger.
-        path_starts_from (str, optional): Truncates ``thisfile`` so that it
-            starts from this.
+        level (str, optional): Logging level. Defaults to ``logging.INFO``.
 
     Returns:
-        tuple:
-            - **logger** (*logging.Logger*) -- Logger created.
-            - **thisfile** (*str*) -- Partial path to the user file (e.g.,
-              starting from package name).
+        logging.Logger: Logger created.
     """
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger()
-
-    folder_names = file_abspath.split('/')
-    if path_starts_from in folder_names:
-        start_idx = folder_names.index(path_starts_from)
-    else:
-        start_idx = 0
-    thisfile = '/'.join(folder_names[start_idx:])
-
-    return logger, thisfile
+    return logger
 
 
 def _add_coloring_to_emit_ansi(fn):

@@ -1,5 +1,5 @@
 from os import remove, rename
-from os.path import abspath, dirname, basename
+from os.path import dirname, basename
 from time import time
 import numpy as np
 
@@ -13,8 +13,8 @@ BVHTree = preset_import('BVHTree')
 
 from .object import get_bmesh, raycast
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from ..geometry.proj import from_homo
 
@@ -50,8 +50,6 @@ def add_camera(xyz=(0, 0, 0),
     Returns:
         bpy_types.Object: Camera added.
     """
-    logger_name = thisfile + '->add_camera()'
-
     bpy.ops.object.camera_add()
     cam = bpy.context.active_object
 
@@ -69,7 +67,6 @@ def add_camera(xyz=(0, 0, 0),
     cam.data.clip_start = clip_start
     cam.data.clip_end = clip_end
 
-    logger.name = logger_name
     logger.info("Camera '%s' added", cam.name)
 
     return cam
@@ -122,7 +119,6 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
         up (array_like, optional): World vector that, when projected,
             points up in the image plane.
     """
-    logger_name = thisfile + '->point_camera_to()'
     failed_ensuring_up_msg = \
         "Camera '%s' pointed to %s, but with no guarantee on up vector" \
         % (cam.name, tuple(xyz_target))
@@ -150,7 +146,6 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
         up_proj = Vector((up_proj[0] / up_proj[2], up_proj[1] / up_proj[2])) - \
             Vector((orig_proj[0] / orig_proj[2], orig_proj[1] / orig_proj[2]))
     except ZeroDivisionError:
-        logger.name = logger_name
         logger.error(
             ("w in homogeneous coordinates is 0; "
              "camera coincides with the point to project? "
@@ -158,7 +153,6 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
         logger.info(failed_ensuring_up_msg)
         return cam
     if up_proj.length == 0:
-        logger.name = logger_name
         logger.error(
             ("Up vector projected to zero length; "
              "optical axis coincides with the up vector? "
@@ -179,7 +173,6 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
     a = Vector((0, 1)).angle_signed(up_proj) # clockwise is positive
     cam.rotation_euler.rotate(Quaternion(direction, a))
 
-    logger.name = logger_name
     logger.info("Camera '%s' pointed to %s with world %s pointing up",
                 cam.name, tuple(xyz_target), tuple(up))
 
@@ -202,8 +195,6 @@ def intrinsics_compatible_with_scene(cam, eps=1e-6):
     Returns:
         bool: Check result.
     """
-    logger.name = thisfile + '->intrinsics_compatible_with_scene()'
-
     # Camera
     sensor_width_mm = cam.data.sensor_width
     sensor_height_mm = cam.data.sensor_height
@@ -246,8 +237,6 @@ def correct_sensor_height(cam):
     Args:
         cam (bpy_types.Object): Camera.
     """
-    logger_name = thisfile + '->correct_sensor_height()'
-
     # Camera
     sensor_width_mm = cam.data.sensor_width
 
@@ -262,7 +251,6 @@ def correct_sensor_height(cam):
     sensor_height_mm = sensor_width_mm * h / w / pixel_aspect_ratio
     cam.data.sensor_height = sensor_height_mm
 
-    logger.name = logger_name
     logger.info("Sensor height changed to %f", sensor_height_mm)
 
 
@@ -302,8 +290,6 @@ def get_camera_matrix(cam, keep_disparity=False):
             - **ext_mat** (*mathutils.Matrix*) -- Camera extrinsics. 4-by-4 if
               ``keep_disparity``; else, 3-by-4.
     """
-    logger_name = thisfile + '->get_camera_matrix()'
-
     # Necessary scene update
     scene = bpy.context.scene
     scene.update()
@@ -403,7 +389,6 @@ def get_camera_matrix(cam, keep_disparity=False):
     # Camera matrix
     cam_mat = int_mat * ext_mat
 
-    logger.name = logger_name
     logger.info("Done computing camera matrix for '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
@@ -435,8 +420,6 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
         numpy.ndarray: Camera :math:`z`-buffer.
     """
     cv2 = preset_import('cv2')
-
-    logger_name = thisfile + '->get_camera_zbuffer()'
 
     # Validate and standardize error-prone inputs
     if hide is not None:
@@ -505,10 +488,11 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     # Load z-buffer as array
     exr_path = outpath + '%04d' % scene.frame_current + '.exr'
     im = cv2.imread(exr_path, cv2.IMREAD_UNCHANGED)
-    assert (np.array_equal(im[:, :, 0], im[:, :, 1]) and
-            np.array_equal(im[:, :, 0], im[:, :, 2])), \
-        ("BGR channels of the z-buffer should be all the same, "
-         "but they are not")
+    assert (
+        np.array_equal(im[:, :, 0], im[:, :, 1]) and np.array_equal(
+            im[:, :, 0], im[:, :, 2])), (
+                "BGR channels of the z-buffer should be all the same, "
+                "but they are not")
     zbuffer = im[:, :, 0]
 
     # Delete or move the .exr as user wants
@@ -519,7 +503,6 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
         # User wants it -- rename
         rename(exr_path, outpath + '.exr')
 
-    logger.name = logger_name
     logger.info("Got z-buffer of camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
@@ -572,8 +555,6 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
               list(mathutils.Vector)*) -- Normal vector(s) at the
               intersection(s) specified in the same space as ``xyzs``.
     """
-    logger_name = thisfile + '->backproject_to_3d()'
-
     # Standardize inputs
     xys = np.array(xys).reshape(-1, 2)
     objs = bpy.data.objects
@@ -663,7 +644,6 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         ("No matter whether a ray is a hit or not, we must have a "
          "\"look-at\" for it")
 
-    logger.name = logger_name
     logger.info("Backprojection done with camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
@@ -703,8 +683,6 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
     Returns:
         list: Indices of vertices that are visible.
     """
-    logger_name = thisfile + '->get_visible_vertices()'
-
     legal = ('zbuffer', 'raycast')
     assert method in legal, \
         "Legal methods: %s, but found '%s'" % (legal, method)
@@ -769,7 +747,6 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
             if visible:
                 visible_vert_ind.append(bv.index)
 
-    logger.name = logger_name
     logger.info("Visibility test done with camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
 
@@ -799,8 +776,6 @@ def get_2d_bounding_box(obj, cam):
             |
             v y (0, h)
     """
-    logger_name = thisfile + '->get_2d_bounding_box()'
-
     scene = bpy.context.scene
     scale = scene.render.resolution_percentage / 100.
     w = scene.render.resolution_x * scale
@@ -825,13 +800,11 @@ def get_2d_bounding_box(obj, cam):
         np.array([x_max, y_max]),
         np.array([x_min, y_max])))
 
-    logger.name = logger_name
     logger.info("Got 2D bounding box of '%s' in camera '%s'",
                 obj.name, cam.name)
     logger.warning("... using w = %d; h = %d", w, h)
 
     if x_min < 0 or x_max >= w or y_min < 0 or y_max >= h:
-        logger.name = logger_name
         logger.warning("Part of the bounding box falls outside the frame")
 
     return corners

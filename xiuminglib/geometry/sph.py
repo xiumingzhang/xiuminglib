@@ -1,8 +1,7 @@
-from os.path import abspath
 import numpy as np
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 
 def uniform_sample_sph(n, r=1, convention='lat-lng'):

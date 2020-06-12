@@ -1,10 +1,10 @@
-from os.path import abspath, join, dirname
+from os.path import join, dirname
 from io import BytesIO
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from .. import const
 from ..io import img as imgio
@@ -40,8 +40,6 @@ def make_apng(
     Writes
         - An animated PNG of the images.
     """
-    logger_name = thisfile + '->make_apng()'
-
     if outpath is None:
         outpath = join(const.Dir.tmp, 'make_apng.apng')
     if not outpath.endswith('.apng'):
@@ -92,7 +90,6 @@ def make_apng(
             h, save_all=True, append_images=imgs_loaded[1:],
             duration=duration)
 
-    logger.name = logger_name
     logger.info("Images written as an animated PNG to:\n\t%s", outpath)
 
 
@@ -116,8 +113,6 @@ def make_video(
     Writes
         - A video of the images.
     """
-    logger_name = thisfile + '->make_video()'
-
     if outpath is None:
         outpath = join(const.Dir.tmp, 'make_video.mp4')
     makedirs(dirname(outpath))
@@ -177,5 +172,4 @@ def make_video(
 
         vw.release()
 
-    logger.name = logger_name
     logger.info("Images written as a video to:\n%s", outpath)

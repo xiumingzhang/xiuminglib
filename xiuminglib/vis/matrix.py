@@ -1,8 +1,8 @@
-from os.path import dirname, abspath, join
+from os.path import dirname, join
 import numpy as np
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from .. import const, os as xm_os
 from ..imprt import preset_import
@@ -31,8 +31,6 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     from ..img import gamma_correct
     cv2 = preset_import('cv2')
 
-    logger_name = thisfile + '->matrix_as_image()'
-
     if outpath is None:
         outpath = join(const.Dir.tmp, 'matrix_as_image.png')
 
@@ -60,7 +58,6 @@ def matrix_as_image(arr, outpath=None, gamma=None):
     minv, maxv = arr.min(), arr.max()
     if minv == maxv:
         im = (arr * dtype_max).astype(dtype)
-        logger.name = logger_name
         logger.warning(
             ("RGB channels contain only a single value: %f, so only "
              "operations performed: multiplied by dtype_max and cast to "
@@ -85,7 +82,6 @@ def matrix_as_image(arr, outpath=None, gamma=None):
         # Grayscale or RGB
         cv2.imwrite(outpath, im[:, :, ::-1])
 
-    logger.name = logger_name
     logger.info("Matrix visualized as image to:\n\t%s", outpath)
 
 
@@ -154,11 +150,8 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-    logger_name = thisfile + '->matrix_as_heatmap()'
-
     ok_version = '2.0.2'
     if matplotlib.__version__ != ok_version:
-        logger.name = logger_name
         logger.warning(
             ("Developed and tested with Matplotlib %s (you are using %s). "
              "Known to be buggy with 3.0.0"),
@@ -226,5 +219,4 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
     plt.close('all')
 
-    logger.name = logger_name
     logger.info("Matrix visualized as heatmap to:\n\t%s", outpath)

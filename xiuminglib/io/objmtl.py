@@ -1,15 +1,17 @@
-from os.path import abspath, basename, dirname, join
+# pylint: disable=len-as-condition
+
+from os.path import basename, dirname, join
 from shutil import copy
 import numpy as np
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from .. import os as xm_os
 from ..imprt import preset_import
 
 
-class Obj(object):
+class Obj:
     """Wavefront .obj Object.
 
     Face, vertex, or other indices here all start from 1.
@@ -28,21 +30,26 @@ class Obj(object):
         diffuse_map_path (str)
         diffuse_map_scale (float)
     """
-    def __init__(self, o=None, v=None, f=None, vn=None, fn=None, vt=None, ft=None,
-                 s=False, mtllib=None, usemtl=None, diffuse_map_path=None, diffuse_map_scale=1):
+    def __init__(
+            self, o=None, v=None, f=None, vn=None, fn=None, vt=None, ft=None,
+            s=False, mtllib=None, usemtl=None, diffuse_map_path=None,
+            diffuse_map_scale=1):
         """
         Args:
             o (str, optional): Object name.
             v (numpy.ndarray, optional): Vertex coordinates.
-            f (list, optional): Faces' vertex indices (1-indexed), e.g., ``[[1, 2, 3], [4, 5, 6],
-                [7, 8, 9, 10], ...]``.
-            vn (numpy.ndarray, optional): Vertex normals of shape N-by-3, normalized or unnormalized.
-            fn (list, optional): Faces' vertex normal indices, e.g., ``[[1, 1, 1], [],
-                [2, 2, 2, 2], ...]``. Must be of the same length as ``f``.
-            vt (numpy.ndarray, optional): Vertex texture coordinates of shape N-by-2. Coordinates
-                must be normalized to :math:`[0, 1]`.
-            ft (list, optional): Faces' texture vertex indices, e.g., ``[[1, 2, 3], [4, 5, 6], [],
-                ...]``. Must be of the same length as ``f``.
+            f (list, optional): Faces' vertex indices (1-indexed), e.g.,
+                ``[[1, 2, 3], [4, 5, 6], [7, 8, 9, 10], ...]``.
+            vn (numpy.ndarray, optional): Vertex normals of shape N-by-3,
+                normalized or not.
+            fn (list, optional): Faces' vertex normal indices, e.g.,
+                ``[[1, 1, 1], [], [2, 2, 2, 2], ...]``. Must be of the same
+                length as ``f``.
+            vt (numpy.ndarray, optional): Vertex texture coordinates of shape
+                N-by-2. Coordinates must be normalized to :math:`[0, 1]`.
+            ft (list, optional): Faces' texture vertex indices, e.g.,
+                ``[[1, 2, 3], [4, 5, 6], [], ...]``. Must be of the same length
+                as ``f``.
             s (bool, optional): Group smoothing.
             mtllib (str, optional): Material file name, e.g., ``'cube.mtl'``.
             usemtl (str, optional): Material name (defined in .mtl file).
@@ -55,9 +62,11 @@ class Obj(object):
         if v is not None:
             assert (len(v.shape) == 2 and v.shape[1] == 3), "'v' must be *-by-3"
         if vt is not None:
-            assert (len(vt.shape) == 2 and vt.shape[1] == 2), "'vt' must be *-by-2"
+            assert (len(vt.shape) == 2 and vt.shape[1] == 2), \
+                "'vt' must be *-by-2"
         if vn is not None:
-            assert (len(vn.shape) == 2 and vn.shape[1] == 3), "'vn' must be *-by-3"
+            assert (len(vn.shape) == 2 and vn.shape[1] == 3), \
+                "'vn' must be *-by-3"
         self.v = v
         self.vt = vt
         self.vn = vn
@@ -91,8 +100,9 @@ class Obj(object):
         # Check if there's only one object
         n_o = len([l for l in lines if l[0] == 'o'])
         if n_o > 1:
-            raise ValueError((".obj file containing multiple objects is not supported "
-                              "-- consider using ``assimp`` instead"))
+            raise ValueError((
+                ".obj file containing multiple objects is not supported "
+                "-- consider using ``assimp`` instead"))
         # Count for array initializations
         n_v = len([l for l in lines if l[:2] == 'v '])
         n_vt = len([l for l in lines if l[:3] == 'vt '])
@@ -108,8 +118,9 @@ class Obj(object):
         usemtl = None
         s = False
         f = [None] * n_f
-        # If there's no 'ft' or 'fn' for a 'f', a '[]' is inserted as a placeholder
-        # This guarantees 'f[i]' always corresponds to 'ft[i]' and 'fn[i]'
+        # If there's no 'ft' or 'fn' for a 'f', a '[]' is inserted as a
+        # placeholder. This guarantees 'f[i]' always corresponds to 'ft[i]'
+        # and 'fn[i]'
         ft = [None] * n_f
         fn = [None] * n_f
         # Load data line by line
@@ -148,15 +159,22 @@ class Obj(object):
                     fn[i_f] = []
                     n_ft += 1
                 elif n_slashes == 2:
-                    if l[2:].split(' ')[0].count('//') == 1: # f and fn (1//1 2//1 3//1)
-                        f[i_f] = [int(x.split('//')[0]) for x in l[2:].split(' ')]
+                    if l[2:].split(' ')[0].count('//') == 1:
+                        # f and fn (1//1 2//1 3//1)
+                        f[i_f] = [
+                            int(x.split('//')[0]) for x in l[2:].split(' ')]
                         ft[i_f] = []
-                        fn[i_f] = [int(x.split('//')[1]) for x in l[2:].split(' ')]
+                        fn[i_f] = [
+                            int(x.split('//')[1]) for x in l[2:].split(' ')]
                         n_fn += 1
-                    else: # f, ft and fn (1/1/1 2/2/1 3/3/1)
-                        f[i_f] = [int(x.split('/')[0]) for x in l[2:].split(' ')]
-                        ft[i_f] = [int(x.split('/')[1]) for x in l[2:].split(' ')]
-                        fn[i_f] = [int(x.split('/')[2]) for x in l[2:].split(' ')]
+                    else:
+                        # f, ft and fn (1/1/1 2/2/1 3/3/1)
+                        f[i_f] = [
+                            int(x.split('/')[0]) for x in l[2:].split(' ')]
+                        ft[i_f] = [
+                            int(x.split('/')[1]) for x in l[2:].split(' ')]
+                        fn[i_f] = [
+                            int(x.split('/')[2]) for x in l[2:].split(' ')]
                         n_ft += 1
                         n_fn += 1
                 i_f += 1
@@ -176,7 +194,6 @@ class Obj(object):
 
     # Print model info
     def print_info(self):
-        logger_name = thisfile + '->Obj:print_info()'
         # Basic stats
         mtllib = self.mtllib
         o = self.o
@@ -189,14 +206,13 @@ class Obj(object):
         diffuse_map_scale = self.diffuse_map_scale
         n_f = len(self.f) if self.f is not None else 0
         if self.ft is not None:
-            n_ft = sum(len(x) > 0 for x in self.ft) # pylint: disable=len-as-condition
+            n_ft = sum(len(x) > 0 for x in self.ft)
         else:
             n_ft = 0
         if self.fn is not None:
-            n_fn = sum(len(x) > 0 for x in self.fn) # pylint: disable=len-as-condition
+            n_fn = sum(len(x) > 0 for x in self.fn)
         else:
             n_fn = 0
-        logger.name = logger_name
         logger.info("-------------------------------------------------------")
         logger.info("Object name            'o'            %s", o)
         logger.info("Material file          'mtllib'       %s", mtllib)
@@ -222,35 +238,40 @@ class Obj(object):
 
     # Set vn and fn according to v and f
     def set_face_normals(self):
-        """Sets face normals according to geometric vertices and their orders in forming faces.
+        """Sets face normals according to geometric vertices and their orders
+        in forming faces.
 
         Returns:
             tuple:
                 - **vn** (*numpy.ndarray*) -- Normal vectors.
-                - **fn** (*list*) -- Normal faces. Each member list consists of the same integer,
-                  e.g., ``[[1, 1, 1], [2, 2, 2, 2], ...]``.
+                - **fn** (*list*) -- Normal faces. Each member list consists of
+                  the same integer, e.g., ``[[1, 1, 1], [2, 2, 2, 2], ...]``.
         """
-        logger_name = thisfile + '->Obj:set_face_normals()'
         n_f = len(self.f)
         vn = np.zeros((n_f, 3))
         fn = [None] * n_f
         # For each face
         for i, verts_id in enumerate(self.f):
-            # Vertices must be coplanar to be valid, so we can just pick the first three
-            ind = [x - 1 for x in verts_id[:3]] # in .obj, index starts from 1, not 0
+            # Vertices must be coplanar to be valid, so we can just pick the
+            # first three
+            ind = [x - 1 for x in verts_id[:3]] # in .obj, index starts from 1,
+            # not 0
             verts = self.v[ind, :]
             p1p2 = verts[1, :] - verts[0, :]
             p1p3 = verts[2, :] - verts[0, :]
             normal = np.cross(p1p2, p1p3)
             if np.linalg.norm(normal) == 0:
-                raise ValueError("Normal vector of zero length probably due to numerical issues?")
+                raise ValueError((
+                    "Normal vector of zero length probably due to numerical "
+                    "issues?"))
             vn[i, :] = normal / np.linalg.norm(normal) # normalize
             fn[i] = [i + 1] * len(verts_id)
         # Set normals and return
         self.vn = vn
         self.fn = fn
-        logger.name = logger_name
-        logger.info("Face normals recalculated with 'v' and 'f' -- 'vn' and 'fn' updated")
+        logger.info((
+            "Face normals recalculated with 'v' and 'f' -- 'vn' and 'fn' "
+            "updated"))
         return vn, fn
 
     # Output object to file
@@ -263,7 +284,6 @@ class Obj(object):
         Writes
             - Output .obj file.
         """
-        logger_name = thisfile + '->Obj:write_file()'
         mtllib = self.mtllib
         o = self.o
         v, vt, vn = self.v, self.vt, self.vn
@@ -301,56 +321,75 @@ class Obj(object):
             if ft is None and fn is None: # just f (1 2 3)
                 for v_id in f:
                     fid.write(('f' + ' %d' * len(v_id) + '\n') % tuple(v_id))
-            elif ft is not None and fn is None: # f and ft (1/1 2/2 3/3 or 1 2 3)
+            elif ft is not None and fn is None:
+                # f and ft (1/1 2/2 3/3 or 1 2 3)
                 for i, v_id in enumerate(f):
                     vt_id = ft[i]
                     if len(vt_id) == len(v_id):
-                        fid.write(('f' + ' %d/%d' * len(v_id) + '\n') %
-                                  tuple([x for pair in zip(v_id, vt_id) for x in pair]))
+                        fid.write((
+                            'f' + ' %d/%d' * len(v_id) + '\n') % tuple(
+                                [x for pair in zip(v_id, vt_id) for x in pair]))
                     elif not vt_id:
-                        fid.write(('f' + ' %d' * len(v_id) + '\n') % tuple(v_id))
+                        fid.write(
+                            ('f' + ' %d' * len(v_id) + '\n') % tuple(v_id))
                     else:
-                        raise ValueError("'ft[%d]', not empty, doesn't match length of 'f[%d]'" % (i, i))
-            elif ft is None and fn is not None: # f and fn (1//1 2//1 3//1 or 1 2 3)
+                        raise ValueError((
+                            "'ft[%d]', not empty, doesn't match length of "
+                            "'f[%d]'") % (i, i))
+            elif ft is None and fn is not None:
+                # f and fn (1//1 2//1 3//1 or 1 2 3)
                 for i, v_id in enumerate(f):
                     vn_id = fn[i]
                     if len(vn_id) == len(v_id):
-                        fid.write(('f' + ' %d//%d' * len(v_id) + '\n') %
-                                  tuple([x for pair in zip(v_id, vn_id) for x in pair]))
+                        fid.write((
+                            'f' + ' %d//%d' * len(v_id) + '\n') % tuple(
+                                [x for pair in zip(v_id, vn_id) for x in pair]))
                     elif not vn_id:
-                        fid.write(('f' + ' %d' * len(v_id) + '\n') % tuple(v_id))
+                        fid.write(
+                            ('f' + ' %d' * len(v_id) + '\n') % tuple(v_id))
                     else:
-                        raise ValueError("'fn[%d]', not empty, doesn't match length of 'f[%d]'" % (i, i))
-            elif ft is not None and fn is not None: # f, ft and fn (1/1/1 2/2/1 3/3/1 or 1/1 2/2 3/3 or 1//1 2//1 3//1 or 1 2 3)
+                        raise ValueError((
+                            "'fn[%d]', not empty, doesn't match length of "
+                            "'f[%d]'") % (i, i))
+            elif ft is not None and fn is not None:
+                # f, ft and fn (1/1/1 2/2/1 3/3/1 or 1/1 2/2 3/3 or
+                # 1//1 2//1 3//1 or 1 2 3)
                 for i, v_id in enumerate(f):
                     vt_id = ft[i]
                     vn_id = fn[i]
                     if len(vt_id) == len(v_id) and len(vn_id) == len(v_id):
-                        fid.write(('f' + ' %d/%d/%d' * len(v_id) + '\n') %
-                                  tuple([x for triple in zip(v_id, vt_id, vn_id) for x in triple]))
+                        fid.write((
+                            'f' + ' %d/%d/%d' * len(v_id) + '\n') % tuple(
+                                [x for triple in zip(v_id, vt_id, vn_id)
+                                 for x in triple]))
                     elif len(vt_id) == len(v_id) and not vn_id:
-                        fid.write(('f' + ' %d/%d' * len(v_id) + '\n') %
-                                  tuple([x for pair in zip(v_id, vt_id) for x in pair]))
+                        fid.write((
+                            'f' + ' %d/%d' * len(v_id) + '\n') % tuple(
+                                [x for pair in zip(v_id, vt_id) for x in pair]))
                     elif not vt_id and len(vn_id) == len(v_id):
-                        fid.write(('f' + ' %d//%d' * len(v_id) + '\n') %
-                                  tuple([x for pair in zip(v_id, vn_id) for x in pair]))
+                        fid.write((
+                            'f' + ' %d//%d' * len(v_id) + '\n') % tuple(
+                                [x for pair in zip(v_id, vn_id) for x in pair]))
                     elif not vt_id and not vn_id:
-                        fid.write(('f' + ' %d' * len(v_id) + '\n') % tuple(v_id))
+                        fid.write(
+                            ('f' + ' %d' * len(v_id) + '\n') % tuple(v_id))
                     else:
-                        raise ValueError(
-                            "If not empty, 'ft[%d]' or 'fn[%d]' doesn't match length of 'f[%d]'" % (i, i, i))
-        logger.name = logger_name
+                        raise ValueError((
+                            "If not empty, 'ft[%d]' or 'fn[%d]' doesn't match "
+                            "length of 'f[%d]'") % (i, i, i))
         logger.info("Done writing to %s", objpath)
 
 
-class Mtl(object):
+class Mtl:
     r"""Wavefront .mtl object.
 
     Attributes:
         mtlfile (str): Material file name, set to ``obj.mtllib``.
         newmtl (str): Material name, set to ``obj.usemtl``.
-        map_Kd_path (str): Path to the diffuse map, set to ``obj.diffuse_map_path``.
-        map_Kd_scale (float): Scale of the diffuse map, set to ``obj.diffuse_map_scale``.
+        map_Kd_path (str): Path to the diffuse map, set to
+            ``obj.diffuse_map_path``.
+        map_Kd_scale (float): Scale of the diffuse map, set to
+            ``obj.diffuse_map_scale``.
         Ns (float)
         Ka (tuple)
         Kd (tuple)
@@ -359,25 +398,32 @@ class Mtl(object):
         d (float)
         illum (int)
     """
-    def __init__(self, obj, Ns=96.078431, Ka=(1, 1, 1), Kd=(0.64, 0.64, 0.64),
-                 Ks=(0.5, 0.5, 0.5), Ni=1, d=1, illum=2): # flake8: noqa
-        """
+    def __init__(
+            self, obj, Ns=96.078431, Ka=(1, 1, 1), Kd=(0.64, 0.64, 0.64),
+            Ks=(0.5, 0.5, 0.5), Ni=1, d=1, illum=2):
+        r"""
         Args:
             obj (Obj): ``Obj`` object for which this ``Mtl`` object is created.
-            Ns (float, optional): Specular exponent, normally :math:`\in[0, 1000]`.
-            Ka (tuple, optional): Ambient reflectivity, each float normally :math:`\in[0, 1]`.
-                Values outside increase or decrease relectivity accordingly.
+            Ns (float, optional): Specular exponent, normally
+                :math:`\in[0, 1000]`.
+            Ka (tuple, optional): Ambient reflectivity, each float normally
+                :math:`\in[0, 1]`. Values outside increase or decrease
+                relectivity accordingly.
             Kd (tuple, optional): Diffuse reflectivity. Same range as ``Ka``.
             Ks (tuple, optional): Specular reflectivity. Same range as ``Ka``.
-            Ni (float, optional): Optical density, a.k.a. index of refraction :math:`\in[0.001, 10]`.
-                1 means light doesn't bend as it passes through. Increasing it increases the amount of bending.
-                Glass has an index of refraction of about 1.5. Values of less than 1.0 produce bizarre results
-                and are not recommended.
-            d (float, optional): Amount this material dissolves into the background :math:`\in[0, 1]`.
-                1.0 is fully opaque (default), and 0 is fully dissolved (completely transparent).
-                Unlike a real transparent material, the dissolve does not depend upon material thickness,
-                nor does it have any spectral character. Dissolve works on all illumination models.
-            illum (int, optional): Illumination model :math:`\in[0, 1, ..., 10]`.
+            Ni (float, optional): Optical density, a.k.a. index of refraction
+                :math:`\in[0.001, 10]`. 1 means light doesn't bend as it passes
+                through. Increasing it increases the amount of bending. Glass
+                has an index of refraction of about 1.5. Values of less than 1.0
+                produce bizarre results and are not recommended.
+            d (float, optional): Amount this material dissolves into the
+                background :math:`\in[0, 1]`. 1.0 is fully opaque (default),
+                and 0 is fully dissolved (completely transparent). Unlike a real
+                transparent material, the dissolve does not depend upon material
+                thickness, nor does it have any spectral character. Dissolve
+                works on all illumination models.
+            illum (int, optional): Illumination model
+                :math:`\in[0, 1, ..., 10]`.
         """
         self.mtlfile = obj.mtllib
         self.newmtl = obj.usemtl
@@ -392,8 +438,7 @@ class Mtl(object):
         self.illum = illum
 
     def print_info(self):
-        logger.name = thisfile + '->Mtl:print_info()'
-        logger.info("-----------------------------------------------------------")
+        logger.info("---------------------------------------------------------")
         logger.info("Material file                          %s", self.mtlfile)
         logger.info("Material name           'newmtl'       %s", self.newmtl)
         logger.info("Diffuse texture map     'map_Kd'       %s", self.map_Kd_path)
@@ -405,7 +450,7 @@ class Mtl(object):
         logger.info("Refraction index        'Ni'           %s", self.Ni)
         logger.info("Dissolve                'd'            %f", self.d)
         logger.info("Illumination model      'illum'        %d", self.illum)
-        logger.info("-----------------------------------------------------------")
+        logger.info("---------------------------------------------------------")
 
     def write_file(self, outdir):
         """Unit tests that can also serve as example usage.
@@ -417,7 +462,6 @@ class Mtl(object):
             - Output .mtl file.
         """
         cv2 = preset_import('cv2')
-        logger_name = thisfile + '->Mtl:write_file()'
         # Validate inputs
         assert (self.mtlfile is not None and self.newmtl is not None), \
             "'mtlfile' and 'newmtl' must not be 'None'"
@@ -444,7 +488,6 @@ class Mtl(object):
                     im = cv2.imread(map_Kd_path, cv2.IMREAD_UNCHANGED)
                     im = cv2.resize(im, None, fx=map_Kd_scale, fy=map_Kd_scale)
                     cv2.imwrite(join(outdir, basename(map_Kd_path)), im)
-        logger.name = logger_name
         logger.info("Done writing to %s", mtlpath)
 
 

@@ -9,5 +9,6 @@ else
     echo "Found blaze -- running with the Blaze binary"
     blaze run -c opt \
         'test' \
-        --
+        -- \
+        --logtostderr
 fi

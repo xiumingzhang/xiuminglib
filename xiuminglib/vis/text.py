@@ -1,8 +1,8 @@
-from os.path import dirname, abspath
+from os.path import dirname
 import numpy as np
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from .. import os as xm_os
 from ..imprt import preset_import
@@ -31,8 +31,6 @@ def text_as_image(
         - An image of the text.
     """
     cv2 = preset_import('cv2')
-
-    logger_name = thisfile + '->text_as_image()'
 
     if isinstance(imsize, int):
         imsize = (imsize, imsize)

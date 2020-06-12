@@ -1,11 +1,11 @@
-from os.path import join, dirname, abspath
+from os.path import join, dirname
 import numpy as np
 
 from .. import const, os as xm_os
 from .general import _savefig
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from ..imprt import preset_import
 cv2 = preset_import('cv2')
@@ -42,8 +42,6 @@ def scatter_on_img(pts, im, size=2, bgr=(0, 0, 255), outpath=None):
     Writes
         - The scatter plot overlaid over the image.
     """
-    logger_name = thisfile + '->scatter_on_img()'
-
     if outpath is None:
         outpath = join(const.Dir.tmp, 'scatter_on_img.png')
 
@@ -58,7 +56,6 @@ def scatter_on_img(pts, im, size=2, bgr=(0, 0, 255), outpath=None):
     n_pts = pts.shape[0]
 
     if im.dtype != 'uint8' and im.dtype != 'uint16':
-        logger.name = logger_name
         logger.warning("Input image type may cause obscure cv2 errors")
 
     if isinstance(size, int):

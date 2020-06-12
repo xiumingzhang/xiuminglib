@@ -1,4 +1,4 @@
-from os.path import join, abspath, commonprefix
+from os.path import join, commonprefix
 from getpass import getuser
 from time import time
 from string import ascii_uppercase, digits
@@ -10,8 +10,8 @@ from tqdm import tqdm
 from ..os import call, makedirs
 from .. import const
 from ..interact import ask_to_proceed
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 
 class Launcher():
@@ -40,12 +40,10 @@ class Launcher():
             self.cell = borg_cell
 
     def _derive_bin(self):
-        logger_name = thisfile + '->Launcher:_derive_bin()'
         assert ':' in self.label, "Must specify target explicitly"
         pkg_bin = self.label.split(':')[-1]
         if pkg_bin.endswith('_mpm'):
             pkg_bin = pkg_bin[:-4]
-        logger.name = logger_name
         logger.warning(("Package binary derived to be `%s`, so make sure "
                         "BUILD is consistent with this"), pkg_bin)
         return pkg_bin
@@ -67,7 +65,6 @@ class Launcher():
         return cell
 
     def blaze_run(self, blaze_dict=None, param_dict=None):
-        logger_name = thisfile + '->Launcher:blaze_run()'
         bash_cmd = 'blaze run -c opt %s' % self.label
         # Blaze parameters
         if blaze_dict is not None:
@@ -83,20 +80,17 @@ class Launcher():
         # To use my own account for Bigstore
         bash_cmd += ' --bigstore_anonymous'
         if self.print_instead:
-            logger.name = logger_name
             logger.info("To blaze-run the job, run:\n\t%s\n", bash_cmd)
         else:
             call(bash_cmd)
             # FIXME: sometimes stdout can't catch the printouts (e.g., tqdm)
 
     def build_for_borg(self):
-        logger_name = thisfile + '->Launcher:build_for_borg()'
         assert self.label.endswith('_mpm'), \
             "Label must be MPM, because .borg generation assumes temporary MPM"
         bash_cmd = 'rabbit build -c opt %s' % self.label
         # FIXME: --verifiable leads to "MPM failed to find the .pkgdef file"
         if self.print_instead:
-            logger.name = logger_name
             logger.info("To build for Borg, run:\n\t%s\n", bash_cmd)
         else:
             retcode, _, _ = call(bash_cmd)
@@ -174,7 +168,6 @@ class Launcher():
     def _borg_run(self, args):
         """.borg generation assumed temporary MPM.
         """
-        logger_name = thisfile + '->Launcher:_borg_run()'
         job_name, shared_params, task_params, n_tasks = args
         borg_f = self.__gen_borg_file(
             job_name, shared_params, task_params, n_tasks)
@@ -185,13 +178,11 @@ class Launcher():
                     '--strict_confirmation_threshold=65536').format(
                         f=borg_f, a=action, u=self.borg_user)
         if self.print_instead:
-            logger.name = logger_name
             logger.info("To launch the job on Borg, run:\n\t%s\n", bash_cmd)
         else:
             call(bash_cmd)
 
     def __gen_borg_file(self, job_name, shared_params, task_params, n_tasks):
-        logger_name = thisfile + '->Launcher:__gen_borg_file()'
         borg_file_str = self.___format_borg_file_str(
             job_name, shared_params, task_params, n_tasks)
         out_dir = join(const.Dir.tmp, '{t}_{s}'.format(s=_random_str(16),
@@ -200,7 +191,6 @@ class Launcher():
         borg_f = join(out_dir, '%s.borg' % job_name)
         with open(borg_f, 'w') as h:
             h.write(borg_file_str)
-        logger.name = logger_name
         logger.info("Generated .borg at\n\t%s", borg_f)
         return borg_f
 
@@ -246,7 +236,7 @@ class Launcher():
     '''.format(job_name=job_name, cell=self.cell,
                label=self.label, binary=self.pkg_bin)
         # Add shared parameters
-        for i, (k, v) in enumerate(shared_params.items()):
+        for k, v in shared_params.items():
             v = self.____to_str(v)
             str_ = '{tab}{tab}{flag} = {val},\n'
             file_str += str_.format(tab=tab, flag=k, val=v)

@@ -1,10 +1,10 @@
-from os.path import abspath, dirname, join
+from os.path import dirname, join
 from glob import glob
 from shutil import move
 from time import time
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from .. import os as xm_os
 
@@ -32,8 +32,6 @@ def set_cycles(w=None, h=None,
             ``'RGBA'``.
         color_depth (str, optional): Color depth: ``'8'`` or ``'16'``.
     """
-    logger_name = thisfile + '->set_cycles()'
-
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     cycles = scene.cycles
@@ -91,7 +89,6 @@ def set_cycles(w=None, h=None,
     if color_depth is not None:
         scene.render.image_settings.color_depth = color_depth
 
-    logger.name = logger_name
     logger.info("Cycles set up as rendering engine")
 
 
@@ -293,8 +290,6 @@ def render(outpath, cam=None, obj_names=None, alpha=True, text=None):
     Writes
         - A 32-bit .exr or 16-bit .png image.
     """
-    logger_name = thisfile + '->render()'
-
     outdir = dirname(outpath)
     xm_os.makedirs(outdir)
 
@@ -316,7 +311,6 @@ def render(outpath, cam=None, obj_names=None, alpha=True, text=None):
                     text['bgr'], text['thickness'])
         cv2.imwrite(outpath, im)
 
-    logger.name = logger_name
     logger.info("%s rendered through '%s'", obj_names, cam_name)
     logger.warning(
         "Node trees and renderability of these objects have changed")
@@ -360,8 +354,6 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
     Todo:
         Ray depth.
     """
-    logger_name = thisfile + '->render_depth()'
-
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     if ray_depth:
@@ -392,7 +384,6 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
     result_socket = nodes['Render Layers'].outputs['Alpha']
     outpath_a = _render(scene, outnode, result_socket, outprefix + '_a')
 
-    logger.name = logger_name
     logger.info("Depth map of %s rendered through '%s' to",
                 obj_names, cam_name)
     logger.info("\t1. z w/o anti-aliasing: %s", outpath_z)
@@ -416,8 +407,6 @@ def render_alpha(outpath, cam=None, obj_names=None, samples=1000):
         - A 16-bit three-channel .png mask, where bright indicates
           foreground.
     """
-    logger_name = thisfile + '->render_alpha()'
-
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     scene.render.engine = 'CYCLES'
@@ -440,7 +429,6 @@ def render_alpha(outpath, cam=None, obj_names=None, samples=1000):
     scene.cycles.samples = samples_old
     scene.cycles.film_transparent = film_transparent_old
 
-    logger.name = logger_name
     logger.info(
         "Foreground alpha of %s rendered through '%s'", obj_names, cam_name)
     logger.warning(
@@ -525,8 +513,6 @@ def render_normal(outpath, cam=None, obj_names=None,
     """
     from .object import add_sphere, remove_objects
     from .camera import get_2d_bounding_box
-
-    logger_name = thisfile + '->render_normal()'
 
     objs = bpy.data.objects
 
@@ -614,7 +600,6 @@ def render_normal(outpath, cam=None, obj_names=None,
         scene.cycles.film_transparent = film_transparent_old
         scene.cycles.samples = samples_old
 
-    logger.name = logger_name
     logger.info("Normal map of %s rendered through %s to %s",
                 obj_names, cam_name, outpath)
     if outpath_refball is not None:
@@ -642,8 +627,6 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
     Writes
         - A 32-bit .exr multi-layer image containing the lighting passes.
     """
-    logger_name = thisfile + '->render_lighting_passes()'
-
     select_passes = [
         'diffuse_direct', 'diffuse_indirect', 'diffuse_color',
         'glossy_direct', 'glossy_indirect', 'glossy_color',
@@ -682,7 +665,6 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
     scene.cycles.samples = n_samples_old
     scene.cycles.film_transparent = film_transparent_old
 
-    logger.name = logger_name
     logger.info("Select lighting passes of %s rendered through '%s' to %s",
                 obj_names, cam_name, outpath)
     logger.warning("The scene node tree has changed")

@@ -1,9 +1,9 @@
-from os.path import abspath, dirname
+from os.path import dirname
 import numpy as np
 from PIL import Image
 
-from .. import log
-logger, thisfile = log.create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from ..imprt import preset_import
 from ..os import makedirs
@@ -20,15 +20,12 @@ def load(path, as_array=False):
     Returns:
         A PIL image type or numpy.ndarray: Loaded image.
     """
-    logger_name = thisfile + '->load()'
-
     gfile = preset_import('gfile')
     open_func = open if gfile is None else gfile.Open
     with open_func(path, 'rb') as h:
         img = Image.open(h)
         img.load()
 
-    logger.name = logger_name
     logger.debug("Image loaded from:\n\t%s", path)
 
     if as_array:
@@ -46,8 +43,6 @@ def write_img(arr_uint, outpath):
     Writes
         - The resultant image.
     """
-    logger_name = thisfile + '->write_img()'
-
     if arr_uint.ndim == 3 and arr_uint.shape[2] == 1:
         arr_uint = np.dstack([arr_uint] * 3)
 
@@ -60,7 +55,6 @@ def write_img(arr_uint, outpath):
     with open_func(outpath, 'wb') as h:
         img.save(h)
 
-    logger.name = logger_name
     logger.debug("Image written to:\n\t%s", outpath)
 
 

@@ -11,6 +11,13 @@ except ModuleNotFoundError:
 
 
 def main(_):
+    logger = xm.log.get_logger()
+    logger.info("This is INFO")
+    logger.warning("This is WARNING")
+    logger.error("This is ERROR")
+
+    return
+
     dtype = 'uint16'
     n_ch = 3
     ims = 256

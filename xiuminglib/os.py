@@ -1,10 +1,10 @@
 import os
-from os.path import abspath, join, exists, isdir, dirname
+from os.path import join, exists, isdir, dirname
 from shutil import rmtree, copy2, copytree
 from glob import glob
 
-from .log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from .log import get_logger
+logger = get_logger()
 
 from .imprt import preset_import
 from .interact import format_print
@@ -285,8 +285,6 @@ def makedirs(directory, rm_if_exists=False):
         rm_if_exists (bool, optional): Whether to remove the directory (and
             its contents) if it already exists.
     """
-    logger_name = thisfile + '->makedirs()'
-
     def exists_cns_cli(directory):
         cmd = 'fileutil test -d %s' % directory
         retcode, _, _ = call(cmd, quiet=True)
@@ -319,7 +317,6 @@ def makedirs(directory, rm_if_exists=False):
         if rm_if_exists:
             rm(directory)
             mkdir_func(directory)
-            logger.name = logger_name
             logger.info("Removed and then remade:\n\t%s", directory)
     else:
         mkdir_func(directory)
@@ -345,11 +342,8 @@ def make_exp_dir(directory, param_dict, rm_if_exists=False):
     from collections import OrderedDict
     from json import dump
 
-    logger_name = thisfile + '->make_exp_dir()'
-
     hash_seed = os.environ.get('PYTHONHASHSEED', None)
     if hash_seed != '0':
-        logger.name = logger_name
         logger.warning(
             ("PYTHONHASHSEED is not 0, so the same param_dict has different "
              "hashes across sessions. Consider disabling this randomization "
@@ -367,7 +361,6 @@ def make_exp_dir(directory, param_dict, rm_if_exists=False):
     with open(json_f, 'w') as h:
         dump(param_dict, h, indent=4, sort_keys=True)
 
-    logger.name = logger_name
     logger.info("Parameters dumped to: %s", json_f)
 
     return directory

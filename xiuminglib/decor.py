@@ -21,12 +21,12 @@ If the function is defined somewhere else, do:
 from time import time, sleep
 from os import makedirs, environ
 import os.path
-from os.path import abspath, join, dirname, getmtime
+from os.path import join, dirname, getmtime
 
 from .os import _is_cnspath, _no_trailing_slash, cp, rm
 
-from .log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from .log import get_logger
+logger = get_logger()
 
 
 def colossus_interface(somefunc):
@@ -69,9 +69,6 @@ def colossus_interface(somefunc):
         - Input files copied from Colossus to ``$TMP/``.
         - Output files generated to ``$TMP/``, to be copied to Colossus.
     """
-    logger_name = thisfile + '->@colossus_interface(%s())' \
-        % somefunc.__name__
-
     # $TMP set by Borg or yourself (e.g., with .bashrc)
     tmp_dir = environ.get('TMP', '/tmp/')
 
@@ -87,10 +84,8 @@ def colossus_interface(somefunc):
     def cp_404ok(src, dst):
         try:
             cp(src, dst)
-            logger.name = logger_name
             logger.debug("\n%s\n\tcopied to\n%s", src, dst)
         except FileNotFoundError:
-            logger.name = logger_name
             logger.warning(("Source doesn't exist yet:\n\t%s\n"
                             "OK if this will be the output"), src)
 
@@ -139,13 +134,10 @@ def colossus_interface(somefunc):
 
 def timeit(somefunc):
     """Outputs the time a function takes to execute."""
-    logger_name = thisfile + '->@timeit(%s())' % somefunc.__name__
-
     def wrapper(*arg, **kwargs):
         t0 = time()
         results = somefunc(*arg, **kwargs)
         t = time() - t0
-        logger.name = logger_name
         logger.info("Time elapsed: %f seconds", t)
         return results
 
@@ -157,15 +149,12 @@ def existok(makedirs_func):
     where one parallel worker checks the folder doesn't exist and wants to
     create it with another worker doing so faster.
     """
-    logger_name = thisfile + '->@existok(%s())' % makedirs_func.__name__
-
     def wrapper(*args, **kwargs):
         try:
             makedirs_func(*args, **kwargs)
         except OSError as e:
             if e.errno != 17:
                 raise
-            logger.name = logger_name
             logger.debug("%s already exists, but that is OK", args[0])
 
     return wrapper

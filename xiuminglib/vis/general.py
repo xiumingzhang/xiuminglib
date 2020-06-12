@@ -2,12 +2,12 @@
 ``matplotlib`` backend problem.
 """
 
-from os.path import dirname, abspath, join
+from os.path import dirname, join
 from pickle import dump
 import numpy as np
 
-from ..log import create_logger
-logger, thisfile = create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from .. import const, os as xm_os
 from ..imprt import preset_import
@@ -328,8 +328,6 @@ def axes3d_wrapper(
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
 
-    logger_name = thisfile + '->axes3d_wrapper()'
-
     if outpath is None:
         outpath = join(const.Dir.tmp, 'axes3d_wrapper.png')
 
@@ -399,7 +397,6 @@ def axes3d_wrapper(
         # bounding box
         x_data, y_data, z_data = np.array([]), np.array([]), np.array([])
 
-        logger.name = logger_name
         logger.warning("Assuming args are x1, y1, z1, x2, y2, z2, ...")
 
         for i in range(0, len(args), 3):

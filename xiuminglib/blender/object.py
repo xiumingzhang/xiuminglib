@@ -1,5 +1,5 @@
 import re
-from os.path import abspath, basename, dirname
+from os.path import basename, dirname
 import numpy as np
 
 from ..imprt import preset_import
@@ -9,7 +9,7 @@ Matrix = preset_import('Matrix')
 Vector = preset_import('Vector')
 
 from .. import log, os as xm_os
-logger, thisfile = log.create_logger(abspath(__file__))
+logger = log.get_logger()
 
 
 def get_object(otype, any_ok=False):
@@ -46,10 +46,9 @@ def remove_objects(name_pattern, regex=False):
 
     Args:
         name_pattern (str): Name or name pattern of object(s) to remove.
-        regex (bool, optional): Whether to interpret ``name_pattern`` as a regex.
+        regex (bool, optional): Whether to interpret ``name_pattern`` as a
+            regex.
     """
-    logger_name = thisfile + '->remove_objects()'
-
     objs = bpy.data.objects
     removed = []
 
@@ -80,7 +79,6 @@ def remove_objects(name_pattern, regex=False):
     # Scene update necessary, as matrix_world is updated lazily
     bpy.context.scene.update()
 
-    logger.name = logger_name
     logger.info("Removed from scene: %s", removed)
 
 
@@ -111,8 +109,6 @@ def import_object(model_path,
     Returns:
         bpy_types.Object or list(bpy_types.Object): Imported object(s).
     """
-    logger_name = thisfile + '->import_object()'
-
     # Deselect all
     for o in bpy.data.objects:
         o.select = False
@@ -123,8 +119,6 @@ def import_object(model_path,
             filepath=model_path, axis_forward=axis_forward, axis_up=axis_up)
     elif model_path.endswith('.ply'):
         bpy.ops.import_mesh.ply(filepath=model_path)
-
-        logger.name = logger_name
         logger.warning("axis_forward and axis_up ignored for .ply")
     else:
         raise NotImplementedError(".%s" % model_path.split('.')[-1])
@@ -165,7 +159,6 @@ def import_object(model_path,
     # Scene update necessary, as matrix_world is updated lazily
     bpy.context.scene.update()
 
-    logger.name = logger_name
     logger.info("Imported: %s", model_path)
 
     if len(obj_list) == 1:
@@ -191,8 +184,6 @@ def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
     Writes
         - Exported model file, possibly accompanied by a material file.
     """
-    logger_name = thisfile + '->export_object()'
-
     out_dir = dirname(model_path)
     xm_os.makedirs(out_dir)
 
@@ -230,7 +221,6 @@ def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
     else:
         raise NotImplementedError(".%s" % model_path.split('.')[-1])
 
-    logger.name = logger_name
     logger.info("%s Exported to %s", exported, model_path)
 
 
@@ -275,12 +265,16 @@ def add_cylinder_between(pt1, pt2, r=1e-3, name=None):
     return cylinder_obj
 
 
-def add_rectangular_plane(center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2), name=None):
-    """Adds a rectangular plane specified by its center location, dimensions, and where its +z points to.
+def add_rectangular_plane(
+        center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2), name=None):
+    """Adds a rectangular plane specified by its center location, dimensions,
+    and where its +z points to.
 
     Args:
-        center_loc (array_like, optional): Plane center location in world coordinates.
-        point_to (array_like, optional): Point in world coordinates to which plane's +z points.
+        center_loc (array_like, optional): Plane center location in world
+            coordinates.
+        point_to (array_like, optional): Point in world coordinates to which
+            plane's +z points.
         size (array_like, optional): Sizes in x and y directions (0 in z).
         name (str, optional): Plane name.
 
@@ -302,9 +296,10 @@ def add_rectangular_plane(center_loc=(0, 0, 0), point_to=(0, 0, 1), size=(2, 2),
 
     # Point it to target
     direction = Vector(point_to) - plane_obj.location
-    # Find quaternion that rotates plane's 'Z' so that it aligns with `direction`
-    # This rotation is not unique because the rotated plane can still rotate about direction vector
-    # Specifying 'Y' gives the rotation quaternion with plane's 'Y' pointing up
+    # Find quaternion that rotates plane's 'Z' so that it aligns with
+    # `direction`. This rotation is not unique because the rotated plane can
+    # still rotate about direction vector. Specifying 'Y' gives the rotation
+    # quaternion with plane's 'Y' pointing up
     rot_quat = direction.to_track_quat('Z', 'Y')
     plane_obj.rotation_euler = rot_quat.to_euler()
 
@@ -326,8 +321,6 @@ def create_mesh(verts, faces, name='new-mesh'):
     Returns:
         bpy_types.Mesh: Mesh data created.
     """
-    logger_name = thisfile + '->create_mesh()'
-
     verts = np.array(verts)
 
     # Create mesh
@@ -335,7 +328,6 @@ def create_mesh(verts, faces, name='new-mesh'):
     mesh_data.from_pydata(verts, [], faces)
     mesh_data.update()
 
-    logger.name = logger_name
     logger.info("Mesh '%s' created", name)
 
     return mesh_data
@@ -356,8 +348,6 @@ def create_object_from_mesh(mesh_data, obj_name='new-obj',
     Returns:
         bpy_types.Object: Object created.
     """
-    logger_name = thisfile + '->create_object_from_mesh()'
-
     # Create
     obj = bpy.data.objects.new(obj_name, mesh_data)
 
@@ -372,7 +362,6 @@ def create_object_from_mesh(mesh_data, obj_name='new-obj',
     obj.rotation_euler = rotation_euler
     obj.scale = scale
 
-    logger.name = logger_name
     logger.info("Object '%s' created from mesh data and selected", obj_name)
 
     # Scene update necessary, as matrix_world is updated lazily
@@ -427,8 +416,6 @@ def color_vertices(obj, vert_ind, colors):
     Raises:
         ValueError: If color length is wrong.
     """
-    logger_name = thisfile + '->color_vertices()'
-
     # Validate inputs
     if isinstance(vert_ind, int):
         vert_ind = [vert_ind]
@@ -492,7 +479,6 @@ def color_vertices(obj, vert_ind, colors):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
-    logger.name = logger_name
     logger.info("Vertex color(s) added to '%s'", obj.name)
     logger.warning("..., so node tree of '%s' has changed", obj.name)
 
@@ -555,8 +541,6 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
         TypeError: If ``texture`` is of wrong type.
         ValueError: If ``shader_type`` is illegal.
     """
-    logger_name = thisfile + '->setup_simple_nodetree()'
-
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -589,9 +573,8 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
-    logger.name = logger_name
-    logger.info("%s node tree set up for '%s'",
-                shader_type.capitalize(), obj.name)
+    logger.info(
+        "%s node tree set up for '%s'", shader_type.capitalize(), obj.name)
 
 
 def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
@@ -602,8 +585,6 @@ def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
         color (tuple, optional): Emission RGBA :math:`\in [0, 1]`.
         strength (float, optional): Emission strength.
     """
-    logger_name = thisfile + '->setup_emission_nodetree()'
-
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -614,12 +595,12 @@ def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
     nodes['Emission'].inputs[0].default_value = color
     nodes['Emission'].inputs[1].default_value = strength
     nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(nodes['Emission'].outputs[0], nodes['Material Output'].inputs[0])
+    node_tree.links.new(
+        nodes['Emission'].outputs[0], nodes['Material Output'].inputs[0])
 
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
-    logger.name = logger_name
     logger.info("Emission node tree set up for '%s'", obj.name)
 
 
@@ -629,8 +610,6 @@ def setup_holdout_nodetree(obj):
     Args:
         obj (bpy_types.Object): Object bundled with texture map.
     """
-    logger_name = thisfile + '->setup_holdout_nodetree()'
-
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -639,34 +618,35 @@ def setup_holdout_nodetree(obj):
 
     nodes.new('ShaderNodeHoldout')
     nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(nodes['Holdout'].outputs[0], nodes['Material Output'].inputs[0])
+    node_tree.links.new(
+        nodes['Holdout'].outputs[0], nodes['Material Output'].inputs[0])
 
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
-    logger.name = logger_name
     logger.info("Holdout node tree set up for '%s'", obj.name)
 
 
-def setup_retroreflective_nodetree(obj, texture, roughness=0, glossy_weight=0.1):
+def setup_retroreflective_nodetree(
+        obj, texture, roughness=0, glossy_weight=0.1):
     r"""Sets up a retroreflective texture node tree.
 
-    Bundled texture can be an external texture map (carelessly mapped) or a pure color.
-    Mathematically, the BRDF model is a mixture of a diffuse BRDF and a glossy BRDF using
-    incoming light directions as normals.
+    Bundled texture can be an external texture map (carelessly mapped) or a
+    pure color. Mathematically, the BRDF model is a mixture of a diffuse BRDF
+    and a glossy BRDF using incoming light directions as normals.
 
     Args:
         obj (bpy_types.Object): Object, optionally bundled with texture map.
-        texture (str or tuple): If string, must be ``'bundled'`` or path to the texture image.
-            If tuple, must be of 4 floats :math:`\in [0, 1]` as RGBA values.
-        roughness (float, optional): Roughness for both the glossy and diffuse shaders.
+        texture (str or tuple): If string, must be ``'bundled'`` or path to
+            the texture image. If tuple, must be of 4 floats :math:`\in [0, 1]`
+            as RGBA values.
+        roughness (float, optional): Roughness for both the glossy and diffuse
+            shaders.
         glossy_weight (float, optional): Mixture weight for the glossy shader.
 
     Raises:
         TypeError: If ``texture`` is of wrong type.
     """
-    logger_name = thisfile + '->setup_retroreflective_nodetree()'
-
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -678,8 +658,10 @@ def setup_retroreflective_nodetree(obj, texture, roughness=0, glossy_weight=0.1)
     glossy_node = nodes.new('ShaderNodeBsdfGlossy')
     if isinstance(texture, str):
         texture_node = _make_texture_node(obj, texture)
-        node_tree.links.new(texture_node.outputs['Color'], diffuse_node.inputs['Color'])
-        node_tree.links.new(texture_node.outputs['Color'], glossy_node.inputs['Color'])
+        node_tree.links.new(
+            texture_node.outputs['Color'], diffuse_node.inputs['Color'])
+        node_tree.links.new(
+            texture_node.outputs['Color'], glossy_node.inputs['Color'])
     elif isinstance(texture, tuple):
         diffuse_node.inputs['Color'].default_value = texture
         glossy_node.inputs['Color'].default_value = texture
@@ -689,10 +671,12 @@ def setup_retroreflective_nodetree(obj, texture, roughness=0, glossy_weight=0.1)
     geometry_node = nodes.new('ShaderNodeNewGeometry')
     mix_node = nodes.new('ShaderNodeMixShader')
     output_node = nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(geometry_node.outputs['Incoming'], glossy_node.inputs['Normal'])
+    node_tree.links.new(
+        geometry_node.outputs['Incoming'], glossy_node.inputs['Normal'])
     node_tree.links.new(diffuse_node.outputs['BSDF'], mix_node.inputs[1])
     node_tree.links.new(glossy_node.outputs['BSDF'], mix_node.inputs[2])
-    node_tree.links.new(mix_node.outputs['Shader'], output_node.inputs['Surface'])
+    node_tree.links.new(
+        mix_node.outputs['Shader'], output_node.inputs['Surface'])
 
     # Roughness
     diffuse_node.inputs['Roughness'].default_value = roughness
@@ -703,7 +687,6 @@ def setup_retroreflective_nodetree(obj, texture, roughness=0, glossy_weight=0.1)
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
-    logger.name = logger_name
     logger.info("Retroreflective node tree set up for '%s'", obj.name)
 
 
@@ -732,11 +715,10 @@ def subdivide_mesh(obj, n_subdiv=2):
         obj (bpy_types.Object): Object whose mesh is to be subdivided.
         n_subdiv (int, optional): Number of subdivision levels.
     """
-    logger_name = thisfile + '->subdivide_mesh()'
-
     scene = bpy.context.scene
 
-    # All objects need to be in 'OBJECT' mode to apply modifiers -- maybe a Blender bug?
+    # All objects need to be in 'OBJECT' mode to apply modifiers -- maybe a
+    # Blender bug?
     for o in bpy.data.objects:
         scene.objects.active = o
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -755,7 +737,6 @@ def subdivide_mesh(obj, n_subdiv=2):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
-    logger.name = logger_name
     logger.info("Subdivided mesh of '%s'", obj.name)
 
 
@@ -765,13 +746,12 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
     Args:
         obj (bpy_types.Object): Object.
         vert_ind (int or list(int)): Vertex index/indices.
-        select_type (str): Type of mesh elements to select: ``'vertex'``, ``'edge'`` or ``'face'``.
+        select_type (str): Type of mesh elements to select: ``'vertex'``,
+            ``'edge'`` or ``'face'``.
 
     Raises:
         ValueError: If ``select_type`` value is invalid.
     """
-    logger_name = thisfile + '->select_mesh_elements_by_vertices()'
-
     if isinstance(vert_ind, int):
         vert_ind = [vert_ind]
 
@@ -817,7 +797,6 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
     # Scene update necessary, as matrix_world is updated lazily
     scene.update()
 
-    logger.name = logger_name
     logger.info("Selected %s elements of '%s'", select_type, obj.name)
 
 

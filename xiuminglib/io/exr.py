@@ -1,8 +1,8 @@
-from os.path import abspath, join
+from os.path import join
 import numpy as np
 
-from .. import log
-logger, thisfile = log.create_logger(abspath(__file__))
+from ..log import get_logger
+logger = get_logger()
 
 from ..imprt import preset_import
 Imath = preset_import('Imath')
@@ -45,7 +45,6 @@ class EXR():
         Returns:
             dict: Loaded EXR data.
         """
-        logger_name = thisfile + '->EXR:load()'
         assert self.exr_f is not None, "You need to set exr_f first"
         assert OpenEXR is not None, "Import failed: OpenEXR"
         f = OpenEXR.InputFile(self.exr_f)
@@ -58,7 +57,6 @@ class EXR():
         for c in f.header()['channels']:
             arr = np.fromstring(f.channel(c, pix_type), dtype=np.float32)
             data[c] = arr.reshape(win_size)
-        logger.name = logger_name
         logger.info("Loaded %s", self.exr_f)
         return data
 
@@ -77,7 +75,6 @@ class EXR():
             - A .npy file containing the raw RGB(A) values.
             - If ``vis``, a .png image, naively tonemapped from the raw values.
         """
-        logger_name = thisfile + '->EXR:extract_rgb()'
         data = [self.data['R'], self.data['G'], self.data['B']]
         if 'A' in self.data.keys():
             data.append(self.data['A'])
@@ -87,7 +84,6 @@ class EXR():
         np.save(outpath, data)
         if vis:
             matrix_as_image(data, outpath[:-4] + '.png')
-        logger.name = logger_name
         logger.info("RGB image extractd to %s", outpath)
 
     def extract_depth(self, alpha_exr, outpath, vis=False):
@@ -107,7 +103,6 @@ class EXR():
             - If ``vis``, a .png image of anti-aliased depth.
         """
         cv2 = preset_import('cv2')
-        logger_name = thisfile + '->EXR:extract_depth()'
 
         def assert_all_channels_same(arr):
             for i in range(1, arr.shape[-1]):
@@ -127,7 +122,6 @@ class EXR():
         np.save(outpath, np.dstack((arr, alpha)))
         if vis:
             depth_as_image(depth, alpha, outpath[:-4] + '.png')
-        logger.name = logger_name
         logger.info("Depth image extractd to %s", outpath)
 
     def extract_normal(self, outpath, negate=False, vis=False):
@@ -146,7 +140,6 @@ class EXR():
             - A .npy file containing an aliased normal map and its alpha map.
             - If ``vis``, a .png visualization of anti-aliased normals.
         """
-        logger_name = thisfile + '->extract_normal()'
         # Load RGBA .exr
         data = self.data
         arr = np.dstack((data['R'], data['G'], data['B']))
@@ -159,7 +152,6 @@ class EXR():
         np.save(outpath, np.dstack((arr, alpha)))
         if vis:
             normal_as_image(arr, alpha, outpath[:-4] + '.png')
-        logger.name = logger_name
         logger.info("Normal image extractd to %s", outpath)
 
     def extract_intrinsic_images_from_lighting_passes(self, outdir,
@@ -180,8 +172,7 @@ class EXR():
             - composite.npy (ditto): composite by Blender.
         """
         from .. import os as xm_os
-        logger_name = thisfile + \
-            '->extract_intrinsic_images_from_lighting_passes()'
+
         xm_os.makedirs(outdir)
         data = self.data
 
@@ -228,7 +219,6 @@ class EXR():
         np.save(join(outdir, 'composite.npy'), composite)
         if vis:
             matrix_as_image(composite, outpath=join(outdir, 'composite.png'))
-        logger.name = logger_name
         logger.info("Intrinsic images extracted to %s", outdir)
 
 
