@@ -76,5 +76,4 @@ def text_as_image(
     cv2.imwrite(outpath, im)
 
     if not quiet:
-        logger.name = logger_name
         logger.info("Text rasterized into image to:\n%s", outpath)
