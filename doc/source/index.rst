@@ -23,7 +23,7 @@ questions, please open an issue there.
 Installation
 ============
 
-First, clone the repo and add it to your ``PYTHONPATH``:
+First, clone the repo. and add it to your ``PYTHONPATH``:
 
 .. code-block:: bash
 
@@ -31,7 +31,7 @@ First, clone the repo and add it to your ``PYTHONPATH``:
     git clone https://github.com/xiumingzhang/xiuminglib.git
     export PYTHONPATH="<your_local_dir>/xiuminglib/":"$PYTHONPATH"
 
-Install the dependencies automatically with conda: simply create an environment
+Install the dependencies automatically with Conda: simply create an environment
 with all the dependencies by running:
 
 .. code-block:: bash
@@ -43,7 +43,7 @@ with all the dependencies by running:
 If you do not need Blender functionalities, you are all set. Otherwise, you
 need to (manually) install Blender as a Python module, as instructed below.
 
-If you want to avoid conda environments, also see the dependencies below and
+If you want to avoid Conda environments, also see the dependencies below and
 manually install each your own way.
 
 (Optional) Manual Dependency Installation
@@ -53,7 +53,7 @@ The library uses "on-demand" imports whenever possible, so that it will not fail
 on imports that you do not need.
 
 If you want Blender, you need to install it as a Python module manually
-(regardless of using conda or not):
+(regardless of using Conda or not):
 
     Blender 2.79
         Note this is different from installing Blender as an application,
