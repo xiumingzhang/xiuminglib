@@ -618,6 +618,14 @@ def _assert_float_0to1(arr):
         raise ValueError("Input image has pixels outside [0, 1]")
 
 
+def _assert_3ch(arr):
+    if arr.ndim != 3:
+        raise ValueError("Input image is not even 3D (H-by-W-by-3)")
+    n_ch = arr.shape[2]
+    if n_ch != 3:
+        raise ValueError("Input image must have 3 channels, but has %d" % n_ch)
+
+
 srgb_linear_thres = 0.0031308
 srgb_linear_coeff = 12.92
 srgb_exponential_coeff = 1.055
@@ -635,11 +643,14 @@ def linear2srgb(im, clip=False):
 
     Raises:
         TypeError: If input image is not ``float``.
-        ValueError: If input image has values outside :math:`[0, 1]`.
+        ValueError: If input image is of wrong shape, or has values outside
+            :math:`[0, 1]`.
 
     Returns:
         numpy.ndarray: Converted image in sRGB.
     """
+    _assert_3ch(im)
+
     if clip:
         im = np.clip(im, 0, 1)
     _assert_float_0to1(im)
@@ -667,11 +678,14 @@ def srgb2linear(im, clip=False):
 
     Raises:
         TypeError: If input image is not ``float``.
-        ValueError: If input image has values outside :math:`[0, 1]`.
+        ValueError: If input image is of wrong shape, or has values outside
+            :math:`[0, 1]`.
 
     Returns:
         numpy.ndarray: Converted image in linear RGB.
     """
+    _assert_3ch(im)
+
     if clip:
         im = np.clip(im, 0, 1)
     _assert_float_0to1(im)
