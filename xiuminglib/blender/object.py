@@ -832,7 +832,7 @@ def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
     return sphere
 
 
-def smart_uv_unwrap(obj):
+def smart_uv_unwrap(obj, area_weight=0.0):
     """UV unwrapping using Blender's smart projection.
 
     A vertex may map to multiple UV locations, but each loop maps to exactly
@@ -845,6 +845,7 @@ def smart_uv_unwrap(obj):
 
     Args:
         obj (bpy_types.Object): Object to UV unwrap.
+        area_weight (float, optional): Area weight.
 
     Returns:
         dict(numpy.ndarray): Dictionary with its keys being the face indices,
@@ -871,7 +872,7 @@ def smart_uv_unwrap(obj):
     bpy.context.scene.objects.active = obj
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.uv.smart_project()
+    bpy.ops.uv.smart_project(user_area_weight=area_weight)
     bpy.ops.object.mode_set(mode='OBJECT')
 
     # Since # faces is usually very large, using faces as dictionary
