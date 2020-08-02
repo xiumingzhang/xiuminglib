@@ -43,3 +43,7 @@ class Path:
 
     # LPIPS
     lpips_weights = join(Dir.data, 'lpips', 'net-lin_alex_v0.1.pb')
+
+    # Fonts
+    open_sans_regular = join(
+        Dir.data, 'fonts', 'open-sans', 'OpenSans-Regular.ttf')

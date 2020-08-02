@@ -48,7 +48,7 @@ def make_apng(
 
     # Font
     if font_ttf is None:
-        font = ImageFont.truetype('arial.ttf', font_size)
+        font = ImageFont.truetype(const.Path.open_sans_regular, font_size)
     else:
         gfile = preset_import('gfile')
         open_func = open if gfile is None else gfile.Open
