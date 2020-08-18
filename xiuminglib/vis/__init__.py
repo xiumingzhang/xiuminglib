@@ -1,4 +1,5 @@
 __all__ = [
+    'anim',
     'general',
     'geometry',
     'html',
