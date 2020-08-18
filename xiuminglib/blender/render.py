@@ -222,12 +222,11 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
         assert exr, ".exr must be used for multi-layer results"
         file_format += '_MULTILAYER'
 
-        assert 'composite' in result_socket.keys(), \
-            ("Composite pass is always rendered anyways. Plus, we need this "
-             "dummy connection for the multi-layer OpenEXR file to be saved "
-             "to disk (strangely)")
-        node_tree.links.new(result_socket['composite'],
-                            outnode.inputs['Image'])
+        assert 'composite' in result_socket.keys(), (
+            "Composite pass is always rendered anyways. Plus, we need this "
+            "dummy connection for the multi-layer OpenEXR file to be saved "
+            "to disk (strangely)")
+        node_tree.links.new(result_socket['composite'], outnode.inputs['Image'])
 
         # Add input slots and connect
         for k, v in result_socket.items():
@@ -252,9 +251,9 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
     # Depending on the scene state, the render filename may be anything
     # matching the pattern
     fs = glob(render_f)
-    assert len(fs) == 1, \
-        ("There should be only one file matching:\n\t{p}\n"
-         "but found {n}").format(p=render_f, n=len(fs))
+    assert len(fs) == 1, (
+        "There should be only one file matching:\n\t{p}\n"
+        "but found {n}").format(p=render_f, n=len(fs))
     render_f = fs[0]
 
     # Move from temporary directory to the desired location
@@ -299,16 +298,17 @@ def render(outpath, cam=None, obj_names=None, alpha=True, text=None):
 
     # Render
     exr = outpath.endswith('.exr')
-    outpath = _render(scene, outnode, result_socket, outpath,
-                      exr=exr, alpha=alpha)
+    outpath = _render(
+        scene, outnode, result_socket, outpath, exr=exr, alpha=alpha)
 
     # Optionally overlay text
     if text is not None:
         cv2 = preset_import('cv2')
         im = cv2.imread(outpath, cv2.IMREAD_UNCHANGED)
-        cv2.putText(im, text['contents'], text['bottom_left_corner'],
-                    cv2.FONT_HERSHEY_SIMPLEX, text['font_scale'],
-                    text['bgr'], text['thickness'])
+        cv2.putText(
+            im, text['contents'], text['bottom_left_corner'],
+            cv2.FONT_HERSHEY_SIMPLEX, text['font_scale'], text['bgr'],
+            text['thickness'])
         cv2.imwrite(outpath, im)
 
     logger.info("%s rendered through '%s'", obj_names, cam_name)
@@ -410,8 +410,8 @@ def render_alpha(outpath, cam=None, obj_names=None, samples=1000):
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     scene.render.engine = 'CYCLES'
-    film_transparent_old = scene.cycles.film_transparent
-    scene.cycles.film_transparent = True
+    film_transparent_old = scene.render.film_transparent
+    scene.render.film_transparent = True
     # Anti-aliased edges are built up by averaging multiple samples
     samples_old = scene.cycles.samples
     scene.cycles.samples = samples
@@ -427,7 +427,7 @@ def render_alpha(outpath, cam=None, obj_names=None, samples=1000):
 
     # Restore
     scene.cycles.samples = samples_old
-    scene.cycles.film_transparent = film_transparent_old
+    scene.render.film_transparent = film_transparent_old
 
     logger.info(
         "Foreground alpha of %s rendered through '%s'", obj_names, cam_name)

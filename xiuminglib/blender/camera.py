@@ -290,9 +290,7 @@ def get_camera_matrix(cam, keep_disparity=False):
             - **ext_mat** (*mathutils.Matrix*) -- Camera extrinsics. 4-by-4 if
               ``keep_disparity``; else, 3-by-4.
     """
-    # Necessary scene update
-    scene = bpy.context.scene
-    scene.update()
+    bpy.context.view_layer.update()
 
     # Check if camera intrinsic parameters comptible with render settings
     if not intrinsics_compatible_with_scene(cam):
@@ -307,6 +305,7 @@ def get_camera_matrix(cam, keep_disparity=False):
     f_mm = cam.data.lens
     sensor_width_mm = cam.data.sensor_width
     sensor_height_mm = cam.data.sensor_height
+    scene = bpy.context.scene
     w = scene.render.resolution_x
     h = scene.render.resolution_y
     scale = scene.render.resolution_percentage / 100.
@@ -366,11 +365,11 @@ def get_camera_matrix(cam, keep_disparity=False):
 
     # World to Blender camera
     rotmat_world2cam = rot_euler.to_matrix().transposed() # same as inverse
-    t_world2cam = rotmat_world2cam * -t
+    t_world2cam = rotmat_world2cam @ -t
 
     # World to computer vision camera
-    rotmat_world2cv = rotmat_cam2cv * rotmat_world2cam
-    t_world2cv = rotmat_cam2cv * t_world2cam
+    rotmat_world2cv = rotmat_cam2cv @ rotmat_world2cam
+    t_world2cv = rotmat_cam2cv @ t_world2cam
 
     if keep_disparity:
         # 4-by-4
@@ -387,7 +386,7 @@ def get_camera_matrix(cam, keep_disparity=False):
             rotmat_world2cv[2][:] + (t_world2cv[2],)))
 
     # Camera matrix
-    cam_mat = int_mat * ext_mat
+    cam_mat = int_mat @ ext_mat
 
     logger.info("Done computing camera matrix for '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)
@@ -595,7 +594,7 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         # projecting to (x, y)
         xy = xys[i, :]
         xy1d = np.append(xy, [1, 1 / z_c]) # with disparity
-        xyzw = cam_mat_inv * Vector(xy1d) # world
+        xyzw = cam_mat_inv @ Vector(xy1d) # world
 
         # Ray start and direction in world coordinates
         ray_to_world = from_homo(xyzw)
@@ -613,23 +612,23 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
             world2obj = world2objs[obj_name]
 
             # Ray start and direction in local coordinates
-            ray_from = world2obj * ray_from_world
-            ray_to = world2obj * ray_to_world
+            ray_from = world2obj @ ray_from_world
+            ray_to = world2obj @ ray_to_world
 
             # Ray tracing
             loc, normal, facei, _ = raycast(tree, ray_from, ray_to)
             # Not using the returned ray distance as that's local
             dist = None if loc is None else (
-                obj2world * loc - ray_from_world).length
+                obj2world @ loc - ray_from_world).length
 
             # See if this intersection is closer to camera center than
             # previous intersections with other objects
             if (dist is not None) and (dist < dist_min):
-                first_intersect = obj2world * loc if world_coords else loc
+                first_intersect = obj2world @ loc if world_coords else loc
                 first_intersect_objname = obj_name
                 first_intersect_facei = facei
                 first_intersect_normal = \
-                    obj2world * normal if world_coords else normal
+                    obj2world @ normal if world_coords else normal
                 first_intersect_normal.normalize()
                 # Re-normalize in case transforming to world coordinates has
                 # ruined the unit length
@@ -640,9 +639,9 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
         intersect_facei[i] = first_intersect_facei
         intersect_normals[i] = first_intersect_normal
 
-    assert None not in ray_tos, \
-        ("No matter whether a ray is a hit or not, we must have a "
-         "\"look-at\" for it")
+    assert None not in ray_tos, (
+        "No matter whether a ray is a hit or not, we must have a "
+        "\"look-at\" for it")
 
     logger.info("Backprojection done with camera '%s'", cam.name)
     logger.warning("... using w = %d; h = %d", w * scale, h * scale)

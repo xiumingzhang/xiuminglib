@@ -77,7 +77,7 @@ def remove_objects(name_pattern, regex=False):
     bpy.ops.object.delete()
 
     # Scene update necessary, as matrix_world is updated lazily
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Removed from scene: %s", removed)
 
@@ -157,7 +157,7 @@ def import_object(model_path,
         obj_list.append(obj)
 
     # Scene update necessary, as matrix_world is updated lazily
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Imported: %s", model_path)
 
@@ -260,7 +260,7 @@ def add_cylinder_between(pt1, pt2, r=1e-3, name=None):
     cylinder_obj.rotation_euler[2] = phi
 
     # Scene update necessary, as matrix_world is updated lazily
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
     return cylinder_obj
 
@@ -304,7 +304,7 @@ def add_rectangular_plane(
     plane_obj.rotation_euler = rot_quat.to_euler()
 
     # Scene update necessary, as matrix_world is updated lazily
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
     return plane_obj
 
@@ -365,7 +365,7 @@ def create_object_from_mesh(mesh_data, obj_name='new-obj',
     logger.info("Object '%s' created from mesh data and selected", obj_name)
 
     # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
+    bpy.context.view_layer.update()
 
     return obj
 
@@ -477,7 +477,7 @@ def color_vertices(obj, vert_ind, colors):
     node_tree.links.new(diffuse_node.outputs[0], output_node.inputs[0])
 
     # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Vertex color(s) added to '%s'", obj.name)
     logger.warning("..., so node tree of '%s' has changed", obj.name)
@@ -556,22 +556,19 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
 
     if isinstance(texture, str):
         texture_node = _make_texture_node(obj, texture)
-        node_tree.links.new(texture_node.outputs['Color'],
-                            shader_node.inputs['Color'])
+        node_tree.links.new(
+            texture_node.outputs['Color'], shader_node.inputs['Color'])
     elif isinstance(texture, tuple):
         shader_node.inputs['Color'].default_value = texture
     else:
         raise TypeError(texture)
 
     output_node = nodes.new('ShaderNodeOutputMaterial')
-    node_tree.links.new(shader_node.outputs['BSDF'],
-                        output_node.inputs['Surface'])
+    node_tree.links.new(
+        shader_node.outputs['BSDF'], output_node.inputs['Surface'])
 
     # Roughness
     shader_node.inputs['Roughness'].default_value = roughness
-
-    # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
 
     logger.info(
         "%s node tree set up for '%s'", shader_type.capitalize(), obj.name)
@@ -599,7 +596,7 @@ def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
         nodes['Emission'].outputs[0], nodes['Material Output'].inputs[0])
 
     # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Emission node tree set up for '%s'", obj.name)
 
@@ -622,7 +619,7 @@ def setup_holdout_nodetree(obj):
         nodes['Holdout'].outputs[0], nodes['Material Output'].inputs[0])
 
     # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Holdout node tree set up for '%s'", obj.name)
 
@@ -685,7 +682,7 @@ def setup_retroreflective_nodetree(
     mix_node.inputs['Fac'].default_value = glossy_weight
 
     # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Retroreflective node tree set up for '%s'", obj.name)
 
@@ -703,7 +700,7 @@ def get_bmesh(obj):
     bm.from_mesh(obj.data)
 
     # Scene update necessary, as matrix_world is updated lazily
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
     return bm
 
@@ -727,15 +724,15 @@ def subdivide_mesh(obj, n_subdiv=2):
     scene.objects.active = obj
 
     bpy.ops.object.modifier_add(type='SUBSURF')
-    obj.modifiers['Subsurf'].subdivision_type = 'CATMULL_CLARK'
-    obj.modifiers['Subsurf'].levels = n_subdiv
-    obj.modifiers['Subsurf'].render_levels = n_subdiv
+    obj.modifiers['Subdivision'].subdivision_type = 'CATMULL_CLARK'
+    obj.modifiers['Subdivision'].levels = n_subdiv
+    obj.modifiers['Subdivision'].render_levels = n_subdiv
 
     # Apply modifier
-    bpy.ops.object.modifier_apply(modifier='Subsurf', apply_as='DATA')
+    bpy.ops.object.modifier_apply(modifier='Subdivision', apply_as='DATA')
 
     # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Subdivided mesh of '%s'", obj.name)
 
@@ -795,18 +792,20 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
     scene.objects.active = scene.objects.active
 
     # Scene update necessary, as matrix_world is updated lazily
-    scene.update()
+    bpy.context.view_layer.update()
 
     logger.info("Selected %s elements of '%s'", select_type, obj.name)
 
 
-def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
+def add_sphere(
+        location=(0, 0, 0), scale=1, n_subdiv=2, shade_smooth=False, name=None):
     """Adds a sphere.
 
     Args:
         location (array_like, optional): Location of the sphere center.
         scale (float, optional): Scale of the sphere.
         n_subdiv (int, optional): Control of how round the sphere is.
+        shade_smooth (bool, optional): Whether to use smooth shading.
         name (str, optional): Name of the added sphere.
 
     Returns:
@@ -823,11 +822,16 @@ def add_sphere(location=(0, 0, 0), scale=1, n_subdiv=2, name=None):
 
     # Subdivide for smoother sphere
     bpy.ops.object.modifier_add(type='SUBSURF')
-    sphere.modifiers['Subsurf'].subdivision_type = 'CATMULL_CLARK'
-    sphere.modifiers['Subsurf'].levels = n_subdiv
-    sphere.modifiers['Subsurf'].render_levels = n_subdiv
-    bpy.context.scene.objects.active = sphere
-    bpy.ops.object.modifier_apply(modifier='Subsurf', apply_as='DATA')
+    sphere.modifiers['Subdivision'].subdivision_type = 'CATMULL_CLARK'
+    sphere.modifiers['Subdivision'].levels = n_subdiv
+    sphere.modifiers['Subdivision'].render_levels = n_subdiv
+    bpy.context.view_layer.objects.active = sphere
+    bpy.ops.object.modifier_apply(modifier='Subdivision', apply_as='DATA')
+
+    # Fake smoothness
+    if shade_smooth:
+        for f in sphere.data.polygons:
+            f.use_smooth = True
 
     return sphere
 

@@ -238,10 +238,10 @@ def add_light_env(env=(1, 1, 1, 1), strength=1, rot_vec_rad=(0, 0, 0),
         env_node = nodes.new('ShaderNodeTexEnvironment')
         env_node.image = env
         mapping_node = nodes.new('ShaderNodeMapping')
-        mapping_node.rotation = rot_vec_rad
-        mapping_node.scale = scale
-        links.new(texcoord_node.outputs['Generated'],
-                  mapping_node.inputs['Vector'])
+        mapping_node.inputs['Rotation'].default_value = rot_vec_rad
+        mapping_node.inputs['Scale'].default_value = scale
+        links.new(
+            texcoord_node.outputs['Generated'], mapping_node.inputs['Vector'])
         links.new(mapping_node.outputs['Vector'], env_node.inputs['Vector'])
         links.new(env_node.outputs['Color'], bg_node.inputs['Color'])
 

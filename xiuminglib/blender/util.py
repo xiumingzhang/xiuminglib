@@ -11,4 +11,4 @@ def cursor_to(loc):
     Args:
         loc (array_like): 3D coordinates, of length 3.
     """
-    bpy.context.scene.cursor_location = loc
+    bpy.context.scene.cursor.location = loc

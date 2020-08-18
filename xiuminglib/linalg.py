@@ -165,6 +165,31 @@ def project_onto(pts, basis):
     return proj
 
 
+def calc_refl_vec(h, l):
+    """Calculates the reflection vector given the half vector.
+
+    Args:
+        h (array_like): Half vector as a 3-array.
+        l (array_like): "Incident" vector (pointing outwards from the surface
+            point), as a 3-array.
+
+    Returns:
+        numpy.ndarray: Reflection vector as a 3-array.
+    """
+    h, l = np.array(h), np.array(l)
+    h, l = normalize(h), normalize(l)
+    v = 2 * (h @ l) * h - l
+    return v
+
+
+def solve_quadratic_eqn(a, b, c):
+    """Solves :math:`ax^2+bx+c=0`.
+    """
+    x1 = (-b + np.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+    x2 = (-b - np.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+    return x1, x2
+
+
 def main(func_name):
     """Unit tests that can also serve as example usage."""
     if func_name == 'is_symmetric':

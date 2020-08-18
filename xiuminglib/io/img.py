@@ -20,6 +20,9 @@ def load(path, as_array=False):
     Returns:
         A PIL image type or numpy.ndarray: Loaded image.
     """
+    if path.endswith('.exr'):
+        raise ValueError("Use the dedicated `io.exr.EXR()` class for .exr")
+
     gfile = preset_import('gfile')
     open_func = open if gfile is None else gfile.Open
     with open_func(path, 'rb') as h:
