@@ -222,22 +222,19 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
     if isinstance(result_socket, dict):
         assert exr, ".exr must be used for multi-layer results"
         file_format += '_MULTILAYER'
-
         assert 'composite' in result_socket.keys(), (
             "Composite pass is always rendered anyways. Plus, we need this "
             "dummy connection for the multi-layer OpenEXR file to be saved "
             "to disk (strangely)")
         node_tree.links.new(result_socket['composite'], outnode.inputs['Image'])
-
         # Add input slots and connect
         for k, v in result_socket.items():
             outnode.layer_slots.new(k)
             node_tree.links.new(v, outnode.inputs[k])
-
         render_f = join(outnode.base_path, '????.exr')
+
     else:
         node_tree.links.new(result_socket, outnode.inputs['Image'])
-
         render_f = join(outnode.base_path, 'Image????' + ext)
 
     outnode.format.file_format = file_format
@@ -609,7 +606,8 @@ def render_normal(outpath, cam=None, obj_names=None,
     logger.warning("The scene node tree has changed")
 
 
-def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
+def render_lighting_passes(
+        outpath, cam=None, obj_names=None, n_samples=None, select=None):
     """Renders select Cycles' lighting passes of the specified object(s) from
     the specified camera.
 
@@ -623,21 +621,34 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
             rendered. If ``None``, there must be only one camera in scene.
         obj_names (str or list(str), optional): Name(s) of object(s) of
             interest. ``None`` means all objects.
-        n_samples (int, optional): Number of path tracing samples per pixel.
+        n_samples (int, optional): Number of samples per pixel. Useful when
+            you want a value different than other renderings; ``None`` means
+            using the current value.
+        select (list(str), optional): Render only this list of passes.
+            ``None`` means rendering all passes: ``diffuse_direct``,
+            ``diffuse_indirect``, ``diffuse_color``, ``glossy_direct``,
+            ``glossy_indirect``, and ``glossy_color``.
 
     Writes
         - A 32-bit .exr multi-layer image containing the lighting passes.
     """
-    select_passes = { # for the purpose of intrinsic images
+    all_passes = { # a set useful for intrinsic image decomposition
         'diffuse_direct': 'DiffDir', 'diffuse_indirect': 'DiffInd',
         'diffuse_color': 'DiffCol', 'glossy_direct': 'GlossDir',
         'glossy_indirect': 'GlossDir', 'glossy_color': 'GlossCol'}
+    if select is None:
+        select_passes = all_passes
+    elif isinstance(select, str):
+        select_passes = {select: all_passes[select]}
+    else:
+        select_passes = {k: v for k, v in all_passes.items() if k in select}
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     scene.render.engine = 'CYCLES'
     n_samples_old = scene.cycles.samples
-    scene.cycles.samples = n_samples
+    if n_samples is not None:
+        scene.cycles.samples = n_samples
     film_transparent_old = scene.render.film_transparent
     scene.render.film_transparent = True
 
@@ -645,8 +656,7 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
     render_layer = scene.view_layers['RenderLayer']
     node_tree = scene.node_tree
     nodes = node_tree.nodes
-    result_sockets = {
-        'composite': nodes['Render Layers'].outputs['Image']}
+    result_sockets = {}
     for p, p_key in select_passes.items():
         setattr(render_layer, 'use_pass_' + p, True)
         # Set alpha
@@ -660,6 +670,13 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
         result_sockets[p] = set_alpha_node.outputs['Image']
 
     # Render
+    if len(result_sockets) == 1:
+        # NOTE: To avoid multi-layer .exr so that one can just read the render
+        # with OpenCV (multi-layer would require OpenEXR)
+        result_sockets = list(result_sockets.values())[0]
+    else:
+        # Multi-layer .exr saving strangely requires this composite pass
+        result_sockets['composite'] = nodes['Render Layers'].outputs['Image']
     outpath = _render(scene, outnode, result_sockets, outpath)
 
     # Restore
