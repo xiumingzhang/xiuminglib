@@ -67,7 +67,7 @@ def set_cycles(w=None, h=None,
 
     # If world background is transparent with premultiplied alpha
     if transp_bg is not None:
-        cycles.film_transparent = transp_bg
+        render.film_transparent = transp_bg
 
     # # Use GPU
     # bpy.context.user_preferences.system.compute_device_type = 'CUDA'
@@ -215,7 +215,8 @@ def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
     else:
         color_mode = 'RGB'
 
-    outnode.base_path = '/tmp/%s' % time()
+    outnode.base_path = '/tmp/%s/' % time()
+    # NOTE: The trailing slash is important
 
     # Connect result socket(s) to the output node
     if isinstance(result_socket, dict):
@@ -530,7 +531,7 @@ def render_normal(outpath, cam=None, obj_names=None,
     # Set up scene node tree
     node_tree = scene.node_tree
     nodes = node_tree.nodes
-    scene.render.layers['RenderLayer'].use_pass_normal = True
+    scene.view_layers['RenderLayer'].use_pass_normal = True
     set_alpha_node = nodes.new('CompositorNodeSetAlpha')
     node_tree.links.new(nodes['Render Layers'].outputs['Alpha'],
                         set_alpha_node.inputs['Alpha'])
@@ -541,8 +542,8 @@ def render_normal(outpath, cam=None, obj_names=None,
     # Select rendering engine based on whether camera or world space
     if world_coords:
         scene.render.engine = 'CYCLES'
-        film_transparent_old = scene.cycles.film_transparent
-        scene.cycles.film_transparent = True
+        film_transparent_old = scene.render.film_transparent
+        scene.render.film_transparent = True
         samples_old = scene.cycles.samples
         scene.cycles.samples = 16 # for anti-aliased edges
     else: # camera space
@@ -597,7 +598,7 @@ def render_normal(outpath, cam=None, obj_names=None,
 
     # Restore
     if world_coords:
-        scene.cycles.film_transparent = film_transparent_old
+        scene.render.film_transparent = film_transparent_old
         scene.cycles.samples = samples_old
 
     logger.info("Normal map of %s rendered through %s to %s",
@@ -627,35 +628,35 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
     Writes
         - A 32-bit .exr multi-layer image containing the lighting passes.
     """
-    select_passes = [
-        'diffuse_direct', 'diffuse_indirect', 'diffuse_color',
-        'glossy_direct', 'glossy_indirect', 'glossy_color',
-    ] # for the purpose of intrinsic images
+    select_passes = { # for the purpose of intrinsic images
+        'diffuse_direct': 'DiffDir', 'diffuse_indirect': 'DiffInd',
+        'diffuse_color': 'DiffCol', 'glossy_direct': 'GlossDir',
+        'glossy_indirect': 'GlossDir', 'glossy_color': 'GlossCol'}
 
     cam_name, obj_names, scene, outnode = _render_prepare(cam, obj_names)
 
     scene.render.engine = 'CYCLES'
     n_samples_old = scene.cycles.samples
     scene.cycles.samples = n_samples
-    film_transparent_old = scene.cycles.film_transparent
-    scene.cycles.film_transparent = True
+    film_transparent_old = scene.render.film_transparent
+    scene.render.film_transparent = True
 
     # Enable all passes of interest
-    render_layer = scene.render.layers['RenderLayer']
+    render_layer = scene.view_layers['RenderLayer']
     node_tree = scene.node_tree
     nodes = node_tree.nodes
     result_sockets = {
-        'composite': nodes['Render Layers'].outputs['Image'],
-    }
-    for p in select_passes:
+        'composite': nodes['Render Layers'].outputs['Image']}
+    for p, p_key in select_passes.items():
         setattr(render_layer, 'use_pass_' + p, True)
-        p_key = ' '.join(x.capitalize() for x in p.split('_'))
         # Set alpha
         set_alpha_node = nodes.new('CompositorNodeSetAlpha')
-        node_tree.links.new(nodes['Render Layers'].outputs['Alpha'],
-                            set_alpha_node.inputs['Alpha'])
-        node_tree.links.new(nodes['Render Layers'].outputs[p_key],
-                            set_alpha_node.inputs['Image'])
+        node_tree.links.new(
+            nodes['Render Layers'].outputs['Alpha'],
+            set_alpha_node.inputs['Alpha'])
+        node_tree.links.new(
+            nodes['Render Layers'].outputs[p_key],
+            set_alpha_node.inputs['Image'])
         result_sockets[p] = set_alpha_node.outputs['Image']
 
     # Render
@@ -663,7 +664,7 @@ def render_lighting_passes(outpath, cam=None, obj_names=None, n_samples=64):
 
     # Restore
     scene.cycles.samples = n_samples_old
-    scene.cycles.film_transparent = film_transparent_old
+    scene.render.film_transparent = film_transparent_old
 
     logger.info("Select lighting passes of %s rendered through '%s' to %s",
                 obj_names, cam_name, outpath)

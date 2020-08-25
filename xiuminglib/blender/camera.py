@@ -589,8 +589,7 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
     ray_from_world = cam.location
 
     # TODO: vectorize for performance
-    for i, xy in enumerate(
-            tqdm(xys, desc="Computing ray internsections with objects")):
+    for i, xy in enumerate(tqdm(xys, desc="Computing ray internsections")):
 
         # Compute any point on the line passing camera center and
         # projecting to (x, y)
