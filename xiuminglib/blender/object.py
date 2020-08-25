@@ -519,7 +519,7 @@ def _make_texture_node(obj, texture_str):
 
 
 def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
-    r"""Sets up a simple (diffuse or glossy) node tree.
+    r"""Sets up a simple (diffuse and/or glossy) node tree.
 
     Texture can be an bundled texture map, a path to an external texture map,
     or simply a pure color. If a path to an external image, and UV

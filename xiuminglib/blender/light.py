@@ -54,7 +54,7 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     Returns:
         bpy_types.Object: Light added.
     """
-    bpy.ops.object.lamp_add(
+    bpy.ops.object.light_add(
         type='SUN', location=xyz, rotation=rot_vec_rad)
     sun = bpy.context.active_object
 
@@ -66,6 +66,7 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     # Strength
     engine = bpy.context.scene.render.engine
     if engine == 'CYCLES':
+        sun.data.use_nodes = True
         sun.data.node_tree.nodes['Emission'].inputs[
             'Strength'].default_value = energy
     else:
@@ -97,7 +98,7 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
             ("Some input value falls outside [-2pi, 2pi]. "
              "Sure inputs are in radians?"))
 
-    bpy.ops.object.lamp_add(type='AREA', location=xyz, rotation=rot_vec_rad)
+    bpy.ops.object.light_add(type='AREA', location=xyz, rotation=rot_vec_rad)
     area = bpy.context.active_object
 
     if name is not None:
@@ -130,7 +131,7 @@ def add_light_point(xyz=(0, 0, 0), name=None, size=0, energy=100):
     Returns:
         bpy_types.Object: Light added.
     """
-    bpy.ops.object.lamp_add(type='POINT', location=xyz)
+    bpy.ops.object.light_add(type='POINT', location=xyz)
     point = bpy.context.active_object
 
     if name is not None:
@@ -167,7 +168,7 @@ def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, shadow_soft_size=0.1,
     Returns:
         bpy_types.Object: Light added.
     """
-    bpy.ops.object.lamp_add(type='SPOT', location=xyz)
+    bpy.ops.object.light_add(type='SPOT', location=xyz)
     spot = bpy.context.active_object
 
     if name is not None:

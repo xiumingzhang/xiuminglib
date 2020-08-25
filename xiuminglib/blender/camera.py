@@ -2,6 +2,7 @@ from os import remove, rename
 from os.path import dirname, basename
 from time import time
 import numpy as np
+from tqdm import tqdm
 
 from ..imprt import preset_import
 bpy = preset_import('bpy')
@@ -588,11 +589,11 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
     ray_from_world = cam.location
 
     # TODO: vectorize for performance
-    for i in range(xys.shape[0]):
+    for i, xy in enumerate(
+            tqdm(xys, desc="Computing ray internsections with objects")):
 
         # Compute any point on the line passing camera center and
         # projecting to (x, y)
-        xy = xys[i, :]
         xy1d = np.append(xy, [1, 1 / z_c]) # with disparity
         xyzw = cam_mat_inv @ Vector(xy1d) # world
 
