@@ -558,7 +558,7 @@ def render_normal(outpath, cam=None, obj_names=None,
         cam_mat, cam_int, _ = get_camera_matrix(cam, keep_disparity=True)
         x, y = cam_int[0][2], cam_int[1][2]
         center_xy1d = Vector([x, y, 1, 1 / z_c]) # with disparity
-        xyzw = cam_mat.inverted() * center_xy1d # from pixel to world
+        xyzw = cam_mat.inverted() @ center_xy1d # from pixel to world
         xyz = from_homo(xyzw)
         sphere = add_sphere(location=xyz)
         # Scale the ball so that it, when projected, fits into the frame

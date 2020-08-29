@@ -35,7 +35,7 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
     export_mesh(mesh, out_obj)
 
 
-def normal_as_image(normal_map, alpha_map, outpath=None):
+def normal_as_image(normal_map, alpha_map=None, outpath=None):
     """Visualizes the normal map by converting vectors to pixel values.
 
     The background is black, complying with industry standards (e.g.,
@@ -43,7 +43,7 @@ def normal_as_image(normal_map, alpha_map, outpath=None):
 
     Args:
         normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
-        alpha_map (numpy.ndarray): H-by-W array of alpha values.
+        alpha_map (numpy.ndarray, optional): H-by-W array of alpha values.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means ``os.path.join(const.Dir.tmp,
             'normal_as_image.png')``.
@@ -55,6 +55,10 @@ def normal_as_image(normal_map, alpha_map, outpath=None):
 
     if outpath is None:
         outpath = join(const.Dir.tmp, 'normal_as_image.png')
+
+    if alpha_map is None:
+        alpha_map = np.sum(normal_map != 0, axis=2) > 0 # "or" all channels
+        alpha_map = alpha_map.astype(float)
 
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max
@@ -70,7 +74,7 @@ def normal_as_image(normal_map, alpha_map, outpath=None):
     cv2.imwrite(outpath, im.astype(dtype)[..., ::-1])
 
 
-def depth_as_image(depth_map, alpha_map, outpath=None):
+def depth_as_image(depth_map, alpha_map=None, outpath=None):
     """Visualizes a(n) (aliased) depth map and an (anti-aliased) alpha map
     as a single depth image.
 
@@ -80,7 +84,7 @@ def depth_as_image(depth_map, alpha_map, outpath=None):
 
     Args:
         depth_map (numpy.ndarray): 2D array of (aliased) raw depth values.
-        alpha_map (numpy.ndarray): 2D array of (anti-aliased) alpha
+        alpha_map (numpy.ndarray, optional): 2D array of (anti-aliased) alpha
             values.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means ``os.path.join(const.Dir.tmp,
@@ -94,11 +98,16 @@ def depth_as_image(depth_map, alpha_map, outpath=None):
     if outpath is None:
         outpath = join(const.Dir.tmp, 'depth_as_image.png')
 
+    # This maximum value belongs to background
+    is_fg = depth_map < depth_map.max()
+
+    if alpha_map is None:
+        alpha_map = is_fg.astype(float)
+
     dtype = 'uint8'
     dtype_max = np.iinfo(dtype).max
 
     # Cap background depth at the object's maximum depth
-    is_fg = depth_map < depth_map.max()
     max_val = depth_map[is_fg].max()
     depth_map[depth_map > max_val] = max_val
 

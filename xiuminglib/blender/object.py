@@ -60,18 +60,18 @@ def remove_objects(name_pattern, regex=False):
 
         for obj in objs:
             if name_pattern.match(obj.name):
-                obj.select = True
+                obj.select_set(True)
                 removed.append(obj.name)
             else:
-                obj.select = False
+                obj.select_set(False)
 
     else:
         for obj in objs:
             if obj.name == name_pattern:
-                obj.select = True
+                obj.select_set(True)
                 removed.append(obj.name)
             else:
-                obj.select = False
+                obj.select_set(False)
 
     # Delete
     bpy.ops.object.delete()
@@ -111,7 +111,7 @@ def import_object(model_path,
     """
     # Deselect all
     for o in bpy.data.objects:
-        o.select = False
+        o.select_set(False)
 
     # Import
     if model_path.endswith('.obj'):
@@ -192,7 +192,7 @@ def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
 
     exported = []
     for o in [x for x in bpy.data.objects if x.type == 'MESH']:
-        o.select = o.name in obj_names
+        o.select_set(o.name in obj_names)
         if o.select:
             exported.append(o.name)
 
@@ -354,7 +354,7 @@ def create_object_from_mesh(mesh_data, obj_name='new-obj',
     # Link to current scene
     scene = bpy.context.scene
     scene.objects.link(obj)
-    obj.select = True
+    obj.select_set(True)
     scene.objects.active = obj # make the selection effective
 
     # Set attributes
@@ -439,7 +439,7 @@ def color_vertices(obj, vert_ind, colors):
 
     scene = bpy.context.scene
     scene.objects.active = obj
-    obj.select = True
+    obj.select_set(True)
     bpy.ops.object.mode_set(mode='OBJECT')
 
     mesh = obj.data
@@ -719,8 +719,8 @@ def subdivide_mesh(obj, n_subdiv=2):
     for o in bpy.data.objects:
         scene.objects.active = o
         bpy.ops.object.mode_set(mode='OBJECT')
-        o.select = False
-    obj.select = True
+        o.select_set(False)
+    obj.select_set(True)
     scene.objects.active = obj
 
     bpy.ops.object.modifier_add(type='SUBSURF')
@@ -773,17 +773,17 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
         bv = bvs[i]
 
         if select_type == 'vertex':
-            bv.select = True
+            bv.select_set(True)
 
         # Select all edges with this vertex at an end
         elif select_type == 'edge':
             for be in bv.link_edges:
-                be.select = True
+                be.select_set(True)
 
         # Select all faces with this vertex
         elif select_type == 'face':
             for bf in bv.link_faces:
-                bf.select = True
+                bf.select_set(True)
 
         else:
             raise ValueError("Wrong selection type")
