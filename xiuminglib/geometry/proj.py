@@ -58,10 +58,11 @@ def from_homo(pts, axis=None):
         numpy.ndarray or mathutils.Vector: Non-homogeneous coordinates of the
         input point(s).
     """
-    if isinstance(pts, Vector):
+    if Vector is not None and isinstance(pts, Vector):
         if axis not in (None, 0):
-            raise ValueError(("axis must be either None (auto) or "
-                              "0 for a Blender vector input"))
+            raise ValueError((
+                "Axis must be either None (auto) or 0 for a Blender vector "
+                "input"))
         pts_nonhomo = Vector(x / pts[-1] for x in pts[:-1])
 
     elif isinstance(pts, np.ndarray):
@@ -69,8 +70,9 @@ def from_homo(pts, axis=None):
             if pts.ndim == 1:
                 axis = 0
             else:
-                raise ValueError(("When pts has more than one dimension, "
-                                  "axis must be specified"))
+                raise ValueError((
+                    "When pts has more than one dimension, axis must be "
+                    "specified"))
         arr = np.take(pts, range(pts.shape[axis] - 1), axis=axis)
         w = np.take(pts, -1, axis=axis)
         pts_nonhomo = np.divide(arr, w) # by broadcasting
