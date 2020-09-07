@@ -7,6 +7,7 @@ logger = get_logger()
 from ..imprt import preset_import
 Imath = preset_import('Imath')
 OpenEXR = preset_import('OpenEXR')
+gfile = preset_import('gfile')
 
 from ..vis.matrix import matrix_as_image
 from ..vis.geometry import depth_as_image, normal_as_image
@@ -45,18 +46,22 @@ class EXR():
         Returns:
             dict: Loaded EXR data.
         """
-        assert self.exr_f is not None, "You need to set exr_f first"
+        assert self.exr_f is not None, "You need to set `exr_f` first"
         assert OpenEXR is not None, "Import failed: OpenEXR"
-        f = OpenEXR.InputFile(self.exr_f)
         assert Imath is not None, "Import failed: Imath"
         pix_type = Imath.PixelType(Imath.PixelType.FLOAT)
-        data_win = f.header()['dataWindow']
-        win_size = (data_win.max.y - data_win.min.y + 1,
-                    data_win.max.x - data_win.min.x + 1)
+        # Load
         data = {}
-        for c in f.header()['channels']:
-            arr = np.fromstring(f.channel(c, pix_type), dtype=np.float32)
-            data[c] = arr.reshape(win_size)
+        open_func = open if gfile is None else gfile.Open
+        with open_func(self.exr_f, 'rb') as h:
+            f = OpenEXR.InputFile(h)
+            data_win = f.header()['dataWindow']
+            win_size = (
+                data_win.max.y - data_win.min.y + 1,
+                data_win.max.x - data_win.min.x + 1)
+            for c in f.header()['channels']:
+                arr = np.fromstring(f.channel(c, pix_type), dtype=np.float32)
+                data[c] = arr.reshape(win_size)
         logger.info("Loaded %s", self.exr_f)
         return data
 
