@@ -44,13 +44,13 @@ def put_text(
         font = ImageFont.truetype(font_bytes, font_size)
 
     if label_top_left_xy is None:
-        top_left_xy = (int(0.1 * img.shape[1]), int(0.05 * img.shape[0]))
+        label_top_left_xy = (int(0.1 * img.shape[1]), int(0.05 * img.shape[0]))
 
     dtype_max = np.iinfo(img.dtype).max
     color = tuple(int(x * dtype_max) for x in font_color)
 
     img = Image.fromarray(img)
-    ImageDraw.Draw(img).text(top_left_xy, text, fill=color, font=font)
+    ImageDraw.Draw(img).text(label_top_left_xy, text, fill=color, font=font)
     img = np.array(img)
 
     return img
