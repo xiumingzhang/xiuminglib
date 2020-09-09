@@ -50,6 +50,7 @@ def put_text(
     color = tuple(int(x * dtype_max) for x in font_color)
 
     img = Image.fromarray(img)
+    img = img.convert('RGB') # to avoid errors due to RGB text on grayscale
     ImageDraw.Draw(img).text(label_top_left_xy, text, fill=color, font=font)
     img = np.array(img)
 
