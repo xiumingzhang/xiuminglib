@@ -30,6 +30,10 @@ def put_text(
     Returns:
         numpy.ndarray: The modified image with text.
     """
+    assert np.issubdtype(img.dtype, np.integer) and (
+        not np.issubdtype(img.dtype, np.signedinteger)), \
+        "Input image must be `uint` (i.e., an actual image)"
+
     if font_size is None:
         font_size = int(0.1 * img.shape[0])
 
