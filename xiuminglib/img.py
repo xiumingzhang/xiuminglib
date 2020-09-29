@@ -602,12 +602,15 @@ def rgb2lum(im):
     (if input is gamma-corrected RGB).
 
     Args:
-        im (numpy.ndarray): H-by-W-3 array of RGB values.
+        im (numpy.ndarray): RGB array of shape ``(..., 3)``.
 
     Returns:
-        numpy.ndarray: H-by-W array of relative luminance or luma.
+        numpy.ndarray: Relative luminance or luma array.
     """
-    lum = 0.2126 * im[:, :, 0] + 0.7152 * im[:, :, 1] + 0.0722 * im[:, :, 2]
+    assert im.shape[-1] == 3, "Input's last dimension must hold RGB"
+
+    lum = 0.2126 * im[..., 0] + 0.7152 * im[..., 1] + 0.0722 * im[..., 2]
+
     return lum
 
 
