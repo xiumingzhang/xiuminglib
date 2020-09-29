@@ -4,6 +4,7 @@ __all__ = [
     'geometry',
     'html',
     'matrix',
+    'plot',
     'pt',
     'text',
     'video',
