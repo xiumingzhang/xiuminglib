@@ -173,9 +173,8 @@ def scatter3d(
             for elev, azim in views:
                 ax.view_init(elev, azim)
                 plt.draw()
-                _savefig(
-                    outpath.replace(
-                        '.png', '_elev%d_azim%d.png' % (elev, azim)))
+                _savefig(outpath[:-len('.png')] + '_elev%03d_azim%03d.png' % (
+                    elev, azim))
     elif outpath.endswith('.pkl'):
         # FIXME: can't load
         with open(outpath, 'wb') as h:
