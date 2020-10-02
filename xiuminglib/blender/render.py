@@ -528,12 +528,14 @@ def render_normal(outpath, cam=None, obj_names=None,
     # Set up scene node tree
     node_tree = scene.node_tree
     nodes = node_tree.nodes
-    scene.view_layers['RenderLayer'].use_pass_normal = True
+    render_layer = bpy.context.view_layer # currently active one
+    render_layer.use_pass_normal = True
     set_alpha_node = nodes.new('CompositorNodeSetAlpha')
-    node_tree.links.new(nodes['Render Layers'].outputs['Alpha'],
-                        set_alpha_node.inputs['Alpha'])
-    node_tree.links.new(nodes['Render Layers'].outputs['Normal'],
-                        set_alpha_node.inputs['Image'])
+    node_tree.links.new(
+        nodes['Render Layers'].outputs['Alpha'], set_alpha_node.inputs['Alpha'])
+    node_tree.links.new(
+        nodes['Render Layers'].outputs['Normal'],
+        set_alpha_node.inputs['Image'])
     result_socket = set_alpha_node.outputs['Image']
 
     # Select rendering engine based on whether camera or world space
@@ -653,7 +655,7 @@ def render_lighting_passes(
     scene.render.film_transparent = True
 
     # Enable all passes of interest
-    render_layer = scene.view_layers['RenderLayer']
+    render_layer = bpy.context.view_layer # currently active one
     node_tree = scene.node_tree
     nodes = node_tree.nodes
     result_sockets = {}
