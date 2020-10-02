@@ -1,3 +1,5 @@
+#FIXME
+
 from os.path import join, dirname
 import pickle as pk
 import numpy as np
@@ -10,7 +12,9 @@ from ..imprt import preset_import
 
 
 def scatter3d(
-        *args,
+        xyz,
+        color=None,
+        size=None,
         labels=None,
         legend_fontsize=20,
         legend_loc=0,
@@ -23,6 +27,9 @@ def scatter3d(
         ylabel_fontsize=20,
         zlabel=None,
         zlabel_fontsize=20,
+        xlim=None,
+        ylim=None,
+        zlim=None,
         xticks=None,
         xticks_fontsize=10,
         xticks_rotation=0,
@@ -35,8 +42,7 @@ def scatter3d(
         grid=True,
         views=None,
         equal_axes=False,
-        outpath=None,
-        **kwargs):
+        outpath=None):
     """Convinience wrapper for 3D scatterplot.
 
     It saves plots directly to the disk without displaying.
@@ -82,6 +88,7 @@ def scatter3d(
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    from matplotlib import cm
     from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
 
     if outpath is None:
@@ -94,7 +101,16 @@ def scatter3d(
     if figtitle is not None:
         ax.set_title(figtitle, fontsize=figtitle_fontsize)
 
-    plot_objs = ax.scatter(*args, **kwargs)
+    kwargs = {}
+    if isinstance(color, np.ndarray):
+        color = (color - color.min()) / (color.max() - color.min())
+        color = cm.Reds(color)
+        kwargs['c'] = color
+    elif color is not None:
+        kwargs['c'] = color
+    if size is not None:
+        kwargs['s'] = size
+    plot_objs = ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2], **kwargs)
 
     # Legend
     if labels is not None:
@@ -141,17 +157,17 @@ def scatter3d(
     outdir = dirname(outpath)
     xm_os.makedirs(outdir)
 
+    if xlim is not None:
+        ax.set_xlim(*xlim)
+    if ylim is not None:
+        ax.set_ylim(*ylim)
+    if zlim is not None:
+        ax.set_zlim(*zlim)
+
     if equal_axes:
         # plt.axis('equal') # not working, hence the hack of creating a cubic
         # bounding box
-        x_data, y_data, z_data = np.array([]), np.array([]), np.array([])
-
-        logger.warning("Assuming args are x1, y1, z1, x2, y2, z2, ...")
-
-        for i in range(0, len(args), 3):
-            x_data = np.hstack((x_data, args[i]))
-            y_data = np.hstack((y_data, args[i + 1]))
-            z_data = np.hstack((z_data, args[i + 2]))
+        x_data, y_data, z_data = xyz[:, 0], xyz[:, 1], xyz[:, 2]
         max_range = np.array([
             x_data.max() - x_data.min(),
             y_data.max() - y_data.min(),
@@ -166,23 +182,25 @@ def scatter3d(
             ax.plot([xb_], [yb_], [zb_], 'w')
 
     # Save plot
+    outpaths = []
     if outpath.endswith('.png'):
         if views is None:
             _savefig(outpath)
+            outpaths.append(outpath)
         else:
             for elev, azim in views:
                 ax.view_init(elev, azim)
                 plt.draw()
-                _savefig(outpath[:-len('.png')] + '_elev%03d_azim%03d.png' % (
-                    elev, azim))
-    elif outpath.endswith('.pkl'):
-        # FIXME: can't load
-        with open(outpath, 'wb') as h:
-            pk.dump(ax, h)
+                outpath_ = outpath[:-len('.png')] + \
+                    '_elev%03d_azim%03d.png' % (elev, azim)
+                _savefig(outpath_)
+                outpaths.append(outpath_)
     else:
-        raise ValueError("`outpath` must end with either '.png' or '.pkl'")
+        raise ValueError("`outpath` must end with '.png'")
 
     plt.close('all')
+
+    return outpaths
 
 
 def _savefig(outpath, contents_only=False, dpi=None):
