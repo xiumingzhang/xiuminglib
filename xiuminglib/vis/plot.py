@@ -92,7 +92,7 @@ def scatter3d(
     from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
 
     if outpath is None:
-        outpath = join(const.Dir.tmp, 'axes3d_wrapper.png')
+        outpath = join(const.Dir.tmp, 'scatter3d.png')
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')
@@ -134,22 +134,15 @@ def scatter3d(
         ax.set_zlabel(zlabel, fontsize=zlabel_fontsize)
 
     # Axis ticks
-    if xticks is None:
-        ax.set_xticklabels(
-            ax.get_xticks(), fontsize=xticks_fontsize, rotation=xticks_rotation)
-    else:
+    # FIXME: if xticks is not provided, xticks_fontsize and xticks_rotation have
+    # no effect
+    if xticks is not None:
         ax.set_xticklabels(
             xticks, fontsize=xticks_fontsize, rotation=xticks_rotation)
-    if yticks is None:
-        ax.set_yticklabels(
-            ax.get_yticks(), fontsize=yticks_fontsize, rotation=yticks_rotation)
-    else:
+    if yticks is not None:
         ax.set_yticklabels(
             yticks, fontsize=yticks_fontsize, rotation=yticks_rotation)
-    if zticks is None:
-        ax.set_zticklabels(
-            ax.get_zticks(), fontsize=zticks_fontsize, rotation=zticks_rotation)
-    else:
+    if zticks is not None:
         ax.set_zticklabels(
             zticks, fontsize=zticks_fontsize, rotation=zticks_rotation)
 

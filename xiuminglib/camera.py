@@ -1,24 +1,18 @@
 import numpy as np
 
 
-class PerspCamera(object):
+class PerspCam(object):
     r"""Perspective camera in 35mm format.
-
-    Attributes:
-        f_mm (float): See ``f``.
-        im_h (float): See ``im_res``.
-        im_w (float): See ``im_res``.
-        loc (numpy.ndarray)
-        lookat (numpy.ndarray)
-        up (numpy.ndarray)
 
     Note:
         - Sensor width of the 35mm format is actually 36mm.
         - This class assumes unit pixel aspect ratio (i.e., :math:`f_x = f_y`)
           and no skewing between the sensor plane and optical axis.
-        - The active sensor size may be smaller than ``sensor_size``, depending
-          on ``im_res``.
-        - ``aov`` is a hardware property, having nothing to do with ``im_res``.
+        - The active sensor size may be smaller than ``sensor_w`` and
+          ``sensor_h``, depending on ``im_res``. See ``sensor_w_active`` and
+          ``sensor_h_active``.
+        - ``aov``, ``sensor_h``, and ``sensor_w`` are hardware properties,
+          having nothing to do with ``im_res``.
     """
     def __init__(
             self, f=50., im_res=(256, 256), loc=(1, 1, 1), lookat=(0, 0, 0),
@@ -40,21 +34,31 @@ class PerspCamera(object):
         self.up = np.array(up)
 
     @property
-    def sensor_w(self):
-        """float: Fixed at 36mm"""
-        return 36 # mm
-
-    @property
-    def sensor_h(self):
-        """float: Fixed at 24mm"""
-        return 24 # mm
-
-    @property
     def aov(self):
         """tuple: Vertical and horizontal angles of view in degrees."""
         alpha_v = 2 * np.arctan(self.sensor_h / (2 * self.f_mm))
         alpha_h = 2 * np.arctan(self.sensor_w / (2 * self.f_mm))
         return (alpha_v / np.pi * 180, alpha_h / np.pi * 180)
+
+    @property
+    def sensor_w(self):
+        """float: Sensor's physical width (fixed at 36mm)"""
+        return 36 # mm
+
+    @property
+    def sensor_h(self):
+        """float: Sensor's physical height (fixed at 24mm)"""
+        return 24 # mm
+
+    @property
+    def sensor_w_active(self):
+        """float: Actual sensor width (mm) in use (resolution-dependent)"""
+        return self.im_w * self._mm_per_pix
+
+    @property
+    def sensor_h_active(self):
+        """float: Actual sensor height (mm) in use (resolution-dependent)"""
+        return self.im_h * self._mm_per_pix
 
     @property
     def _mm_per_pix(self):
@@ -82,12 +86,14 @@ class PerspCamera(object):
         # Two coordinate systems involved:
         #   1. Object space: "obj"
         #   2. Desired computer vision camera coordinates: "cv"
-        #        - x is horizontal, pointing right (to align with pixel coordinates)
+        #        - x is horizontal, pointing right (to align with pixel
+        #          coordinates)
         #        - y is vertical, pointing down
         #        - right-handed: positive z is the look-at direction
         # cv axes expressed in obj space
         cvz_obj = self.lookat - self.loc
-        assert np.linalg.norm(cvz_obj) > 0, "Camera location and lookat coincide"
+        assert np.linalg.norm(cvz_obj) > 0, \
+            "Camera location and lookat coincide"
         cvx_obj = np.cross(cvz_obj, self.up)
         cvy_obj = np.cross(cvz_obj, cvx_obj)
         # Normalize
@@ -125,6 +131,7 @@ class PerspCamera(object):
             NotImplementedError: If focal length is not specified in mm.
         """
         from xml.etree.ElementTree import parse
+
         tree = parse(xml_path)
         # Focal length
         f_tag = tree.find('./sensor/string[@name="focalLength"]')
@@ -142,19 +149,23 @@ class PerspCamera(object):
         self.lookat = np.fromstring(cam_transform['target'], sep=',')
         self.up = np.fromstring(cam_transform['up'], sep=',')
         # Resolution
-        self.im_h = int(tree.find('./sensor/film/integer[@name="height"]').attrib['value'])
-        self.im_w = int(tree.find('./sensor/film/integer[@name="width"]').attrib['value'])
+        self.im_h = int(
+            tree.find('./sensor/film/integer[@name="height"]').attrib['value'])
+        self.im_w = int(
+            tree.find('./sensor/film/integer[@name="width"]').attrib['value'])
 
     def proj(self, pts, space='object'):
         """Projects 3D points to 2D.
 
         Args:
-            pts (array_like): 3D point(s) of shape N-by-3 or 3-by-N, or of length 3.
+            pts (array_like): 3D point(s) of shape N-by-3 or 3-by-N, or of
+                length 3.
             space (str, optional): In which space these points are specified:
                 ``'object'`` or ``'camera'``.
 
         Returns:
-            array_like: Vertical and horizontal coordinates of the projections, following:
+            array_like: Vertical and horizontal coordinates of the projections,
+                following:
 
             .. code-block:: none
 
@@ -193,19 +204,22 @@ class PerspCamera(object):
             vhs = vhs[0, :]
         return vhs
 
-    def backproj(self, depth, fg_mask=None, depth_type='plane', space='object'):
+    def backproj(
+            self, depth, fg_mask=None, bg_fill=0., depth_type='plane',
+            space='object'):
         """Backprojects depth map to 3D points.
 
         Args:
             depth (numpy.ndarray): Depth map.
-            fg_mask (numpy.ndarray, optional): Backproject only pixels falling inside this
-                foreground mask. Its values should be logical.
+            fg_mask (numpy.ndarray, optional): Backproject only pixels falling
+                inside this foreground mask. Its values should be logical.
+            bg_fill (flaot, optional): Filler value for background region.
             depth_type (str, optional): Plane or ray depth.
-            space (str, optional): In which space the backprojected points are specified:
-                ``'object'`` or ``'camera'``.
+            space (str, optional): In which space the backprojected points are
+                specified: ``'object'`` or ``'camera'``.
 
         Returns:
-            numpy.ndarray: 3D points.
+            numpy.ndarray: XYZ map.
         """
         if fg_mask is None:
             fg_mask = np.ones(depth.shape, dtype=bool)
@@ -220,17 +234,23 @@ class PerspCamera(object):
         if depth_type == 'ray':
             d2 = np.power(vs - v_c, 2) + np.power(hs - h_c, 2)
             # Similar triangles
-            zs_plane = np.multiply(zs, self.f_pix / np.sqrt(self.f_pix ** 2 + d2))
+            zs_plane = np.multiply(
+                zs, self.f_pix / np.sqrt(self.f_pix ** 2 + d2))
             zs = zs_plane
         # Backproject to camera space
         xs = np.multiply(zs, hs - h_c) / self.f_pix
         ys = np.multiply(zs, vs - v_c) / self.f_pix
         pts = np.vstack((xs, ys, zs))
-        if space == 'camera':
-            return pts.T
-        # Need to further transform to object space
-        rot_mat = self.ext_mat[:, :3] # happens first in projection
-        trans_vec = self.ext_mat[:, 3].reshape(-1, 1) # happens second in projection
-        n_pts = pts.shape[1]
-        pts_obj = np.linalg.inv(rot_mat).dot(pts - np.tile(trans_vec, (1, n_pts)))
-        return pts_obj.T
+        if space == 'object':
+            # Need to further transform to object space
+            rot_mat = self.ext_mat[:, :3] # happens first in projection
+            trans_vec = \
+                self.ext_mat[:, 3].reshape(-1, 1) # happens second in projection
+            n_pts = pts.shape[1]
+            pts = np.linalg.inv(rot_mat).dot(
+                pts - np.tile(trans_vec, (1, n_pts)))
+        pts = pts.T # (n_fg_pts, 3)
+        # Put them back into a buffer
+        xyz = bg_fill * np.ones(depth.shape + (3,), dtype=float)
+        xyz[np.dstack([fg_mask] * 3)] = pts.ravel()
+        return xyz
