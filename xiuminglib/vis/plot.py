@@ -14,7 +14,6 @@ class Plot:
             legend_fontsize=20,
             legend_loc=0,
             figsize=(14, 14),
-            figtitle=None,
             figtitle_fontsize=20,
             xlabel=None,
             xlabel_fontsize=20,
@@ -84,7 +83,6 @@ class Plot:
         #
         self.plt = plt
         self.figsize = figsize
-        self.figtitle = figtitle
         self.figtitle_fontsize = figtitle_fontsize
         self.legend_fontsize = legend_fontsize
         self.legend_loc = legend_loc
@@ -107,11 +105,6 @@ class Plot:
         self.zticks = zticks
         self.zticks_rotation = zticks_rotation
         self.zticks_fontsize = zticks_fontsize
-
-    def _set_title(self, ax):
-        if self.figtitle is None:
-            return
-        ax.set_title(self.figtitle, fontsize=self.figtitle_fontsize)
 
     def _savefig(self, outpath, contents_only=False, dpi=None):
         # Make directory, if necessary
@@ -192,12 +185,13 @@ class Plot:
         for xb_, yb_, zb_ in zip(xb, yb, zb):
             ax.plot([xb_], [yb_], [zb_], 'w')
 
-    def bar(self, y, group_width=0.8, labels=None, outpath=None):
+    def bar(self, y, group_width=0.8, labels=None, figtitle=None, outpath=None):
         if outpath is None:
             outpath = join(const.Dir.tmp, 'bar.png')
         fig = self.plt.figure(figsize=self.figsize)
         ax = fig.add_subplot(111)
-        self._set_title(ax)
+        if figtitle is not None:
+            ax.set_title(figtitle, fontsize=self.figtitle_fontsize)
         # Ensure y is 2D, with columns representing values within groups
         # and rows across groups
         if y.ndim == 1:
@@ -231,7 +225,7 @@ class Plot:
 
     def scatter3d(
             self, xyz, color=None, size=None, labels=None, equal_axes=False,
-            views=None, outpath=None):
+            figtitle=None, views=None, outpath=None):
         from matplotlib import cm
         from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
         #
@@ -239,7 +233,8 @@ class Plot:
             outpath = join(const.Dir.tmp, 'scatter3d.png')
         fig = self.plt.figure(figsize=self.figsize)
         ax = fig.add_subplot(111, projection='3d')
-        self._set_title(ax)
+        if figtitle is not None:
+            ax.set_title(figtitle, fontsize=self.figtitle_fontsize)
         # Prepare kwargs to scatter()
         kwargs = {}
         if isinstance(color, np.ndarray):
