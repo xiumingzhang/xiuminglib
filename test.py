@@ -11,6 +11,14 @@ except ModuleNotFoundError:
 
 
 def main(_):
+    plot = xm.vis.plot.Plot()
+    y = np.random.uniform(size=(16, 4))
+    plot.bar(y, labels=('A', 'B', 'C', 'D'))
+    xyz = np.random.uniform(size=(128, 3))
+    plot.scatter3d(xyz)
+
+    return
+
     logger = xm.log.get_logger()
     logger.info("This is INFO")
     logger.warning("This is WARNING")

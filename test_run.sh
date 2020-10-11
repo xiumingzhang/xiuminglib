@@ -8,7 +8,7 @@ if [[ ${bin_path} == '' ]]; then
 else
     echo "Found blaze -- running with the Blaze binary"
     blaze run -c opt \
-        'test' \
+        'experimental/users/xiuming/xiuminglib:test' \
         -- \
         --logtostderr
 fi
