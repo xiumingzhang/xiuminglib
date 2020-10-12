@@ -77,10 +77,16 @@ def write_arr(arr_0to1, outpath, img_dtype='uint8', clip=False):
     Returns:
         numpy.ndarray: The resultant image array.
     """
+    arr_min, arr_max = arr_0to1.min(), arr_0to1.max()
     if clip:
+        if arr_max > 1:
+            logger.info("Maximum before clipping: %f", arr_max)
+        if arr_min < 0:
+            logger.info("Minimum before clipping: %f", arr_min)
         arr_0to1 = np.clip(arr_0to1, 0, 1)
-    assert arr_0to1.min() >= 0 and arr_0to1.max() <= 1, \
-        "Input should be in [0, 1], or allow it to be clipped"
+    else:
+        assert arr_min >= 0 and arr_max <= 1, \
+            "Input should be in [0, 1], or allow it to be clipped"
 
     # Float array to image
     img_arr = (arr_0to1 * np.iinfo(img_dtype).max).astype(img_dtype)
