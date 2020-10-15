@@ -1,6 +1,49 @@
 import numpy as np
 
 
+def get_extrema(arr, top=True, n=1, n_std=None):
+    """Gets top (or bottom) N value(s) from an M-D array, with the option to
+    ignore outliers.
+
+    Args:
+        arr (array_like): Array, which will be flattened if high-D.
+        top (bool, optional): Whether to find the top or bottom N.
+        n (int, optional): Number of values to return.
+        n_std (float, optional): Definition of outliers to exclude, assuming
+            Gaussian. ``None`` means assuming no outlier.
+
+    Returns:
+        tuple:
+            - **ind** (*tuple*) -- Indices that give the extrema, M-tuple of
+              arrays of N integers.
+            - **val** (*numpy.ndarray*) -- Extremum values, i.e.,
+              ``arr[ind]``.
+    """
+    arr = np.array(arr, dtype=float)
+
+    if top:
+        arr_to_sort = -arr.flatten()
+    else:
+        arr_to_sort = arr.flatten()
+
+    if n_std is not None:
+        meanv = np.mean(arr_to_sort)
+        stdv = np.std(arr_to_sort)
+        arr_to_sort[np.logical_or(
+            arr_to_sort < meanv - n_std * stdv,
+            arr_to_sort > meanv + n_std * stdv,
+        )] = np.nan # considered greater than numbers
+
+    ind = [
+        x for x in np.argsort(arr_to_sort)
+        if not np.isnan(arr_to_sort[x])
+    ][:n] # 1D indices
+    ind = np.unravel_index(ind, arr.shape) # Back to high-D
+    val = arr[ind]
+
+    return ind, val
+
+
 def smooth_1d(arr, win_size, kernel_type='half'):
     """Smooths 1D signal.
 
