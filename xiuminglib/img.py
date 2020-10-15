@@ -15,9 +15,6 @@ def normalize_uint(arr):
     Args:
         arr (numpy.ndarray): Input array of type ``uint``.
 
-    Raises:
-        TypeError: If input array is not of a correct ``uint`` type.
-
     Returns:
         numpy.ndarray: Normalized array of type ``float``.
     """
@@ -36,11 +33,6 @@ def denormalize_float(arr, uint_type='uint8'):
     Args:
         arr (numpy.ndarray): Input array of type ``float``.
         uint_type (str, optional): Target ``uint`` type.
-
-    Raises:
-        TypeError: If target ``uint`` type is not valid, or input array is not
-            ``float``.
-        ValueError: If input array has values outside :math:`[0, 1]`.
 
     Returns:
         numpy.ndarray: De-normalized array of the target type.
@@ -62,10 +54,6 @@ def alpha_blend(arr1, alpha, arr2=None):
         alpha (numpy.ndarray): Alpha map whose values are :math:`\in [0,1]`.
         arr2 (numpy.ndarray): Input array. If ``None``, ``arr1`` will be
             blended with an all-zero array, equivalent to masking ``arr1``.
-
-    Raises:
-        NotImplementedError: If ``alpha`` and ``arr1`` have different shapes,
-            and shape matching is not implemented.
 
     Returns:
         numpy.ndarray: Blended array of type ``float``.
@@ -96,9 +84,6 @@ def resize(arr, new_h=None, new_w=None):
         new_w (int, optional): Target width. If ``None``, will be calculated
             according to the target height, assuming the same aspect ratio.
 
-    Raises:
-        ValueError: If both ``new_h`` and ``new_w`` are ``None``.
-
     Returns:
         numpy.ndarray: Resized image.
     """
@@ -127,9 +112,6 @@ def binarize(im, threshold=None):
             and treated as H-by-W.
         threshold (float, optional): Threshold for binarization. ``None``
             means midpoint of the ``dtype``.
-
-    Raises:
-        ValueError: If ``im`` has wrong dimensions.
 
     Returns:
         numpy.ndarray: Binarized image. Of only 0's and 1's.
@@ -222,10 +204,6 @@ def grid_query_img(im, query_x, query_y, method='bilinear'):
 
         method (str, optional): Interpolation method: ``'spline'`` or
             ``'bilinear'``.
-
-    Raises:
-        ValueError: If input is of a wrong shape or dimensions.
-        NotImplementedError: If interpolation method is not implemented.
 
     Returns:
         numpy.ndarray: Interpolated values at query locations, of shape
@@ -442,9 +420,6 @@ def find_local_extrema(im, want_maxima, kernel_size=3):
         kernel_size (int, optional): Side length of the square window under
             consideration. Must be larger than 1.
 
-    Raises:
-        ValueError: If the input image has wrong dimensions.
-
     Returns:
         numpy.ndarray: Binary map indicating if each pixel is a local extremum.
     """
@@ -499,9 +474,6 @@ def compute_gradients(im):
         im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or
             H-by-W-by-C if multi-channel (e.g., RGB) images. Gradients are
             computed independently for each of the C channels.
-
-    Raises:
-        ValueError: If ``im`` has wrong dimensions.
 
     Returns:
         tuple:
@@ -644,11 +616,6 @@ def linear2srgb(im, clip=False):
         clip (bool, optional): Whether to clip values to :math:`[0,1]`.
             Defaults to ``False``.
 
-    Raises:
-        TypeError: If input image is not ``float``.
-        ValueError: If input image is of wrong shape, or has values outside
-            :math:`[0, 1]`.
-
     Returns:
         numpy.ndarray: Converted image in sRGB.
     """
@@ -678,11 +645,6 @@ def srgb2linear(im, clip=False):
             :math:`\in [0, 1]`.
         clip (bool, optional): Whether to clip values to :math:`[0,1]`.
             Defaults to ``False``.
-
-    Raises:
-        TypeError: If input image is not ``float``.
-        ValueError: If input image is of wrong shape, or has values outside
-            :math:`[0, 1]`.
 
     Returns:
         numpy.ndarray: Converted image in linear RGB.

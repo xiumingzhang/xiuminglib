@@ -27,9 +27,6 @@ def make_anim(imgs, duration=1, outpath=None):
             file). ``None`` means
             ``os.path.join(const.Dir.tmp, 'make_anim.gif')``.
 
-    Raises:
-        TypeError: If any input image is neither a string nor an array.
-
     Writes
         - An animation of the images.
     """

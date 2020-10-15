@@ -80,10 +80,6 @@ def pyplot_wrapper(
             ``None`` means
             ``os.path.join(const.Dir.tmp, 'pyplot_wrapper.png')``.
 
-    Raises:
-        NotImplementedError: If ``func`` is not implemented.
-        TypeError: If ``ci`` is of a wrong type.
-
     Writes
         - The plot.
     """
@@ -315,10 +311,6 @@ def axes3d_wrapper(
             Should end with ``'.png'`` or ``'.pkl'`` (for offline interactive
             viewing). ``None`` means ``os.path.join(const.Dir.tmp,
             'axes3d_wrapper.png')``.
-
-    Raises:
-        NotImplementedError: If ``func`` is not yet implemented.
-        ValueError: If ``outpath`` has a wrong extension.
 
     Writes
         - One or multiple (if ``views`` is provided) views of the 3D plot.

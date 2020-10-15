@@ -126,9 +126,6 @@ class PerspCam(object):
 
         Args:
             xml_path (str): Path to the XML file.
-
-        Raises:
-            NotImplementedError: If focal length is not specified in mm.
         """
         from xml.etree.ElementTree import parse
 

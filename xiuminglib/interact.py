@@ -86,9 +86,6 @@ def format_print(msg, fmt):
         msg (str): Message to print.
         fmt (str): Format; try your luck with any value -- don't worry; if
             it's illegal, you will be prompted with all legal values.
-
-    Raises:
-        ValueError: If the input format is illegal.
     """
     fmt_strs = {
         'header': '\033[95m',

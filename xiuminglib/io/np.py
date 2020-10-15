@@ -18,9 +18,6 @@ def load_or_save_np(data_f, fallback=None):
 
                 fallback=lambda: your_fancy_func(var0, var1)
 
-    Raises:
-        NotImplementedError: If file extension is neither .npy nor .npz.
-
     Returns:
         Data loaded if ``data_f`` exists; otherwise, ``fallback``'s return
         (``None`` if no fallback).

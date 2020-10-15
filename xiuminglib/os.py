@@ -197,9 +197,6 @@ def cp(src, dst, cns_parallel_copy=10):
         cns_parallel_copy (int): The number of files to be copied in
             parallel. Only effective when copying a directory from/to
             Colossus.
-
-    Raises:
-        FileNotFoundError: If the source doesn't exist.
     """
     src = _no_trailing_slash(src)
     dst = _no_trailing_slash(dst)

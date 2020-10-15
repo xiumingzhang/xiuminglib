@@ -14,11 +14,6 @@ def uniform_sample_sph(n, r=1, convention='lat-lng'):
         convention (str, optional): Convention for spherical coordinates.
             See :func:`cart2sph` for conventions.
 
-    Raises:
-        ValueError: If number of points is not a perfect square.
-        NotImplementedError: If convention is neither ``'lat-lng'`` nor
-            ``'theta-phi'``.
-
     Returns:
         numpy.ndarray: Spherical coordinates :math:`(r, \theta_1, \theta_2)`
         in radians. The points are ordered such that all azimuths are looped
@@ -79,11 +74,6 @@ def cart2sph(pts_cart, convention='lat-lng'):
                                           ,'|
                                         ,'  |
                 (theta = 90, phi = 0) x     | (theta = 180)
-
-    Raises:
-        ValueError: If input is of a wrong shape.
-        NotImplementedError: If convention is neither ``'lat-lng'`` nor
-            ``'theta-phi'``.
 
     Returns:
         numpy.ndarray: Spherical coordinates :math:`(r, \theta_1, \theta_2)`

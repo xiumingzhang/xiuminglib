@@ -22,9 +22,6 @@ def get_object(otype, any_ok=False):
             exist multiple ones matching the given type. If ``False``, there
             must be exactly one object of the given type.
 
-    Raises:
-        RuntimeError: If it's ambiguous which object to get.
-
     Returns:
         bpy_types.Object.
     """
@@ -103,9 +100,6 @@ def import_object(model_path,
         merge (bool, optional): Whether to merge objects into one.
         name (str, optional): Object name after import.
 
-    Raises:
-        NotImplementedError: If the model is not a .obj or .ply file.
-
     Returns:
         bpy_types.Object or list(bpy_types.Object): Imported object(s).
     """
@@ -177,9 +171,6 @@ def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
             the default is ``'-Z'``, and ``'Y'`` for .ply.
         axis_up (str, optional): Which direction is upward. For .obj, the
             default is ``'Y'``, and ``'Z'`` for .ply.
-
-    Raises:
-        NotImplementedError: If the output path doesn't end with .obj or .ply.
 
     Writes
         - Exported model file, possibly accompanied by a material file.
@@ -412,9 +403,6 @@ def color_vertices(obj, vert_ind, colors):
             vertex/vertices. Values :math:`\in [0, 1]`. If one tuple,
             this color will be applied to all vertices. If list of tuples,
             must be of the same length as ``vert_ind``.
-
-    Raises:
-        ValueError: If color length is wrong.
     """
     # Validate inputs
     if isinstance(vert_ind, int):
@@ -484,10 +472,6 @@ def color_vertices(obj, vert_ind, colors):
 
 
 def _assert_cycles(scene):
-    """
-    Raises:
-        NotImplementedError: If rendering engine is not Cycles.
-    """
     engine = scene.render.engine
     if engine != 'CYCLES':
         raise NotImplementedError(engine)
@@ -536,10 +520,6 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
         shader_type (str): Either ``'diffuse'`` or ``'glossy'``.
         roughness (float, optional): If diffuse, the roughness in Oren-Nayar,
             0 gives Lambertian. If glossy, 0 means perfectly reflective.
-
-    Raises:
-        TypeError: If ``texture`` is of wrong type.
-        ValueError: If ``shader_type`` is illegal.
     """
     scene = bpy.context.scene
     _assert_cycles(scene)
@@ -640,9 +620,6 @@ def setup_retroreflective_nodetree(
         roughness (float, optional): Roughness for both the glossy and diffuse
             shaders.
         glossy_weight (float, optional): Mixture weight for the glossy shader.
-
-    Raises:
-        TypeError: If ``texture`` is of wrong type.
     """
     scene = bpy.context.scene
     _assert_cycles(scene)
@@ -745,9 +722,6 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
         vert_ind (int or list(int)): Vertex index/indices.
         select_type (str): Type of mesh elements to select: ``'vertex'``,
             ``'edge'`` or ``'face'``.
-
-    Raises:
-        ValueError: If ``select_type`` value is invalid.
     """
     if isinstance(vert_ind, int):
         vert_ind = [vert_ind]

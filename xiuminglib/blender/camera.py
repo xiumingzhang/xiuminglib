@@ -277,10 +277,6 @@ def get_camera_matrix(cam, keep_disparity=False):
         keep_disparity (bool, optional): Whether or not the matrices keep
             disparity.
 
-    Raises:
-        ValueError: If render settings and camera intrinsics mismatch. Run
-            :func:`intrinsics_compatible_with_scene` for advice.
-
     Returns:
         tuple:
             - **cam_mat** (*mathutils.Matrix*) -- Camera matrix, product of

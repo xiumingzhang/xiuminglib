@@ -54,9 +54,6 @@ def smooth_1d(arr, win_size, kernel_type='half'):
             :math:`[2^{-2}, 2^{-1}, 2^0, 2^{-1}, 2^{-2}]`) or ``'equal'``
             (e.g., normalized :math:`[1, 1, 1, 1, 1]`).
 
-    Raises:
-        ValueError: If kernel type is wrong.
-
     Returns:
         numpy.ndarray: Smoothed 1D signal.
     """
@@ -99,9 +96,6 @@ def pca(data_mat, n_pcs=None, eig_method='scipy.sparse.linalg.eigsh'):
         eig_method (str, optional): Method for eigendecomposition of the
             symmetric covariance matrix: ``'numpy.linalg.eigh'`` or
             ``'scipy.sparse.linalg.eigsh'``.
-
-    Raises:
-        NotImplementedError: If ``eig_method`` is not implemented.
 
     Returns:
         tuple:
@@ -426,10 +420,6 @@ def sh_bases_real(l, n_lat, coord_convention='colatitude-azimuth', _check_orthon
 
         _check_orthonormality (bool, optional, internal): Whether to check
             orthonormal or not.
-
-    Raises:
-        NotImplementedError: If the coordinate convention specified is not
-            implemented.
 
     Returns:
         tuple:

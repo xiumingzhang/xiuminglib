@@ -71,9 +71,6 @@ class Plot:
                 viewing). ``None`` means ``os.path.join(const.Dir.tmp,
                 'axes3d_wrapper.png')``.
 
-        Raises:
-            ValueError: If ``outpath`` has a wrong extension.
-
         Writes
             - One or multiple (if ``views`` is provided) views of the 3D plot.
         """

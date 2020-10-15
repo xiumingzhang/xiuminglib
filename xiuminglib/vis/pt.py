@@ -108,9 +108,6 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None, max_n_lines=None,
         linewidth (float, optional): Width of the lines connecting the dots.
         linecolor (str, optional): Their color.
 
-    Raises:
-        ValueError: If ``texmap`` is of the wrong value.
-
     Writes
         - An image of where the vertices map to on the texture map.
     """

@@ -10,9 +10,6 @@ def to_homo(pts):
     Args:
         pts (numpy.ndarray): Input array of 2D or 3D points.
 
-    Raises:
-        ValueError: If ``pts`` is ambiguous to guess.
-
     Returns:
         numpy.ndarray: Homogeneous coordinates of the input points.
     """
@@ -48,11 +45,6 @@ def from_homo(pts, axis=None):
             or Blender vector of a single N-D point.
         axis (int, optional): The last slice of which dimension holds the
             :math:`w` values. Optional for 1D inputs.
-
-    Raises:
-        TypeError: If the input is neither a NumPy array nor a Blender vector.
-        ValueError: If the provided ``axis`` value doesn't make sense for
-            input point(s).
 
     Returns:
         numpy.ndarray or mathutils.Vector: Non-homogeneous coordinates of the

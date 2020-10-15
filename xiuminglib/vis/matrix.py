@@ -22,9 +22,6 @@ def matrix_as_image(arr, outpath=None, gamma=None):
             means ``os.path.join(const.Dir.tmp, 'matrix_as_image.png')``.
         gamma (float, optional): For gamma correction.
 
-    Raises:
-        ValueError: If ``arr`` is neither 2D or 3D.
-
     Writes
         - An image of the matrix.
     """
@@ -138,9 +135,6 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
             plot heatmaps separately and later concatenate them into a single
             one.
         figtitle (str, optional): Figure title. ``None`` means no title.
-
-    Raises:
-        ValueError: If ``mat`` has wrong dimensions.
 
     Writes
         - A heatmap of the matrix.

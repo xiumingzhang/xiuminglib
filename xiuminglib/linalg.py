@@ -75,9 +75,6 @@ def normalize(vecs, axis=0):
             vectors, 3D array for an "image" of vectors, etc.
         axis (int, optional): Along which axis normalization is done.
 
-    Raises:
-        ValueError: If ``axis`` is illegal.
-
     Returns:
         numpy.ndarray: Normalized vector(s) of the same shape as input.
     """
