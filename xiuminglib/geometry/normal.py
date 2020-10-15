@@ -43,3 +43,38 @@ def transform_space(normal_map, rotmat):
 
     normal_map_trans = normal_trans.T.reshape(orig_shape)
     return normal_map_trans
+
+
+def gen_world2local(normal):
+    """Generates rotation matrices that transform world normals to local +Z,
+    world tangents to local +X, and world binormals to local +Y.
+
+    Args:
+        normal (numpy.ndarray): any size-by-3 array of normal vectors.
+
+    Returns:
+        numpy.ndarray: any size-by-3-by-3 world-to-local rotation matrices,
+            which should be left-multiplied to world coordinates.
+    """
+    last_dim_i = normal.ndim - 1
+
+    z = np.array((0, 0, 1), dtype=float)
+
+    # Tangents
+    t = np.cross(normal, z)
+    if (t == 0).all(axis=-1).any():
+        raise ValueError((
+            "Found (0, 0, 0) tangents! Possible reasons: normal colinear with "
+            "(0, 0, 1); normal is (0, 0, 0)"))
+    t = normalize_vec(t, axis=last_dim_i)
+
+    # Binormals
+    # No need to normalize because normals and tangents are orthonormal
+    b = np.cross(normal, t)
+
+    # Rotation matrices
+    rot = np.stack((t, b, normal), axis=last_dim_i)
+    # So that at each location, we have a 3x3 matrix whose ROWS, from top to
+    # bottom, are world tangents, binormals, and normals
+
+    return rot
