@@ -550,7 +550,7 @@ def gamma_correct(im, gamma=2.2):
 
     # Don't correct alpha channel, if exists
     alpha = None
-    if im.ndim == 2 and im.shape[2] == 4:
+    if im.ndim == 3 and im.shape[2] == 4:
         alpha = im[:, :, 3]
         im = im[:, :, :3]
 
