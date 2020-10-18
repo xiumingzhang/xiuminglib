@@ -9,7 +9,7 @@ dependencies:
   - pillow
   - tqdm
   - trimesh
-  - tensorflow-gpu
+  - tensorflow
   - pip
   - pip:
     - opencv-python
