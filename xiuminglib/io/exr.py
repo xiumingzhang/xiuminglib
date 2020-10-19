@@ -21,39 +21,39 @@ class EXR():
     etc. When data loaded are physically meaningful, these methods assume the
     EXR files are produced by :mod:`xiuminglib.blender.render` and hence
     follow certain formats.
-
-    Attributes:
-        exr_f (str): Path to the EXR file.
-        data (dict): Data loaded.
     """
-    def __init__(self, exr_path=None):
+    def __init__(self, exr_path):
         """
         Args:
-            exr_path (str, optional): Path to the EXR file.
+            exr_path (str): Path to the EXR file.
         """
-        self.exr_f = exr_path
-        if exr_path is None:
-            self.data = None
-        else:
-            self.data = self.load()
+        self.exr_path = exr_path
+        self._data = self.load(exr_path)
 
-    def load(self):
+    @property
+    def data(self):
+        return self._data
+
+    @staticmethod
+    def load(exr_path):
         r"""Loads an EXR as a dictionary of NumPy arrays.
 
         Uses OpenEXR for :math:`> 3` channels. If :math:`\leq 3` channels,
         can just use OpenCV.
 
+        Args:
+            exr_path (str): Path to the EXR file.
+
         Returns:
             dict: Loaded EXR data.
         """
-        assert self.exr_f is not None, "You need to set `exr_f` first"
         assert OpenEXR is not None, "Import failed: OpenEXR"
         assert Imath is not None, "Import failed: Imath"
         pix_type = Imath.PixelType(Imath.PixelType.FLOAT)
         # Load
         data = {}
         open_func = open if gfile is None else gfile.Open
-        with open_func(self.exr_f, 'rb') as h:
+        with open_func(exr_path, 'rb') as h:
             f = OpenEXR.InputFile(h)
             data_win = f.header()['dataWindow']
             win_size = (
@@ -62,7 +62,7 @@ class EXR():
             for c in f.header()['channels']:
                 arr = np.fromstring(f.channel(c, pix_type), dtype=np.float32)
                 data[c] = arr.reshape(win_size)
-        logger.info("Loaded %s", self.exr_f)
+        logger.info("Loaded: %s", exr_path)
         return data
 
     def extract_rgb(self, outpath, vis=False):
@@ -119,7 +119,7 @@ class EXR():
         arr = cv2.imread(alpha_exr, cv2.IMREAD_UNCHANGED)
         alpha = assert_all_channels_same(arr)
         # Load depth
-        arr = cv2.imread(self.exr_f, cv2.IMREAD_UNCHANGED)
+        arr = cv2.imread(self.exr_path, cv2.IMREAD_UNCHANGED)
         depth = assert_all_channels_same(arr) # these raw values are aliased,
         # so only one crazy big value for the background
         if not outpath.endswith('.npy'):
@@ -230,9 +230,9 @@ class EXR():
 def main():
     """Unit tests that can also serve as example usage."""
     from .. import constants
-    exr_f = join(constants.Dir.tmp, 'test.exr')
-    exr = EXR(exr_f)
-    exr.extract_normal(exr_f.replace('.exr', '.npy'), vis=True)
+    exr_path = join(constants.Dir.tmp, 'test.exr')
+    exr = EXR(exr_path)
+    exr.extract_normal(exr_path.replace('.exr', '.npy'), vis=True)
 
 
 if __name__ == '__main__':
