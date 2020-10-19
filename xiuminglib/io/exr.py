@@ -9,7 +9,7 @@ Imath = preset_import('Imath')
 OpenEXR = preset_import('OpenEXR')
 gfile = preset_import('gfile')
 
-from ..vis.matrix import matrix_as_image
+from ..io.img import write_arr
 from ..vis.geometry import depth_as_image, normal_as_image
 from ..geometry.normal import normalize
 
@@ -201,30 +201,36 @@ class EXR():
         albedo = collapse_passes(['diffuse_color', 'glossy_color'])
         np.save(join(outdir, 'albedo.npy'), albedo)
         if vis:
-            matrix_as_image(albedo, outpath=join(outdir, 'albedo.png'))
+            matrix_as_image(albedo, join(outdir, 'albedo.png'))
         # Shading
         shading = collapse_passes(['diffuse_indirect', 'diffuse_direct'])
         np.save(join(outdir, 'shading.npy'), shading)
         if vis:
-            matrix_as_image(shading, outpath=join(outdir, 'shading.png'))
+            matrix_as_image(shading, join(outdir, 'shading.png'))
         # Specularity
         specularity = collapse_passes(['glossy_indirect', 'glossy_direct'])
         np.save(join(outdir, 'specularity.npy'), specularity)
         if vis:
             matrix_as_image(
-                specularity, outpath=join(outdir, 'specularity.png'))
+                specularity, join(outdir, 'specularity.png'))
         # Reconstruction vs. ...
         recon = np.multiply(albedo, shading) + specularity
         recon[:, :, 3] = albedo[:, :, 3] # can't add up alpha channels
         np.save(join(outdir, 'recon.npy'), recon)
         if vis:
-            matrix_as_image(recon, outpath=join(outdir, 'recon.png'))
+            matrix_as_image(recon, join(outdir, 'recon.png'))
         # ... composite from Blender, just for sanity check
         composite = collapse_passes(['composite'])
         np.save(join(outdir, 'composite.npy'), composite)
         if vis:
-            matrix_as_image(composite, outpath=join(outdir, 'composite.png'))
+            matrix_as_image(composite, join(outdir, 'composite.png'))
         logger.info("Intrinsic images extracted to %s", outdir)
+
+
+def matrix_as_image(arr, outpath):
+    minv = arr.min()
+    arr_0to1 = (arr - minv) / (arr.max() - minv)
+    write_arr(arr_0to1, outpath)
 
 
 def main():
