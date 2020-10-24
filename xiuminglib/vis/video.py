@@ -1,4 +1,5 @@
 from os.path import join, dirname
+import numpy as np
 
 from ..log import get_logger
 logger = get_logger()
@@ -9,7 +10,7 @@ from ..imprt import preset_import
 
 
 def make_video(
-        imgs, fps=24, outpath=None, matplotlib=True, dpi=96, bitrate=-1):
+        imgs, fps=24, outpath=None, method='matplotlib', dpi=96, bitrate=-1):
     """Writes a list of images into a grayscale or color video.
 
     Args:
@@ -19,8 +20,8 @@ def make_video(
         outpath (str, optional): Where to write the video to (a .mp4 file).
             ``None`` means
             ``os.path.join(const.Dir.tmp, 'make_video.mp4')``.
-        matplotlib (bool, optional): Whether to use ``matplotlib``.
-            If ``False``, use ``cv2``.
+        method (str, optional): Method to use: ``'matplotlib'``, ``'opencv'``,
+            ``'video_api'``.
         dpi (int, optional): Dots per inch when using ``matplotlib``.
         bitrate (int, optional): Bit rate in kilobits per second when using
             ``matplotlib``; reasonable values include 7200.
@@ -38,7 +39,7 @@ def make_video(
         assert frame.shape[:2] == (h, w), \
             "All frames must have the same shape"
 
-    if matplotlib:
+    if method == 'matplotlib':
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
@@ -64,7 +65,7 @@ def make_video(
 
         plt.close('all')
 
-    else:
+    elif method == 'opencv':
         cv2 = preset_import('cv2')
 
         # TODO: debug codecs (see http://www.fourcc.org/codecs.php)
@@ -86,5 +87,20 @@ def make_video(
             vw.write(frame)
 
         vw.release()
+
+    elif method == 'video_api':
+        video_api = preset_import('video_api')
+
+        assert outpath.endswith('.webm'), "`video_api` requires .webm"
+
+        with video_api.write(outpath, fps=fps) as h:
+            for frame in imgs:
+                if frame.ndim == 3 and frame.shape[2] == 4:
+                    frame = frame[:, :, :3]
+                frame = frame.astype(np.ubyte)
+                h.add_frame(frame)
+
+    else:
+        raise ValueError(method)
 
     logger.info("Images written as a video to:\n%s", outpath)

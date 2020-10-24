@@ -42,6 +42,13 @@ def preset_import(name):
         mod = import_module_404ok('google3.pyglib.gfile')
         return mod
 
+    if name == 'video_api':
+        # BUILD deps:
+        # "//learning/deepmind/video/python:video_api",
+        mod = import_module_404ok(
+            'google3.learning.deepmind.video.python.video_api')
+        return mod
+
     if name in ('bpy', 'bmesh', 'OpenEXR', 'Imath'):
         # BUILD deps:
         # "//third_party/py/Imath",

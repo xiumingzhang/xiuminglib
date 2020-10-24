@@ -34,45 +34,23 @@ class Plot:
             zticks_fontsize=10,
             zticks_rotation=0,
             grid=True):
-        # FIXME: docstring
-        """Convinience wrapper for 3D scatterplot.
-
-        It saves plots directly to the disk without displaying.
+        """Plotter.
 
         Args:
-            *args: Positional parameters that ``ax.scatter()`` takes.
-            **kwargs: Keyword parameters that ``ax.scatter()`` takes.
-            labels (list(str), optional): Labels for plot objects, to appear in
-                the legend. Use ``None`` for no label for a certain object.
-                ``None`` means no legend at all.
+            legend_fontsize (int, optional): Legend font size.
             legend_loc (str, optional): Legend location: ``'best'``,
                 ``'upper right'``, ``'lower left'``, ``'right'``,
                 ``'center left'``, ``'lower center'``, ``'upper center'``,
-                ``'center'``, etc. Effective only when ``labels`` is not ``None``.
+                ``'center'``, etc. Effective only when ``labels`` is not
+                ``None``.
             figsize (tuple, optional): Width and height of the figure in inches.
-            figtitle (str, optional): Figure title.
-            xlabel (str, optional): Label of x-axis.
-            ylabel
-            zlabel
-            xticks (array_like, optional): Tick values of x-axis. ``None`` means
-                auto.
-            yticks
-            zticks
             *_fontsize (int, optional): Font size.
-            *_rotation (float, optional): Tick rotation in degrees.
+            ?label (str, optional): Axis labels.
+            ?lim (array_like, optional): Axis min. and max. ``None`` means auto.
+            ?ticks (array_like, optional): Axis tick values. ``None`` means
+                auto.
+            ?ticks_rotation (float, optional): Tick rotation in degrees.
             grid (bool, optional): Whether to draw grid.
-            views (list(tuple), optional): List of elevation-azimuth angle pairs
-                (in degrees). A good set of views is ``[(30, 0), (30, 45),
-                (30, 90), (30, 135)]``.
-            equal_axes (bool, optional): Whether to have the same scale for all
-                axes.
-            outpath (str, optional): Path to which the visualization is saved to.
-                Should end with ``'.png'`` or ``'.pkl'`` (for offline interactive
-                viewing). ``None`` means ``os.path.join(const.Dir.tmp,
-                'axes3d_wrapper.png')``.
-
-        Writes
-            - One or multiple (if ``views`` is provided) views of the 3D plot.
         """
         import matplotlib
         matplotlib.use('Agg')
@@ -183,6 +161,22 @@ class Plot:
             ax.plot([xb_], [yb_], [zb_], 'w')
 
     def bar(self, y, group_width=0.8, labels=None, figtitle=None, outpath=None):
+        """Bar plot.
+
+        Args:
+            y (array_like): N-by-M array of N groups, each with M bars,
+                or N-array of N groups, each with one bar.
+            group_width (float, optional): Width allocated to each group,
+                shared by all bars within the group.
+            labels (list, optional): Labels for the N groups.
+            figtitle (str, optional): Figure title.
+            outpath (str, optional): Path to which the plot is saved to. Should
+                end with ``'.png'``, and ``None`` means
+                ``os.path.join(const.Dir.tmp, 'axes3d_wrapper.png')``.
+
+        Writes
+            - The bar plot.
+        """
         if outpath is None:
             outpath = join(const.Dir.tmp, 'bar.png')
         fig = self.plt.figure(figsize=self.figsize)
@@ -223,6 +217,29 @@ class Plot:
     def scatter3d(
             self, xyz, color=None, size=None, labels=None, equal_axes=False,
             figtitle=None, views=None, outpath=None):
+        """3D scatter plot.
+
+        Args:
+            xyz (array_like): N-by-3 array of N points.
+            color (array_like or list(str) or str, optional): If N-array, these
+                values are colormapped. If N-list, its elements should be color
+                strings. If a single color string, all points use that color.
+            size (int, optional): Scatter size.
+            labels (list(str), optional): N-list of scatter labels.
+            equal_axes (bool, optional): Whether to have the same scale for all
+                axes.
+            equal_axes (bool, optional): Whether to have the same scale for all
+            figtitle (str, optional): Figure title.
+            views (list(tuple), optional): List of elevation-azimuth angle pairs
+                (in degrees). A good set of views is ``[(30, 0), (30, 45),
+                (30, 90), (30, 135)]``.
+            outpath (str, optional): Path to which the plot is saved to. Should
+                end with ``'.png'``, and ``None`` means
+                ``os.path.join(const.Dir.tmp, 'axes3d_wrapper.png')``.
+
+        Writes
+            - One or multiple (if ``views`` is provided) views of the 3D plot.
+        """
         from matplotlib import cm
         from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
         #
