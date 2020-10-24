@@ -34,6 +34,10 @@ def make_video(
     makedirs(dirname(outpath))
 
     assert imgs, "Frame list is empty"
+    for frame in imgs:
+        assert np.issubdtype(frame.dtype, np.unsignedinteger), \
+            "Image type must be unsigned integer"
+
     h, w = imgs[0].shape[:2]
     for frame in imgs[1:]:
         assert frame.shape[:2] == (h, w), \
@@ -97,7 +101,7 @@ def make_video(
             for frame in imgs:
                 if frame.ndim == 3 and frame.shape[2] == 4:
                     frame = frame[:, :, :3]
-                frame = frame.astype(np.ubyte)
+                #frame = frame.astype(np.ubyte)
                 h.add_frame(frame)
 
     else:
