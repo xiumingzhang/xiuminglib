@@ -225,8 +225,8 @@ class PerspCam(object):
         v_is, h_is = np.where(fg_mask)
         hs = h_is + 0.5
         vs = v_is + 0.5
-        h_c = (depth.shape[1] - 1) / 2
-        v_c = (depth.shape[0] - 1) / 2
+        h_c = depth.shape[1] / 2
+        v_c = depth.shape[0] / 2
         zs = depth[fg_mask]
         if depth_type == 'ray':
             d2 = np.power(vs - v_c, 2) + np.power(hs - h_c, 2)
