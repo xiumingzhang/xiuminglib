@@ -9,6 +9,14 @@ xiuminglib.vis package
 Submodules
 ----------
 
+xiuminglib.vis.anim module
+--------------------------
+
+.. automodule:: xiuminglib.vis.anim
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.vis.general module
 -----------------------------
 
@@ -37,6 +45,14 @@ xiuminglib.vis.matrix module
 ----------------------------
 
 .. automodule:: xiuminglib.vis.matrix
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.vis.plot module
+--------------------------
+
+.. automodule:: xiuminglib.vis.plot
     :members:
     :undoc-members:
     :show-inheritance:
