@@ -15,8 +15,8 @@ py_binary(
     python_version = "PY3",
     deps = [
         "//experimental/users/xiuming/xiuminglib",
-        "//third_party/py/absl:app",
         "//third_party/py/IPython:ipython-libs",
+        "//third_party/py/absl:app",
         "//third_party/py/numpy",
     ],
 )
