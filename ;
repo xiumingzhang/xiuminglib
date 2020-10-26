@@ -14,7 +14,6 @@ class Plot:
             legend_fontsize=20,
             legend_loc=0,
             figsize=(14, 14),
-            figtitle=None,
             figtitle_fontsize=20,
             xlabel=None,
             xlabel_fontsize=20,
@@ -34,9 +33,7 @@ class Plot:
             zticks=None,
             zticks_fontsize=10,
             zticks_rotation=0,
-            grid=True,
-            labels=None,
-            outpath=None):
+            grid=True):
         """Plotter.
 
         Args:
@@ -47,7 +44,6 @@ class Plot:
                 ``'center'``, etc. Effective only when ``labels`` is not
                 ``None``.
             figsize (tuple, optional): Width and height of the figure in inches.
-            figtitle (str, optional): Figure title.
             *_fontsize (int, optional): Font size.
             ?label (str, optional): Axis labels.
             ?lim (array_like, optional): Axis min. and max. ``None`` means auto.
@@ -55,20 +51,17 @@ class Plot:
                 auto.
             ?ticks_rotation (float, optional): Tick rotation in degrees.
             grid (bool, optional): Whether to draw grid.
-            labels (list, optional): Labels.
-            outpath (str, optional): Path to which the plot is saved to. Should
-                end with ``'.png'``, and ``None`` means to ``const.Dir.tmp``.
         """
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         #
         self.plt = plt
+        self.figsize = figsize
+        self.figtitle_fontsize = figtitle_fontsize
         self.legend_fontsize = legend_fontsize
         self.legend_loc = legend_loc
-        self.figsize = figsize
-        self.figtitle = figtitle
-        self.figtitle_fontsize = figtitle_fontsize
+        self.grid = grid
         self.xlabel = xlabel
         self.xlabel_fontsize = xlabel_fontsize
         self.ylabel = ylabel
@@ -87,9 +80,6 @@ class Plot:
         self.zticks = zticks
         self.zticks_rotation = zticks_rotation
         self.zticks_fontsize = zticks_fontsize
-        self.grid = grid
-        self.labels = labels
-        self.outpath = outpath
 
     def _savefig(self, outpath, contents_only=False, dpi=None):
         # Make directory, if necessary
@@ -109,15 +99,15 @@ class Plot:
             with open_func(outpath, 'wb') as h:
                 self.plt.savefig(h, bbox_inches='tight', dpi=dpi)
 
-    def _add_legend(self, plot_objs):
-        if self.labels is None:
+    def _add_legend(self, plot_objs, labels):
+        if labels is None:
             return
         n_plot_objs = len(plot_objs)
-        assert (len(self.labels) == n_plot_objs), (
+        assert (len(labels) == n_plot_objs), (
             "Number of labels must equal number of plot objects; "
             "use None for object without a label")
         for i in range(n_plot_objs):
-            plot_objs[i].set_label(self.labels[i])
+            plot_objs[i].set_label(labels[i])
         self.plt.legend(fontsize=self.legend_fontsize, loc=self.legend_loc)
 
     def _add_axis_labels(self, ax):
@@ -170,11 +160,7 @@ class Plot:
         for xb_, yb_, zb_ in zip(xb, yb, zb):
             ax.plot([xb_], [yb_], [zb_], 'w')
 
-    def _set_title(self, ax):
-        if self.figtitle is not None:
-            ax.set_title(self.figtitle, fontsize=self.figtitle_fontsize)
-
-    def bar(self, y, group_width=0.8):
+    def bar(self, y, group_width=0.8, labels=None, figtitle=None, outpath=None):
         """Bar plot.
 
         Args:
@@ -182,15 +168,21 @@ class Plot:
                 or N-array of N groups, each with one bar.
             group_width (float, optional): Width allocated to each group,
                 shared by all bars within the group.
+            labels (list, optional): Labels for the N groups.
+            figtitle (str, optional): Figure title.
+            outpath (str, optional): Path to which the plot is saved to. Should
+                end with ``'.png'``, and ``None`` means
+                ``os.path.join(const.Dir.tmp, 'axes3d_wrapper.png')``.
 
         Writes
             - The bar plot.
         """
-        outpath = join(const.Dir.tmp, 'bar.png') if self.outpath is None \
-            else self.outpath
+        if outpath is None:
+            outpath = join(const.Dir.tmp, 'bar.png')
         fig = self.plt.figure(figsize=self.figsize)
         ax = fig.add_subplot(111)
-        self._set_title(ax)
+        if figtitle is not None:
+            ax.set_title(figtitle, fontsize=self.figtitle_fontsize)
         # Ensure y is 2D, with columns representing values within groups
         # and rows across groups
         if y.ndim == 1:
@@ -207,7 +199,7 @@ class Plot:
             plot_obj = ax.bar(x_, y[:, i], bar_width)
             plot_objs.append(plot_obj)
         #
-        self._add_legend(plot_objs)
+        self._add_legend(plot_objs, labels)
         self.plt.grid(self.grid)
         self._add_axis_labels(ax)
         self._set_axis_ticks(ax)
@@ -217,7 +209,8 @@ class Plot:
         return outpath
 
     def scatter3d(
-            self, xyz, colors=None, size=None, equal_axes=False, views=None):
+            self, xyz, colors=None, size=None, labels=None, equal_axes=False,
+            figtitle=None, views=None, outpath=None):
         """3D scatter plot.
 
         Args:
@@ -226,11 +219,17 @@ class Plot:
                 values are colormapped. If N-list, its elements should be color
                 strings. If a single color string, all points use that color.
             size (int, optional): Scatter size.
+            labels (list(str), optional): N-list of scatter labels.
             equal_axes (bool, optional): Whether to have the same scale for all
                 axes.
+            equal_axes (bool, optional): Whether to have the same scale for all
+            figtitle (str, optional): Figure title.
             views (list(tuple), optional): List of elevation-azimuth angle pairs
                 (in degrees). A good set of views is ``[(30, 0), (30, 45),
                 (30, 90), (30, 135)]``.
+            outpath (str, optional): Path to which the plot is saved to. Should
+                end with ``'.png'``, and ``None`` means
+                ``os.path.join(const.Dir.tmp, 'axes3d_wrapper.png')``.
 
         Writes
             - One or multiple (if ``views`` is provided) views of the 3D plot.
@@ -238,11 +237,12 @@ class Plot:
         from matplotlib import cm
         from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
         #
-        outpath = join(const.Dir.tmp, 'scatter3d.png') if self.outpath is None \
-            else self.outpath
+        if outpath is None:
+            outpath = join(const.Dir.tmp, 'scatter3d.png')
         fig = self.plt.figure(figsize=self.figsize)
         ax = fig.add_subplot(111, projection='3d')
-        self._set_title(ax)
+        if figtitle is not None:
+            ax.set_title(figtitle, fontsize=self.figtitle_fontsize)
         # Prepare kwargs to scatter()
         kwargs = {}
         if isinstance(colors, np.ndarray):
@@ -256,7 +256,7 @@ class Plot:
         # Plot
         plot_objs = ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2], **kwargs)
         #
-        self._add_legend(plot_objs)
+        self._add_legend(plot_objs, labels)
         self.plt.grid(self.grid)
         self._add_axis_labels(ax)
         self._set_axis_ticks(ax)
@@ -282,24 +282,38 @@ class Plot:
         self.plt.close('all')
         return outpaths
 
-    def line(self, xy, width=None, marker=None, marker_size=None):
-        """Line/curve plot.
+    def line(
+            self, xy, width=None, labels=None, markers=None, marker_size=None,
+            figtitle=None, outpath=None):
+        """3D scatter plot.
 
         Args:
-            xy (array_like): N-by-M array of N x-values (first column) and
-                their corresponding y-values (the remaining M-1 columns).
-            width (float, optional): Line width.
-            marker (str, optional): Marker.
-            marker_size (float, optional): Marker size.
+            xyz (array_like): N-by-3 array of N points.
+            colors (array_like or list(str) or str, optional): If N-array, these
+                values are colormapped. If N-list, its elements should be color
+                strings. If a single color string, all points use that color.
+            size (int, optional): Scatter size.
+            labels (list(str), optional): N-list of scatter labels.
+            equal_axes (bool, optional): Whether to have the same scale for all
+                axes.
+            equal_axes (bool, optional): Whether to have the same scale for all
+            figtitle (str, optional): Figure title.
+            views (list(tuple), optional): List of elevation-azimuth angle pairs
+                (in degrees). A good set of views is ``[(30, 0), (30, 45),
+                (30, 90), (30, 135)]``.
+            outpath (str, optional): Path to which the plot is saved to. Should
+                end with ``'.png'``, and ``None`` means
+                ``os.path.join(const.Dir.tmp, 'axes3d_wrapper.png')``.
 
         Writes
-            - The line plot.
+            - One or multiple (if ``views`` is provided) views of the 3D plot.
         """
-        outpath = join(const.Dir.tmp, 'line.png') if self.outpath is None \
-            else self.outpath
+        if outpath is None:
+            outpath = join(const.Dir.tmp, 'line.png')
         fig = self.plt.figure(figsize=self.figsize)
         ax = fig.add_subplot(111)
-        self._set_title(ax)
+        if figtitle is not None:
+            ax.set_title(figtitle, fontsize=self.figtitle_fontsize)
         # Prepare kwargs to scatter()
         kwargs_list = []
         n_lines = xy.shape[1] - 1
@@ -307,20 +321,18 @@ class Plot:
             kwargs = {}
             if width is not None:
                 kwargs['linewidth'] = width
-            if marker is not None:
-                kwargs['marker'] = marker
-            if marker_size is not None:
-                kwargs['markersize'] = marker_size
+            if markers is not None:
+                assert len(markers) == n_lines, \
+                    "Number of markers must be the same as number of lines"
+                kwargs['marker'] = markers[i]
             kwargs_list.append(kwargs)
         # Plot
         plot_objs = []
         for i in range(n_lines):
             plot_obj = self.plt.plot(xy[:, 0], xy[:, 1 + i], **kwargs_list[i])
-            assert len(plot_obj) == 1
-            plot_obj = plot_obj[0]
             plot_objs.append(plot_obj)
         #
-        self._add_legend(plot_objs)
+        self._add_legend(plot_objs, labels)
         self.plt.grid(self.grid)
         self._add_axis_labels(ax)
         self._set_axis_ticks(ax)
