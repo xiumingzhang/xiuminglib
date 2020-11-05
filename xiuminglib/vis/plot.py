@@ -1,3 +1,5 @@
+# pylint: disable=blacklisted-name
+
 from os.path import join, dirname
 import numpy as np
 
@@ -154,7 +156,7 @@ class Plot:
 
     @staticmethod
     def _set_axes_equal(ax, xyz):
-        # plt.axis('equal') # not working, hence the hack of creating a cubic
+        # plt.axis('equal') not working, hence the hack of creating a cubic
         # bounding box
         x_data, y_data, z_data = xyz[:, 0], xyz[:, 1], xyz[:, 2]
         max_range = np.array([
@@ -235,7 +237,6 @@ class Plot:
         Writes
             - One or multiple (if ``views`` is provided) views of the 3D plot.
         """
-        from matplotlib import cm
         from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
         #
         outpath = join(const.Dir.tmp, 'scatter3d.png') if self.outpath is None \
@@ -245,10 +246,11 @@ class Plot:
         self._set_title(ax)
         # Prepare kwargs to scatter()
         kwargs = {}
+        need_colorbar = False
         if isinstance(colors, np.ndarray):
-            colors = (colors - colors.min()) / (colors.max() - colors.min())
-            colors = cm.Reds(colors)
-            kwargs['c'] = colors
+            kwargs['c'] = colors # will be colormapped with color map
+            kwargs['cmap'] = 'viridis'
+            need_colorbar = True
         elif colors is not None:
             kwargs['c'] = colors
         if size is not None:
@@ -263,6 +265,9 @@ class Plot:
         self._set_axis_lim(ax)
         if equal_axes:
             self._set_axes_equal(ax, xyz)
+        if need_colorbar:
+            self.plt.colorbar(plot_objs)
+            # TODO: this seems to mess up equal axes
         # Save plot
         outpaths = []
         if outpath.endswith('.png'):
