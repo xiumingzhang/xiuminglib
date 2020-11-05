@@ -2,7 +2,6 @@ from os import remove, rename
 from os.path import dirname, basename
 from time import time
 import numpy as np
-from tqdm import tqdm
 
 from ..imprt import preset_import
 bpy = preset_import('bpy')
@@ -551,6 +550,8 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
               list(mathutils.Vector)*) -- Normal vector(s) at the
               intersection(s) specified in the same space as ``xyzs``.
     """
+    from tqdm import tqdm
+
     # Standardize inputs
     xys = np.array(xys).reshape(-1, 2)
     objs = bpy.data.objects
