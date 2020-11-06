@@ -79,13 +79,10 @@ def remove_objects(name_pattern, regex=False):
     logger.info("Removed from scene: %s", removed)
 
 
-def import_object(model_path,
-                  axis_forward='-Z', axis_up='Y',
-                  rot_mat=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-                  trans_vec=(0, 0, 0),
-                  scale=1,
-                  merge=False,
-                  name=None):
+def import_object(
+        model_path, axis_forward='-Z', axis_up='Y',
+        rot_mat=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+        trans_vec=(0, 0, 0), scale=1, merge=False, name=None):
     """Imports external object to current scene, the low-level way.
 
     Args:
