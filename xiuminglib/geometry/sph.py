@@ -1,5 +1,7 @@
 import numpy as np
 
+from .rot import _warn_degree
+
 from ..log import get_logger
 logger = get_logger()
 
@@ -168,9 +170,7 @@ def sph2cart(pts_sph, convention='lat-lng'):
         raise ValueError("Shape of input must be either (3,) or (n, 3)")
 
     # Degrees?
-    if (np.abs(pts_sph[:, 1:]) > 2 * np.pi).any():
-        logger.warning(("Some input value falls outside [-2pi, 2pi]. "
-                        "Sure inputs are in radians?"))
+    _warn_degree(pts_sph[:, 1:])
 
     # Convert to latitude-longitude convention, if necessary
     if convention == 'lat-lng':

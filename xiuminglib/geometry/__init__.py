@@ -3,6 +3,7 @@ __all__ = [
     'normal',
     'proj',
     'pt',
+    'rot',
     'sph',
     'tri',
 ]

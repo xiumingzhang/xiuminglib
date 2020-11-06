@@ -1,7 +1,5 @@
 import numpy as np
 
-from ..linalg import project_onto, normalize
-
 
 def ptcld2tdf(pts, res=128, center=False):
     """Converts point cloud to truncated distance function (TDF).
