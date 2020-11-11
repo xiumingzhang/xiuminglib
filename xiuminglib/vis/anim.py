@@ -62,4 +62,4 @@ def make_anim(imgs, duration=1, outpath=None):
             h, save_all=True, append_images=imgs_loaded[1:],
             duration=duration, loop=0)
 
-    logger.info("Images written as an animation to:\n\t%s", outpath)
+    logger.debug("Images written as an animation to:\n\t%s", outpath)
