@@ -152,7 +152,7 @@ class PSNR(Base):
 
 
 class SSIM(Base):
-    r"""The Structural Similarity Index (SSIM) :math:`\in [0,1]`
+    r"""The (multi-scale) Structural Similarity Index (SSIM) :math:`\in [0,1]`
     (higher is better).
 
     If the inputs are RGB, they are first converted to luma (or relative
@@ -163,7 +163,7 @@ class SSIM(Base):
         super().__init__(dtype)
         assert tf is not None, "TensorFlow import failed"
 
-    def __call__(self, im1, im2):
+    def __call__(self, im1, im2, multiscale=False):
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
@@ -180,7 +180,12 @@ class SSIM(Base):
         # Guaranteed to be HxWx1 now
         im1 = tf.convert_to_tensor(im1)
         im2 = tf.convert_to_tensor(im2)
-        similarity = tf.image.ssim(im1, im2, max_val=self.drange).numpy()
+        if multiscale:
+            ssim_func = tf.image.ssim_multiscale
+        else:
+            ssim_func = tf.image.ssim
+        similarity = ssim_func(im1, im2, max_val=self.drange)
+        similarity = similarity.numpy()
         return similarity
 
 
