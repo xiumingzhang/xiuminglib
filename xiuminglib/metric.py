@@ -164,6 +164,15 @@ class SSIM(Base):
         assert tf is not None, "TensorFlow import failed"
 
     def __call__(self, im1, im2, multiscale=False):
+        """
+        Args:
+            im1
+            im2
+            multiscale (bool, optional): Whether to compute MS-SSIM.
+
+        Returns:
+            float: SSIM computed (higher is better).
+        """
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
@@ -237,6 +246,14 @@ class LPIPS(Base):
             tf.nest.map_structure(import_graph.as_graph_element, outputs))
 
     def __call__(self, im1, im2):
+        """
+        Args:
+            im1
+            im2
+
+        Returns:
+            float: LPIPS computed (lower is better).
+        """
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
