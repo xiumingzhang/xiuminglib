@@ -65,6 +65,8 @@ def alpha_blend(arr1, alpha, arr2=None):
     if alpha.shape != arr1.shape:
         if alpha.ndim == 2 and arr1.ndim == 3:
             alpha = np.dstack([alpha] * arr1.shape[2])
+        elif alpha.ndim == 3 and alpha.shape[2] == 1 and arr1.ndim == 3:
+            alpha = np.tile(alpha, (1, 1, arr1.shape[2]))
         else:
             raise NotImplementedError(
                 "{arr_s} and {alpha_s}".format(
