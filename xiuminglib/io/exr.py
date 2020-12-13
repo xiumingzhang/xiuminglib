@@ -236,6 +236,7 @@ def matrix_as_image(arr, outpath):
 def main():
     """Unit tests that can also serve as example usage."""
     from .. import constants
+
     exr_path = join(constants.Dir.tmp, 'test.exr')
     exr = EXR(exr_path)
     exr.extract_normal(exr_path.replace('.exr', '.npy'), vis=True)

@@ -666,3 +666,28 @@ def srgb2linear(im, clip=False):
     im_ = np.where(im_ > srgb_linear_thres * srgb_linear_coeff, gamma, scale)
 
     return im_
+
+
+def tonemap(hdr):
+    """Tonemaps an HDR image using:
+        Dynamic Range Reduction Inspired by Photoreceptor Physiology [TVCG '05].
+
+    Args:
+        hdr (numpy.ndarray): HDR image.
+
+    Returns:
+        numpy.ndarray: Tonemapped image.
+    """
+    tonemapper = cv2.createTonemapReinhard(1, 1, 0, 0)
+    img = tonemapper.process(hdr)
+
+    # Clip, if necessary, to guard against numerical errors
+    minv, maxv = img.min(), img.max()
+    if minv < 0:
+        logger.warning("Clipping negative values (e.g., %f)", minv)
+        img = np.clip(img, 0, np.inf)
+    if maxv > 1:
+        logger.warning("Clipping >1 values (e.g., %f)", maxv)
+        img = np.clip(img, -np.inf, 1)
+
+    return img
