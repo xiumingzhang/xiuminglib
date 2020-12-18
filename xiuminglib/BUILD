@@ -7,7 +7,6 @@ py_library(
     ]),
     srcs_version = "PY3",
     deps = [
-        # bpy not in third_party, so has to be wrapped into an MPM package
         "//experimental/users/xiuming/xiuminglib/data",
         "//experimental/users/xiuming/xiuminglib/xiuminglib/blender",
         "//experimental/users/xiuming/xiuminglib/xiuminglib/geometry",
@@ -24,6 +23,8 @@ py_library(
         "//third_party/py/PIL:pil",
         "//third_party/py/scipy",
         "//third_party/py/tqdm",
+        "//third_party/py/tensorflow",
+        # bpy not in third_party, so has to be wrapped into an MPM package
         # FIXME: Listing OpenEXR and Imath as deps here segfaults bpy
     ],
 )
@@ -35,7 +36,6 @@ py_library(
     ]),
     srcs_version = "PY3",
     deps = [
-        # bpy not in third_party, so has to be wrapped into an MPM package
         "//experimental/users/xiuming/xiuminglib/data",
         "//experimental/users/xiuming/xiuminglib/xiuminglib/blender",
         "//experimental/users/xiuming/xiuminglib/xiuminglib/geometry",
@@ -54,5 +54,7 @@ py_library(
         "//third_party/py/tqdm",
         "//third_party/py/Imath",
         "//third_party/py/OpenEXR",
+        "//third_party/py/tensorflow",
+        # bpy not in third_party, so has to be wrapped into an MPM package
     ],
 )

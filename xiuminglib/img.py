@@ -75,7 +75,7 @@ def alpha_blend(arr1, alpha, arr2=None):
     return blend
 
 
-def resize(arr, new_h=None, new_w=None):
+def resize(arr, new_h=None, new_w=None, use_tf=False):
     """Resizes an image, with the option of maintaining the aspect ratio.
 
     Args:
@@ -85,6 +85,8 @@ def resize(arr, new_h=None, new_w=None):
             according to the target width, assuming the same aspect ratio.
         new_w (int, optional): Target width. If ``None``, will be calculated
             according to the target height, assuming the same aspect ratio.
+        use_tf (bool, optional): Whether to use TensorFlow's resizing (bilinear
+            and anti-aliasing).
 
     Returns:
         numpy.ndarray: Resized image.
@@ -102,7 +104,20 @@ def resize(arr, new_h=None, new_w=None):
     else:
         raise ValueError("At least one of new height or width must be given")
 
-    return cv2.resize(arr, (new_w, new_h))
+    # If using TensorFlow
+    if use_tf:
+        tf = preset_import('tensorflow', assert_success=True)
+        tf.compat.v1.enable_eager_execution()
+        tensor = tf.convert_to_tensor(arr)
+        tensor_resized = tf.image.resize(
+            tensor, (new_h, new_w), method='bilinear', antialias=True)
+        resized = tensor_resized.numpy()
+
+    # If using OpenCV
+    else:
+        resized = cv2.resize(arr, (new_w, new_h))
+
+    return resized
 
 
 def binarize(im, threshold=None):
