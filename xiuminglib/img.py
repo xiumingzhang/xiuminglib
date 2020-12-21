@@ -636,8 +636,6 @@ def linear2srgb(im, clip=False):
     Returns:
         numpy.ndarray: Converted image in sRGB.
     """
-    _assert_3ch(im)
-
     if clip:
         im = np.clip(im, 0, 1)
     _assert_float_0to1(im)
@@ -666,8 +664,6 @@ def srgb2linear(im, clip=False):
     Returns:
         numpy.ndarray: Converted image in linear RGB.
     """
-    _assert_3ch(im)
-
     if clip:
         im = np.clip(im, 0, 1)
     _assert_float_0to1(im)
