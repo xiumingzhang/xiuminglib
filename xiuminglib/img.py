@@ -680,8 +680,8 @@ def srgb2linear(im, clip=False):
 
 
 def tonemap(hdr):
-    """Tonemaps an HDR image using:
-        Dynamic Range Reduction Inspired by Photoreceptor Physiology [TVCG '05].
+    """Tonemaps an HDR image using "Dynamic Range Reduction Inspired by
+    Photoreceptor Physiology" [TVCG '05].
 
     Args:
         hdr (numpy.ndarray): HDR image.
