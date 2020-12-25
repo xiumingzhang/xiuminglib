@@ -10,7 +10,7 @@ except NameError:
     ModuleNotFoundError = ImportError
 
 
-def preset_import(name):
+def preset_import(name, assert_success=False):
     """A unified importer for both regular and ``google3`` modules, according
     to specified presets/profiles (e.g., ignoring ``ModuleNotFoundError``).
     """
@@ -25,48 +25,43 @@ def preset_import(name):
             # from google3.third_party.OpenCVX import cvx2 as cv2
         except ModuleNotFoundError:
             mod = import_module_404ok('cv2')
-        # TODO: Below is cleaner, but doesn't work
-        # mod = import_module_404ok('cvx2.latest')
-        # if mod is None:
-        #    mod = import_module_404ok('cv2')
-        return mod
 
-    if name in ('tf', 'tensorflow'):
+    elif name in ('tf', 'tensorflow'):
         mod = import_module_404ok('tensorflow')
-        return mod
 
-    if name == 'gfile':
+    elif name == 'gfile':
         # BUILD deps:
         # "//pyglib:gfile",
         # "//file/colossus/cns",
         mod = import_module_404ok('google3.pyglib.gfile')
-        return mod
 
-    if name == 'video_api':
+    elif name == 'video_api':
         # BUILD deps:
         # "//learning/deepmind/video/python:video_api",
         mod = import_module_404ok(
             'google3.learning.deepmind.video.python.video_api')
-        return mod
 
-    if name in ('bpy', 'bmesh', 'OpenEXR', 'Imath'):
+    elif name in ('bpy', 'bmesh', 'OpenEXR', 'Imath'):
         # BUILD deps:
         # "//third_party/py/Imath",
         # "//third_party/py/OpenEXR",
         mod = import_module_404ok(name)
-        return mod
 
-    if name in ('Vector', 'Matrix', 'Quaternion'):
+    elif name in ('Vector', 'Matrix', 'Quaternion'):
         mod = import_module_404ok('mathutils')
-        cls = _get_module_class(mod, name)
-        return cls
+        mod = _get_module_class(mod, name)
 
-    if name == 'BVHTree':
+    elif name == 'BVHTree':
         mod = import_module_404ok('mathutils.bvhtree')
-        cls = _get_module_class(mod, name)
-        return cls
+        mod = _get_module_class(mod, name)
 
-    raise NotImplementedError(name)
+    else:
+        raise NotImplementedError(name)
+
+    if assert_success:
+        assert mod is not None, "Failed in importing '%s'" % name
+
+    return mod
 
 
 def import_module_404ok(*args, **kwargs):
