@@ -35,15 +35,17 @@ def ptcld_as_isosurf(pts, out_obj, res=128, center=False):
     export_mesh(mesh, out_obj)
 
 
-def normal_as_image(normal_map, alpha_map=None, outpath=None):
+def normal_as_image(
+        normal_map, alpha_map=None, keep_alpha=False, outpath=None):
     """Visualizes the normal map by converting vectors to pixel values.
 
-    The background is black, complying with industry standards (e.g.,
-    Adobe AE).
+    If not keeping alpha, the background is black, complying with industry
+    standards (e.g., Adobe AE).
 
     Args:
         normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
         alpha_map (numpy.ndarray, optional): H-by-W array of alpha values.
+        keep_alpha (bool, optional): Whether to keep alpha channel in output.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means ``os.path.join(const.Dir.tmp,
             'normal_as_image.png')``.
@@ -56,6 +58,7 @@ def normal_as_image(normal_map, alpha_map=None, outpath=None):
     if outpath is None:
         outpath = join(const.Dir.tmp, 'normal_as_image.png')
 
+    # Compute a crude alpha map, if not provided
     if alpha_map is None:
         alpha_map = np.sum(normal_map != 0, axis=2) > 0 # "or" all channels
         alpha_map = alpha_map.astype(float)
@@ -67,14 +70,23 @@ def normal_as_image(normal_map, alpha_map=None, outpath=None):
     im = (normal_map / 2 + 0.5) * dtype_max
     # [0, dtype_max]
 
+    # Composite normals onto a black background
     bg = np.zeros(im.shape)
     alpha = np.dstack([alpha_map] * 3)
     im = np.multiply(alpha, im) + np.multiply(1 - alpha, bg)
 
-    cv2.imwrite(outpath, im.astype(dtype)[..., ::-1])
+    # To uint
+    bgr = im[..., ::-1].astype(dtype)
+
+    if keep_alpha:
+        alpha_uint = (alpha_map * dtype_max).astype(dtype)
+        bgr = np.dstack((bgr, alpha_uint))
+
+    cv2.imwrite(outpath, bgr)
 
 
-def depth_as_image(depth_map, alpha_map=None, outpath=None):
+def depth_as_image(
+        depth_map, alpha_map=None, keep_alpha=False, outpath=None):
     """Visualizes a(n) (aliased) depth map and an (anti-aliased) alpha map
     as a single depth image.
 
@@ -86,6 +98,7 @@ def depth_as_image(depth_map, alpha_map=None, outpath=None):
         depth_map (numpy.ndarray): 2D array of (aliased) raw depth values.
         alpha_map (numpy.ndarray, optional): 2D array of (anti-aliased) alpha
             values.
+        keep_alpha (bool, optional): Whether to keep alpha channel in output.
         outpath (str, optional): Path to which the visualization is saved to.
             ``None`` means ``os.path.join(const.Dir.tmp,
             'depth_as_image.png')``.
@@ -101,6 +114,7 @@ def depth_as_image(depth_map, alpha_map=None, outpath=None):
     # This maximum value belongs to background
     is_fg = depth_map < depth_map.max()
 
+    # Compute crude alpha, if not provided
     if alpha_map is None:
         alpha_map = is_fg.astype(float)
 
@@ -119,4 +133,11 @@ def depth_as_image(depth_map, alpha_map=None, outpath=None):
     bg = np.zeros(im.shape)
     im = np.multiply(alpha_map, im) + np.multiply(1 - alpha_map, bg)
 
-    cv2.imwrite(outpath, im.astype(dtype))
+    # To uint
+    bgr = np.dstack([im] * 3).astype(dtype)
+
+    if keep_alpha:
+        alpha_uint = (alpha_map * dtype_max).astype(dtype)
+        bgr = np.dstack((bgr, alpha_uint))
+
+    cv2.imwrite(outpath, bgr)
