@@ -5,7 +5,7 @@ from .. import log, os as xm_os
 logger = log.get_logger()
 
 
-def load_or_save_np(data_f, fallback=None):
+def load_or_save(data_f, fallback=None):
     """Loads the data file if it exists. Otherwise, if fallback is provided,
     call fallback and save its return to disk.
 
