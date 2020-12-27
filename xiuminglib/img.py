@@ -75,7 +75,7 @@ def alpha_blend(arr1, alpha, arr2=None):
     return blend
 
 
-def resize(arr, new_h=None, new_w=None, use_tf=False):
+def resize(arr, new_h=None, new_w=None, method='cv2'):
     """Resizes an image, with the option of maintaining the aspect ratio.
 
     Args:
@@ -85,8 +85,7 @@ def resize(arr, new_h=None, new_w=None, use_tf=False):
             according to the target width, assuming the same aspect ratio.
         new_w (int, optional): Target width. If ``None``, will be calculated
             according to the target height, assuming the same aspect ratio.
-        use_tf (bool, optional): Whether to use TensorFlow's resizing (bilinear
-            and anti-aliasing).
+        method (str, optional): Accepted values: ``'cv2'`` and ``'tf'``.
 
     Returns:
         numpy.ndarray: Resized image.
@@ -104,8 +103,7 @@ def resize(arr, new_h=None, new_w=None, use_tf=False):
     else:
         raise ValueError("At least one of new height or width must be given")
 
-    # If using TensorFlow
-    if use_tf:
+    if method in ('tf', 'tensorflow'):
         tf = preset_import('tensorflow', assert_success=True)
         tf.compat.v1.enable_eager_execution()
         tensor = tf.convert_to_tensor(arr)
@@ -113,9 +111,12 @@ def resize(arr, new_h=None, new_w=None, use_tf=False):
             tensor, (new_h, new_w), method='bilinear', antialias=True)
         resized = tensor_resized.numpy()
 
-    # If using OpenCV
+    elif method in ('cv', 'cv2', 'opencv'):
+        interp = cv2.INTER_LINEAR if new_h > h else cv2.INTER_AREA
+        resized = cv2.resize(arr, (new_w, new_h), interpolation=interp)
+
     else:
-        resized = cv2.resize(arr, (new_w, new_h))
+        raise NotImplementedError(method)
 
     return resized
 
