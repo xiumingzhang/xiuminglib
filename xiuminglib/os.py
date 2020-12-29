@@ -10,6 +10,26 @@ from .imprt import preset_import
 from .interact import format_print
 
 
+def open_file(path, mode):
+    """Opens a file.
+
+    Supports Google Colossus if ``gfile`` can be imported.
+
+    Args:
+        path (str): Path to open.
+        mode (str): ``'r'``, ``'rb'``, ``'w'``, or ``'wb'``.
+
+    Returns:
+        File handle that can be used as a context.
+    """
+    gfile = preset_import('gfile')
+
+    open_func = open if gfile is None else gfile.Open
+    handle = open_func(path, mode)
+
+    return handle
+
+
 def _is_cnspath(path):
     return isinstance(path, str) and path.startswith('/cns/')
 
@@ -232,7 +252,7 @@ def cp(src, dst, cns_parallel_copy=10):
         # Destination directory may be owned by a Ganpati group
         if _is_cnspath(dst):
             cmd += ' --gfs_user %s' % _select_gfs_user(dst)
-        _ = _call_assert_success(cmd)
+        _call_assert_success(cmd)
 
     else:
         with gfile.AsUser(_select_gfs_user(dst)):
@@ -266,7 +286,7 @@ def rm(path):
     else:
         # Falls back to filter CLI
         cmd = 'fileutil rm -R -f %s' % path # works for file and directory
-        _ = _call_assert_success(cmd, quiet=True)
+        _call_assert_success(cmd, quiet=True)
 
 
 def makedirs(directory, rm_if_exists=False):
@@ -293,7 +313,7 @@ def makedirs(directory, rm_if_exists=False):
 
     def mkdir_cns_cli(directory):
         cmd = 'fileutil mkdir -p %s' % directory
-        _ = _call_assert_success(cmd, quiet=True)
+        _call_assert_success(cmd, quiet=True)
 
     if _is_cnspath(directory):
         # Is a CNS path

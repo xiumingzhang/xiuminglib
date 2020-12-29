@@ -7,8 +7,7 @@ logger = get_logger()
 
 from .. import const
 from ..io import img as imgio
-from ..os import makedirs
-from ..imprt import preset_import
+from ..os import makedirs, open_file
 
 
 def make_anim(imgs, duration=1, outpath=None):
@@ -55,9 +54,7 @@ def make_anim(imgs, duration=1, outpath=None):
 
     duration = duration * 1000 # because in ms
 
-    gfile = preset_import('gfile')
-    open_func = open if gfile is None else gfile.Open
-    with open_func(outpath, 'wb') as h:
+    with open_file(outpath, 'wb') as h:
         imgs_loaded[0].save(
             h, save_all=True, append_images=imgs_loaded[1:],
             duration=duration, loop=0)

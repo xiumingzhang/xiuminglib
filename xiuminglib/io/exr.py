@@ -7,8 +7,8 @@ logger = get_logger()
 from ..imprt import preset_import
 Imath = preset_import('Imath')
 OpenEXR = preset_import('OpenEXR')
-gfile = preset_import('gfile')
 
+from ..os import open_file
 from ..io.img import write_arr
 from ..vis.geometry import depth_as_image, normal_as_image
 from ..geometry.normal import normalize
@@ -52,8 +52,7 @@ class EXR():
         pix_type = Imath.PixelType(Imath.PixelType.FLOAT)
         # Load
         data = {}
-        open_func = open if gfile is None else gfile.Open
-        with open_func(exr_path, 'rb') as h:
+        with open_file(exr_path, 'rb') as h:
             f = OpenEXR.InputFile(h)
             data_win = f.header()['dataWindow']
             win_size = (

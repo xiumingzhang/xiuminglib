@@ -7,7 +7,7 @@ from ..log import get_logger
 logger = get_logger()
 
 from .. import const
-from .. import os as xm_os
+from ..os import makedirs, open_file
 from ..imprt import preset_import
 
 
@@ -41,9 +41,7 @@ def put_text(
     if font_ttf is None:
         font = ImageFont.truetype(const.Path.open_sans_regular, font_size)
     else:
-        gfile = preset_import('gfile')
-        open_func = open if gfile is None else gfile.Open
-        with open_func(font_ttf, 'rb') as h:
+        with open_file(font_ttf, 'rb') as h:
             font_bytes = BytesIO(h.read())
         font = ImageFont.truetype(font_bytes, font_size)
 
@@ -125,7 +123,7 @@ def text_as_image(
 
     # Write
     outdir = dirname(outpath)
-    xm_os.makedirs(outdir)
+    makedirs(outdir)
     cv2.imwrite(outpath, im)
 
     if not quiet:

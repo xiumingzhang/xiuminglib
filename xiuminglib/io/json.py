@@ -1,7 +1,9 @@
 from os.path import dirname
 import json
 
-from .. import log, os as xm_os
+from ..os import makedirs, open_file
+
+from .. import log
 logger = log.get_logger()
 
 
@@ -16,9 +18,9 @@ def write(dict_, path):
         - JSON file.
     """
     outdir = dirname(path)
-    xm_os.makedirs(outdir)
+    makedirs(outdir)
 
-    with open(path, 'w') as h:
+    with open_file(path, 'w') as h:
         json.dump(dict_, h, indent=4, sort_keys=True)
 
 
@@ -31,6 +33,6 @@ def load(path):
     Returns:
         Data dictionary.
     """
-    with open(path, 'rb') as h:
+    with open_file(path, 'r') as h:
         data = json.load(h)
     return data

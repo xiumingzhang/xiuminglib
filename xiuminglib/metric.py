@@ -7,10 +7,10 @@ logger = get_logger()
 
 from .img import rgb2lum
 from .const import Path
+from .os import open_file
 
 from .imprt import preset_import
 tf = preset_import('tf')
-gfile = preset_import('gfile')
 
 
 def compute_ci(data, level=0.95):
@@ -225,12 +225,11 @@ class LPIPS(Base):
         """
         super().__init__(dtype)
         assert tf is not None, "TensorFlow import failed"
-        open_func = open if gfile is None else gfile.Open
         if weight_pb is None:
             weight_pb = Path.lpips_weights
         # Pack LPIPS network into a tf function
         graph_def = tf.compat.v1.GraphDef()
-        with open_func(weight_pb, 'rb') as h:
+        with open_file(weight_pb, 'rb') as h:
             graph_def.ParseFromString(h.read())
         self.lpips_func = tf.function(self._wrap_frozen_graph(
             graph_def, inputs=['0:0', '1:0'], outputs='Reshape_10:0'))

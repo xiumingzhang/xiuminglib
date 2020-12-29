@@ -9,8 +9,8 @@ import numpy as np
 from ..log import get_logger
 logger = get_logger()
 
-from .. import const, os as xm_os
-from ..imprt import preset_import
+from .. import const
+from ..os import makedirs, open_file
 
 
 def pyplot_wrapper(
@@ -184,7 +184,7 @@ def pyplot_wrapper(
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xm_os.makedirs(outdir)
+    makedirs(outdir)
 
     # Save plot
     _savefig(outpath)
@@ -230,17 +230,14 @@ def _savefig(outpath, contents_only=False, dpi=None):
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
-    gfile = preset_import('gfile')
-    open_func = open if gfile is None else gfile.Open
-
     if contents_only:
         ax = plt.gca()
         ax.set_position([0, 0, 1, 1])
         ax.set_axis_off()
-        with open_func(outpath, 'wb') as h:
+        with open_file(outpath, 'wb') as h:
             plt.savefig(h, dpi=dpi)
     else:
-        with open_func(outpath, 'wb') as h:
+        with open_file(outpath, 'wb') as h:
             plt.savefig(h, bbox_inches='tight', dpi=dpi)
 
 
@@ -382,7 +379,7 @@ def axes3d_wrapper(
 
     # Make directory, if necessary
     outdir = dirname(outpath)
-    xm_os.makedirs(outdir)
+    makedirs(outdir)
 
     if equal_axes:
         # plt.axis('equal') # not working, hence the hack of creating a cubic

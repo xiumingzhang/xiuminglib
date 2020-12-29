@@ -6,9 +6,8 @@ from ..log import get_logger
 logger = get_logger()
 
 from ..imprt import preset_import
-gfile = preset_import('gfile')
 
-from ..os import makedirs
+from ..os import makedirs, open_file
 
 
 def load(path):
@@ -23,22 +22,20 @@ def load(path):
     """
     cv2 = preset_import('cv2')
 
-    open_func = open if gfile is None else gfile.Open
-
     # EXR
     if path.endswith('.exr'):
         raise ValueError("Use the dedicated `io.exr.EXR()` class for .exr")
 
     # HDR
     elif path.endswith('.hdr'):
-        with open_func(path, 'rb') as h:
+        with open_file(path, 'rb') as h:
             buffer_ = np.fromstring(h.read(), np.uint8)
         img = cv2.imdecode(buffer_, cv2.IMREAD_UNCHANGED)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # Whatever supported by Pillow
     else:
-        with open_func(path, 'rb') as h:
+        with open_file(path, 'rb') as h:
             img = Image.open(h)
             img.load()
         img = np.array(img)
@@ -64,9 +61,8 @@ def write_img(arr_uint, outpath):
     img = Image.fromarray(arr_uint)
 
     # Write to disk
-    open_func = open if gfile is None else gfile.Open
     makedirs(dirname(outpath))
-    with open_func(outpath, 'wb') as h:
+    with open_file(outpath, 'wb') as h:
         img.save(h)
 
     logger.debug("Image written to:\n\t%s", outpath)

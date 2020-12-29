@@ -1,3 +1,4 @@
+from os.path import join
 import numpy as np
 
 from absl import app
@@ -9,6 +10,12 @@ except ModuleNotFoundError:
 
 
 def main(_):
+    json_path = join(xm.const.Dir.tmp, 'transforms_train.json')
+    data = xm.io.json.load(json_path)
+    xm.io.json.write(data, json_path[:-len('.json')] + '_repro.json')
+
+    return
+
     dtype = 'uint8'
     n_ch = 3
     ims = 256

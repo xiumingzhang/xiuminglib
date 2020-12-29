@@ -6,8 +6,8 @@ import numpy as np
 from ..log import get_logger
 logger = get_logger()
 
-from .. import const, os as xm_os
-from ..imprt import preset_import
+from .. import const
+from ..os import makedirs, open_file
 
 
 class Plot:
@@ -96,19 +96,16 @@ class Plot:
     def _savefig(self, outpath, contents_only=False, dpi=None):
         # Make directory, if necessary
         outdir = dirname(outpath)
-        xm_os.makedirs(outdir)
-        # Figure out open function, depending on filesystem
-        gfile = preset_import('gfile')
-        open_func = open if gfile is None else gfile.Open
+        makedirs(outdir)
         #
         if contents_only:
             ax = self.plt.gca()
             ax.set_position([0, 0, 1, 1])
             ax.set_axis_off()
-            with open_func(outpath, 'wb') as h:
+            with open_file(outpath, 'wb') as h:
                 self.plt.savefig(h, dpi=dpi)
         else:
-            with open_func(outpath, 'wb') as h:
+            with open_file(outpath, 'wb') as h:
                 self.plt.savefig(h, bbox_inches='tight', dpi=dpi)
 
     def _add_legend(self, plot_objs):
