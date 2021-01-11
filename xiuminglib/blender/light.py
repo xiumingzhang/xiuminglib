@@ -134,6 +134,8 @@ def add_light_point(xyz=(0, 0, 0), name=None, size=0, energy=100):
     bpy.ops.object.light_add(type='POINT', location=xyz)
     point = bpy.context.active_object
 
+    point.data.use_nodes = True
+
     if name is not None:
         point.name = name
 
