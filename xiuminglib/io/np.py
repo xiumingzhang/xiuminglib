@@ -1,20 +1,23 @@
-from os.path import exists, dirname
+from os.path import dirname
 import numpy as np
 
-from .. import log, os as xm_os
-logger = log.get_logger()
+from ..os import open_file, exists_isdir, makedirs
+
+from ..log import get_logger
+logger = get_logger()
 
 
-def load_or_save(data_f, fallback=None):
+def read_or_write(data_f, fallback=None):
     """Loads the data file if it exists. Otherwise, if fallback is provided,
     call fallback and save its return to disk.
 
     Args:
-        data_f (str): Path to the data file, whose extension will be used for deciding
-            how to load the data.
-        fallback (function, optional): Fallback function used if data file doesn't exist.
-            Its return will be saved to ``data_f`` for future loadings. It should not
-            take arguments, but if yours requires taking arguments, just wrap yours with::
+        data_f (str): Path to the data file, whose extension will be used for
+            deciding how to load the data.
+        fallback (function, optional): Fallback function used if data file
+            doesn't exist. Its return will be saved to ``data_f`` for future
+            loadings. It should not take arguments, but if yours requires taking
+            arguments, just wrap yours with::
 
                 fallback=lambda: your_fancy_func(var0, var1)
 
@@ -27,17 +30,24 @@ def load_or_save(data_f, fallback=None):
     """
     # Decide data file type
     ext = data_f.split('.')[-1].lower()
-    if ext == 'npy':
-        load_func = np.load
-        save_func = np.save
-    elif ext == 'npz':
-        load_func = np.load
-        save_func = np.savez
-    else:
-        raise NotImplementedError(ext)
+
+    def load_func(path):
+        with open_file(path, 'rb') as h:
+            data = np.load(h)
+        return data
+
+    def save_func(data, path):
+        if ext == 'npy':
+            save = np.save
+        elif ext == 'npz':
+            save = np.savez
+        else:
+            raise NotImplementedError(ext)
+        with open_file(path, 'wb') as h:
+            save(h, data)
 
     # Load or call fallback
-    if exists(data_f):
+    if exists_isdir(data_f)[0]:
         data = load_func(data_f)
         msg = "Loaded: "
     else:
@@ -48,8 +58,8 @@ def load_or_save(data_f, fallback=None):
         else:
             data = fallback()
             out_dir = dirname(data_f)
-            xm_os.makedirs(out_dir)
-            save_func(data_f, data)
+            makedirs(out_dir)
+            save_func(data, data_f)
             msg += "(fallback provided); fallback return now saved to: "
     msg += data_f
 
