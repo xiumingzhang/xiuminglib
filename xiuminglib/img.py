@@ -552,11 +552,11 @@ def compute_gradients(im):
 
 
 def gamma_correct(im, gamma=2.2):
-    r"""Applies gamma correction to image.
+    r"""Applies gamma correction to an ``uint`` image.
 
     Args:
         im (numpy.ndarray): H-by-W if single-channel (e.g., grayscale) or
-            H-by-W-by-C multi-channel (e.g., RGB) images.
+            H-by-W-by-C multi-channel (e.g., RGB) ``uint`` images.
         gamma (float, optional): Gamma value :math:`< 1` shifts image towards
             the darker end of the spectrum, while value :math:`> 1` towards
             the brighter.
@@ -680,26 +680,32 @@ def srgb2linear(im, clip=False):
     return im_
 
 
-def tonemap(hdr):
-    """Tonemaps an HDR image using "Dynamic Range Reduction Inspired by
-    Photoreceptor Physiology" [TVCG '05].
+def tonemap(hdr, method='gamma', gamma=2.2):
+    r"""Tonemaps an HDR image.
 
     Args:
         hdr (numpy.ndarray): HDR image.
+        method (str, optional): Values accepted: ``'gamma'`` and ``'reinhard'``.
+        gamma (float, optional): Gamma value used if method is ``'gamma'``.
 
     Returns:
-        numpy.ndarray: Tonemapped image.
+        numpy.ndarray: Tonemapped image :math:`\in [0, 1]`.
     """
-    tonemapper = cv2.createTonemapReinhard(1, 1, 0, 0)
-    img = tonemapper.process(hdr)
+    if method == 'reinhard':
+        tonemapper = cv2.createTonemapReinhard(1, 1, 0, 0)
+        img = tonemapper.process(hdr)
+    elif method == 'gamma':
+        img = (hdr / hdr.max()) ** (1 / gamma)
+    else:
+        raise ValueError(method)
 
     # Clip, if necessary, to guard against numerical errors
     minv, maxv = img.min(), img.max()
     if minv < 0:
-        logger.warning("Clipping negative values (e.g., %f)", minv)
+        logger.warning("Clipping negative values (min.: %f)", minv)
         img = np.clip(img, 0, np.inf)
     if maxv > 1:
-        logger.warning("Clipping >1 values (e.g., %f)", maxv)
+        logger.warning("Clipping >1 values (max.: %f)", maxv)
         img = np.clip(img, -np.inf, 1)
 
     return img
