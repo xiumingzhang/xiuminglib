@@ -11,7 +11,9 @@ def get_logger(level=None):
     Returns:
         logging.Logger: Logger created.
     """
-    logging.basicConfig(level=logging.INFO)
+    if level is None:
+        level = logging.INFO
+    logging.basicConfig(level=level)
     logger = logging.getLogger()
     return logger
 

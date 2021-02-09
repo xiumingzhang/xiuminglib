@@ -102,9 +102,9 @@ def write_float(arr_0to1, outpath, img_dtype='uint8', clip=False):
     arr_min, arr_max = arr_0to1.min(), arr_0to1.max()
     if clip:
         if arr_max > 1:
-            logger.info("Maximum before clipping: %f", arr_max)
+            logger.debug("Maximum before clipping: %f", arr_max)
         if arr_min < 0:
-            logger.info("Minimum before clipping: %f", arr_min)
+            logger.debug("Minimum before clipping: %f", arr_min)
         arr_0to1 = np.clip(arr_0to1, 0, 1)
     else:
         assert arr_min >= 0 and arr_max <= 1, \
