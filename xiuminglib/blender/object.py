@@ -551,12 +551,14 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
         "%s node tree set up for '%s'", shader_type.capitalize(), obj.name)
 
 
-def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
+def setup_emission_nodetree(obj, texture=(1, 1, 1, 1), strength=1):
     r"""Sets up an emission node tree for the object.
 
     Args:
-        obj (bpy_types.Object): Object bundled with texture map.
-        color (tuple, optional): Emission RGBA :math:`\in [0, 1]`.
+        obj (bpy_types.Object): Object (maybe bundled with texture map).
+        texture (str or tuple, optional): If string, must be ``'bundled'`` or
+            path to the texture image. If tuple, must be of 4 floats
+            :math:`\in [0, 1]` as RGBA values.
         strength (float, optional): Emission strength.
     """
     scene = bpy.context.scene
@@ -565,12 +567,23 @@ def setup_emission_nodetree(obj, color=(1, 1, 1, 1), strength=1):
     node_tree = _clear_nodetree_for_active_material(obj)
     nodes = node_tree.nodes
 
+    # Emission node
     nodes.new('ShaderNodeEmission')
-    nodes['Emission'].inputs[0].default_value = color
-    nodes['Emission'].inputs[1].default_value = strength
+    if isinstance(texture, str):
+        texture_node = _make_texture_node(obj, texture)
+        node_tree.links.new(
+            texture_node.outputs['Color'], nodes['Emission'].inputs['Color'])
+    elif isinstance(texture, tuple):
+        nodes['Emission'].inputs['Color'].default_value = texture
+    else:
+        raise TypeError(texture)
+    nodes['Emission'].inputs['Strength'].default_value = strength
+
+    # Output node
     nodes.new('ShaderNodeOutputMaterial')
     node_tree.links.new(
-        nodes['Emission'].outputs[0], nodes['Material Output'].inputs[0])
+        nodes['Emission'].outputs['Emission'],
+        nodes['Material Output'].inputs['Surface'])
 
     # Scene update necessary, as matrix_world is updated lazily
     bpy.context.view_layer.update()
