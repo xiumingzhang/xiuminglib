@@ -1,5 +1,7 @@
 import numpy as np
 
+from .imprt import preset_import
+
 
 def get_extrema(arr, top=True, n=1, n_std=None):
     """Gets top (or bottom) N value(s) from an M-D array, with the option to
@@ -569,19 +571,18 @@ def main(test_id):
         from copy import deepcopy
         from scipy.fftpack import dct, idct
         from . import const, os as xm_os
-        from .imprt import preset_import
         from .vis.matrix import matrix_as_heatmap, matrix_as_heatmap_complex
-        cv2 = preset_import('cv2')
+        cv2 = preset_import('cv2', assert_success=True)
         outdir = join(const.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE)
+        im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE) # TODO: switch to xm.io.img
         im = cv2.resize(im, (64, 64))
-        cv2.imwrite(join(outdir, 'orig.png'), im)
+        cv2.imwrite(join(outdir, 'orig.png'), im) # TODO: switch to xm.io.img
         # Transform by my DCT (2-step)
         dct_mat_h, dct_mat_w = dct_2d_bases(*im.shape)
         coeffs_2step = dct_mat_h.dot(im).dot(dct_mat_w)
         recon_2step = dct_mat_h.T.dot(coeffs_2step).dot(dct_mat_w.T)
-        cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step)
+        cv2.imwrite(join(outdir, 'recon_2step.png'), recon_2step) # TODO: switch to xm.io.img
         print("(Ours 2-Step Full Recon. vs. Orig.) Max. difference: %e" %
               np.abs(im - recon_2step).max())
         # Transform by my DCT (1-step)
@@ -589,7 +590,7 @@ def main(test_id):
         coeffs_1step = dct_mat.dot(im.ravel())
         recon_1step = dct_mat.T.dot(coeffs_1step)
         cv2.imwrite(join(outdir, 'recon_1step.png'),
-                    recon_1step.reshape(im.shape))
+                    recon_1step.reshape(im.shape)) # TODO: switch to xm.io.img
         print("(Ours 1-Step Full Recon. vs. Orig.) Max. difference: %e" %
               np.abs(im - recon_1step.reshape(im.shape)).max())
         # for i in range(dct_mat.shape[0]):
@@ -602,7 +603,7 @@ def main(test_id):
         coeffs_1step_quarter = coeffs_1step_quarter.ravel()
         recon_1step_quarter = dct_mat.T.dot(coeffs_1step_quarter)
         cv2.imwrite(join(outdir, 'recon_1step_quarter.png'),
-                    recon_1step_quarter.reshape(im.shape))
+                    recon_1step_quarter.reshape(im.shape)) # TODO: switch to xm.io.img
         # Transform by SciPy
         coeffs_sp = dct(
             dct(im.T, type=2, norm='ortho').T,
@@ -621,8 +622,8 @@ def main(test_id):
         recon_sp_quarter = idct(
             idct(coeffs_sp_quarter, type=2, norm='ortho').T,
             type=2, norm='ortho').T
-        cv2.imwrite(join(outdir, 'recon_scipy.png'), recon_sp)
-        cv2.imwrite(join(outdir, 'recon_scipy_quarter.png'), recon_sp_quarter)
+        cv2.imwrite(join(outdir, 'recon_scipy.png'), recon_sp) # TODO: switch to xm.io.img
+        cv2.imwrite(join(outdir, 'recon_scipy_quarter.png'), recon_sp_quarter) # TODO: switch to xm.io.img
         print("(Ours 1-Step Quarter Recon. vs. SciPy) Max. difference: %e" %
               np.abs(recon_sp_quarter.ravel() - recon_1step_quarter).max())
 
@@ -648,14 +649,13 @@ def main(test_id):
     elif test_id == 'dft_cameraman':
         from os.path import join
         from . import os as xm_os
-        from .imprt import preset_import
         from .vis.matrix import matrix_as_heatmap_complex
-        cv2 = preset_import('cv2')
+        cv2 = preset_import('cv2', assert_success=True)
         outdir = join(const.Dir.tmp, test_id)
         xm_os.makedirs(outdir, rm_if_exists=True)
-        im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE)
+        im = cv2.imread(const.Path.cameraman, cv2.IMREAD_GRAYSCALE) # TODO: switch to xm.io.img
         im = cv2.resize(im, (64, 64))
-        cv2.imwrite(join(outdir, 'orig.png'), im)
+        cv2.imwrite(join(outdir, 'orig.png'), im) # TODO: switch to xm.io.img
         # My two-step DFT
         dft_h_mat, dft_w_mat = dft_2d_bases(*im.shape)
         coeffs_2step = dft_h_mat.dot(im).dot(dft_w_mat)
@@ -664,13 +664,13 @@ def main(test_id):
         assert np.allclose(np.imag(recon_2step), 0)
         recon_2step = np.real(recon_2step)
         cv2.imwrite(join(outdir, 'recon_2step.png'),
-                    recon_2step.astype(im.dtype))
+                    recon_2step.astype(im.dtype)) # TODO: switch to xm.io.img
         # NumPy DFT
         coeffs_np = np.fft.fft2(im, norm='ortho')
         recon_np = np.fft.ifft2(coeffs_np, norm='ortho')
         assert np.allclose(np.imag(recon_np), 0)
         recon_np = np.real(recon_np)
-        cv2.imwrite(join(outdir, 'recon_np.png'), recon_np.astype(im.dtype))
+        cv2.imwrite(join(outdir, 'recon_np.png'), recon_np.astype(im.dtype)) # TODO: switch to xm.io.img
         # My one-step DFT
         dft_mat = dft_2d_bases_vec(*im.shape)
         coeffs_1step = dft_mat.dot(im.ravel())
@@ -678,7 +678,7 @@ def main(test_id):
         assert np.allclose(np.imag(recon_1step), 0)
         recon_1step = np.real(recon_1step)
         cv2.imwrite(join(outdir, 'recon_1step.png'),
-                    recon_1step.astype(im.dtype))
+                    recon_1step.astype(im.dtype)) # TODO: switch to xm.io.img
         # Compare coefficients
         matrix_as_heatmap_complex(
             coeffs_1step.reshape(im.shape) - coeffs_np,

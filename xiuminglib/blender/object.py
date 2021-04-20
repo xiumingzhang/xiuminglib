@@ -3,10 +3,6 @@ from os.path import basename, dirname
 import numpy as np
 
 from ..imprt import preset_import
-bpy = preset_import('bpy')
-bmesh = preset_import('bmesh')
-Matrix = preset_import('Matrix')
-Vector = preset_import('Vector')
 
 from .. import log, os as xm_os
 logger = log.get_logger()
@@ -25,6 +21,8 @@ def get_object(otype, any_ok=False):
     Returns:
         bpy_types.Object.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     objs = [x for x in bpy.data.objects if x.type == otype]
     n_objs = len(objs)
     if n_objs == 0:
@@ -34,8 +32,9 @@ def get_object(otype, any_ok=False):
     # More than one objects
     if any_ok:
         return objs[0]
-    raise RuntimeError(("When `any_ok` is `False`, there must be exactly "
-                        "one object matching the given type"))
+    raise RuntimeError((
+        "When `any_ok` is `False`, there must be exactly "
+        "one object matching the given type"))
 
 
 def remove_objects(name_pattern, regex=False):
@@ -46,6 +45,8 @@ def remove_objects(name_pattern, regex=False):
         regex (bool, optional): Whether to interpret ``name_pattern`` as a
             regex.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     objs = bpy.data.objects
     removed = []
 
@@ -100,6 +101,9 @@ def import_object(
     Returns:
         bpy_types.Object or list(bpy_types.Object): Imported object(s).
     """
+    bpy = preset_import('bpy', assert_success=True)
+    Matrix = preset_import('Matrix', assert_success=True)
+
     # Deselect all
     for o in bpy.data.objects:
         o.select_set(False)
@@ -172,6 +176,8 @@ def export_object(obj_names, model_path, axis_forward=None, axis_up=None):
     Writes
         - Exported model file, possibly accompanied by a material file.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     out_dir = dirname(model_path)
     xm_os.makedirs(out_dir)
 
@@ -226,6 +232,8 @@ def add_cylinder_between(pt1, pt2, r=1e-3, name=None):
     Returns:
         bpy_types.Object: Cylinder added.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     pt1 = np.array(pt1)
     pt2 = np.array(pt2)
 
@@ -269,6 +277,9 @@ def add_rectangular_plane(
     Returns:
         bpy_types.Object: Plane added.
     """
+    bpy = preset_import('bpy', assert_success=True)
+    Vector = preset_import('Vector', assert_success=True)
+
     center_loc = np.array(center_loc)
     point_to = np.array(point_to)
     size = np.append(np.array(size), 0)
@@ -309,6 +320,8 @@ def create_mesh(verts, faces, name='new-mesh'):
     Returns:
         bpy_types.Mesh: Mesh data created.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     verts = np.array(verts)
 
     # Create mesh
@@ -336,6 +349,8 @@ def create_object_from_mesh(mesh_data, obj_name='new-obj',
     Returns:
         bpy_types.Object: Object created.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     # Create
     obj = bpy.data.objects.new(obj_name, mesh_data)
 
@@ -364,6 +379,8 @@ def _clear_nodetree_for_active_material(obj):
     So that desired node tree can be cleanly set up. If no active material, one
     will be created.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     # Create material if none
     if obj.active_material is None:
         mat = bpy.data.materials.new(name='new-mat-for-%s' % obj.name)
@@ -401,6 +418,8 @@ def color_vertices(obj, vert_ind, colors):
             this color will be applied to all vertices. If list of tuples,
             must be of the same length as ``vert_ind``.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     # Validate inputs
     if isinstance(vert_ind, int):
         vert_ind = [vert_ind]
@@ -475,6 +494,8 @@ def _assert_cycles(scene):
 
 
 def _make_texture_node(obj, texture_str):
+    bpy = preset_import('bpy', assert_success=True)
+
     mat = obj.active_material
     node_tree = mat.node_tree
     nodes = node_tree.nodes
@@ -518,6 +539,8 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
         roughness (float, optional): If diffuse, the roughness in Oren-Nayar,
             0 gives Lambertian. If glossy, 0 means perfectly reflective.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -551,7 +574,7 @@ def setup_simple_nodetree(obj, texture, shader_type, roughness=0):
         "%s node tree set up for '%s'", shader_type.capitalize(), obj.name)
 
 
-def setup_emission_nodetree(obj, texture=(1, 1, 1, 1), strength=1):
+def setup_emission_nodetree(obj, texture=(1, 1, 1, 1), strength=1, hide=False):
     r"""Sets up an emission node tree for the object.
 
     Args:
@@ -560,7 +583,11 @@ def setup_emission_nodetree(obj, texture=(1, 1, 1, 1), strength=1):
             path to the texture image. If tuple, must be of 4 floats
             :math:`\in [0, 1]` as RGBA values.
         strength (float, optional): Emission strength.
+        hide (bool, optional): Useful for hiding the emissive object (but
+            keeping the light of course).
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -585,6 +612,9 @@ def setup_emission_nodetree(obj, texture=(1, 1, 1, 1), strength=1):
         nodes['Emission'].outputs['Emission'],
         nodes['Material Output'].inputs['Surface'])
 
+    # hide_render hides the object and the light, but this keeps the light
+    obj.cycles_visibility.camera = not hide
+
     # Scene update necessary, as matrix_world is updated lazily
     bpy.context.view_layer.update()
 
@@ -597,6 +627,8 @@ def setup_holdout_nodetree(obj):
     Args:
         obj (bpy_types.Object): Object bundled with texture map.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -631,6 +663,8 @@ def setup_retroreflective_nodetree(
             shaders.
         glossy_weight (float, optional): Mixture weight for the glossy shader.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
     _assert_cycles(scene)
 
@@ -683,6 +717,9 @@ def get_bmesh(obj):
     Returns:
         BMesh: Blender mesh data.
     """
+    bpy = preset_import('bpy', assert_success=True)
+    bmesh = preset_import('bmesh', assert_success=True)
+
     bm = bmesh.new()
     bm.from_mesh(obj.data)
 
@@ -699,6 +736,8 @@ def subdivide_mesh(obj, n_subdiv=2):
         obj (bpy_types.Object): Object whose mesh is to be subdivided.
         n_subdiv (int, optional): Number of subdivision levels.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
 
     # All objects need to be in 'OBJECT' mode to apply modifiers -- maybe a
@@ -733,6 +772,9 @@ def select_mesh_elements_by_vertices(obj, vert_ind, select_type):
         select_type (str): Type of mesh elements to select: ``'vertex'``,
             ``'edge'`` or ``'face'``.
     """
+    bpy = preset_import('bpy', assert_success=True)
+    bmesh = preset_import('bmesh', assert_success=True)
+
     if isinstance(vert_ind, int):
         vert_ind = [vert_ind]
 
@@ -795,6 +837,8 @@ def add_sphere(
     Returns:
         bpy_types.Object: Sphere created.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     bpy.ops.mesh.primitive_ico_sphere_add()
     sphere = bpy.context.active_object
 
@@ -854,6 +898,8 @@ def smart_uv_unwrap(obj, area_weight=0.0):
                 +-----------> (1, 0)
             (0, 0)        u
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     assert obj.type == 'MESH'
 
     bpy.ops.object.mode_set(mode='OBJECT')

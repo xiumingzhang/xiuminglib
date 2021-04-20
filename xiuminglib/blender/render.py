@@ -3,13 +3,11 @@ from glob import glob
 from shutil import move
 from time import time
 
+from .. import os as xm_os
+from ..imprt import preset_import
+
 from ..log import get_logger
 logger = get_logger()
-
-from .. import os as xm_os
-
-from ..imprt import preset_import
-bpy = preset_import('bpy')
 
 
 def set_cycles(w=None, h=None,
@@ -32,6 +30,8 @@ def set_cycles(w=None, h=None,
             ``'RGBA'``.
         color_depth (str, optional): Color depth: ``'8'`` or ``'16'``.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     cycles = scene.cycles
@@ -118,6 +118,8 @@ def easyset(w=None, h=None,
         n_aa_samples (int, optional): Number of anti-aliasing samples (used
             with ``'BRANCHED_PATH'``).
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
 
     scene.render.resolution_percentage = 100
@@ -158,6 +160,8 @@ def easyset(w=None, h=None,
 
 
 def _render_prepare(cam, obj_names):
+    bpy = preset_import('bpy', assert_success=True)
+
     if cam is None:
         cams = [o for o in bpy.data.objects if o.type == 'CAMERA']
         assert (len(cams) == 1), \
@@ -199,6 +203,8 @@ def _render_prepare(cam, obj_names):
 
 
 def _render(scene, outnode, result_socket, outpath, exr=True, alpha=True):
+    bpy = preset_import('bpy', assert_success=True)
+
     node_tree = scene.node_tree
 
     # Set output file format
@@ -319,6 +325,8 @@ def _disable_cycles_mat_nodes_for_bi():
 
     Cycles use_nodes being True leads to 0 alpha in Blender Internal.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     if bpy.context.scene.render.engine == 'BLENDER_RENDER':
         for o in bpy.data.objects:
             mat = o.active_material
@@ -511,6 +519,7 @@ def render_normal(outpath, cam=None, obj_names=None,
     """
     from .object import add_sphere, remove_objects
     from .camera import get_2d_bounding_box
+    bpy = preset_import('bpy', assert_success=True)
 
     objs = bpy.data.objects
 
@@ -634,6 +643,8 @@ def render_lighting_passes(
     Writes
         - A 32-bit .exr multi-layer image containing the lighting passes.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     all_passes = { # a set useful for intrinsic image decomposition
         'diffuse_direct': 'DiffDir', 'diffuse_indirect': 'DiffInd',
         'diffuse_color': 'DiffCol', 'glossy_direct': 'GlossDir',

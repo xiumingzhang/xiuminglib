@@ -8,8 +8,6 @@ from os.path import basename
 import numpy as np
 
 from ..imprt import preset_import
-bpy = preset_import('bpy')
-Vector = preset_import('Vector')
 
 from ..log import get_logger
 logger = get_logger()
@@ -22,6 +20,8 @@ def point_light_to(light, target):
         light (bpy_types.Object): Light object.
         target (tuple(float)): Target location to which light rays point.
     """
+    Vector = preset_import('Vector', assert_success=True)
+
     target = Vector(target)
 
     # Point it to target
@@ -54,6 +54,8 @@ def add_light_sun(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     Returns:
         bpy_types.Object: Light added.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     bpy.ops.object.light_add(
         type='SUN', location=xyz, rotation=rot_vec_rad)
     sun = bpy.context.active_object
@@ -93,6 +95,8 @@ def add_light_area(xyz=(0, 0, 0), rot_vec_rad=(0, 0, 0), name=None,
     Returns:
         bpy_types.Object: Light added.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     if (np.abs(rot_vec_rad) > 2 * np.pi).any():
         logger.warning(
             ("Some input value falls outside [-2pi, 2pi]. "
@@ -131,6 +135,8 @@ def add_light_point(xyz=(0, 0, 0), name=None, size=0, energy=100):
     Returns:
         bpy_types.Object: Light added.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     bpy.ops.object.light_add(type='POINT', location=xyz)
     point = bpy.context.active_object
 
@@ -170,6 +176,8 @@ def add_light_spot(xyz=(0, 0, 0), name=None, energy=100, shadow_soft_size=0.1,
     Returns:
         bpy_types.Object: Light added.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     bpy.ops.object.light_add(type='SPOT', location=xyz)
     spot = bpy.context.active_object
 
@@ -209,6 +217,8 @@ def add_light_env(env=(1, 1, 1, 1), strength=1, rot_vec_rad=(0, 0, 0),
         scale (tuple(float), optional): If all changed simultaneously,
             then no effects.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     engine = bpy.context.scene.render.engine
     assert engine == 'CYCLES', "Rendering engine is not Cycles"
 

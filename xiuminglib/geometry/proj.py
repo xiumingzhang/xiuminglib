@@ -1,7 +1,6 @@
 import numpy as np
 
 from ..imprt import preset_import
-Vector = preset_import('Vector')
 
 
 def to_homo(pts):
@@ -50,6 +49,8 @@ def from_homo(pts, axis=None):
         numpy.ndarray or mathutils.Vector: Non-homogeneous coordinates of the
         input point(s).
     """
+    Vector = preset_import('Vector')
+
     if Vector is not None and isinstance(pts, Vector):
         if axis not in (None, 0):
             raise ValueError((

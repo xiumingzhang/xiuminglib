@@ -72,14 +72,14 @@ def sortglob(directory, filename='*', ext=None, ext_ignore_case=False):
 
     if _is_cnspath(directory):
         # Is a CNS path
-        gfile = preset_import('gfile')
+        gfile = preset_import('gfile', assert_success=True)
         if gfile is None:
             glob_func = glob_cns_cli
         else:
             glob_func = gfile.Glob
     elif _is_bspath(directory):
         # Is a Bigstore path
-        gfile = preset_import('gfile')
+        gfile = preset_import('gfile', assert_success=True)
         if gfile is None:
             glob_func = glob_bs_cli
         else:
@@ -140,7 +140,7 @@ def exists_isdir(path):
         path_isdir = isdir(path) if path_exists else None
         return path_exists, path_isdir
 
-    gfile = preset_import('gfile')
+    gfile = preset_import('gfile', assert_success=True)
 
     # Using fileutil CLI
     if gfile is None:
@@ -184,7 +184,7 @@ def _select_gfs_user(writeto):
     Useful for operations on a folder whose owner is a Ganpati group (e.g.,
     ``gcam-gpu``).
     """
-    gfile = preset_import('gfile')
+    gfile = preset_import('gfile', assert_success=True)
 
     writeto = _no_trailing_slash(writeto)
 
@@ -239,7 +239,7 @@ def cp(src, dst, cns_parallel_copy=10):
             copy2(src, dst)
         return
 
-    gfile = preset_import('gfile')
+    gfile = preset_import('gfile', assert_success=True)
 
     if gfile is None:
         cmd = 'fileutil cp -f -colossus_parallel_copy '

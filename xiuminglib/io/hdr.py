@@ -1,13 +1,11 @@
 from os.path import dirname
 import numpy as np
 
+from ..imprt import preset_import
+from ..os import makedirs, open_file
+
 from ..log import get_logger
 logger = get_logger()
-
-from ..imprt import preset_import
-cv2 = preset_import('cv2')
-
-from ..os import makedirs, open_file
 
 
 def read(path):
@@ -19,6 +17,8 @@ def read(path):
     Returns:
         numpy.ndarray: Loaded HDR map.
     """
+    cv2 = preset_import('cv2', assert_success=True)
+
     with open_file(path, 'rb') as h:
         buffer_ = np.fromstring(h.read(), np.uint8)
     bgr = cv2.imdecode(buffer_, cv2.IMREAD_UNCHANGED)
@@ -39,6 +39,7 @@ def write(rgb, outpath):
     Writes
         - The resultant HDR map.
     """
+    cv2 = preset_import('cv2', assert_success=True)
     assert rgb.dtype == np.float32, "Input must be float32"
 
     makedirs(dirname(outpath))

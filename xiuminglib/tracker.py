@@ -2,8 +2,6 @@ from os.path import join
 import numpy as np
 
 from .imprt import preset_import
-cv2 = preset_import('cv2')
-
 from .vis.pt import scatter_on_img
 
 
@@ -36,7 +34,8 @@ class LucasKanadeTracker():
         Args:
             frames (list(numpy.array)): Frame images in order. Arrays are either
                 H-by-W or H-by-W-by-3, and will be converted to grayscale.
-            pts (array_like): Points to track in the first frame. Of shape N-by-2.
+            pts (array_like): Points to track in the first frame. Of shape
+                N-by-2.
 
                 .. code-block:: none
 
@@ -51,6 +50,7 @@ class LucasKanadeTracker():
             lk_params (dict, optional): Keyword parameters for
                 :func:`cv2.calcOpticalFlowPyrLK`.
         """
+        cv2 = preset_import('cv2', assert_success=True)
         frames_gs = []
         for img in frames:
             if img.ndim == 3:
@@ -62,8 +62,7 @@ class LucasKanadeTracker():
             'winSize': (15, 15),
             'maxLevel': 12,
             'criteria': (
-                cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)
-        }
+                cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)}
         if lk_params is not None:
             # Overwrite with whatever is user-provided
             for key, val in lk_params.items():
@@ -82,6 +81,7 @@ class LucasKanadeTracker():
                 arrays as well as the current workspace (as a dictionary) and
                 return another array.
         """
+        cv2 = preset_import('cv2', assert_success=True)
         for fi in range(0, len(self.frames) - 1):
             f0, f1 = self.frames[fi], self.frames[fi + 1]
             if fi == 0:

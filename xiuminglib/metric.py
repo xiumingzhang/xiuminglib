@@ -2,15 +2,13 @@
 
 import numpy as np
 
-from .log import get_logger
-logger = get_logger()
-
 from .img import rgb2lum
 from .const import Path
 from .os import open_file
-
 from .imprt import preset_import
-tf = preset_import('tf')
+
+from .log import get_logger
+logger = get_logger()
 
 
 def compute_ci(data, level=0.95):
@@ -159,10 +157,6 @@ class SSIM(Base):
     luminance, if the inputs are not gamma-corrected). SSIM is computed
     on the luma.
     """
-    def __init__(self, dtype):
-        super().__init__(dtype)
-        assert tf is not None, "TensorFlow import failed"
-
     def __call__(self, im1, im2, multiscale=False):
         """
         Args:
@@ -173,6 +167,7 @@ class SSIM(Base):
         Returns:
             float: SSIM computed (higher is better).
         """
+        tf = preset_import('tf', assert_success=True)
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
@@ -224,7 +219,7 @@ class LPIPS(Base):
                 Defaults to the bundled ``net-lin_alex_v0.1.pb``.
         """
         super().__init__(dtype)
-        assert tf is not None, "TensorFlow import failed"
+        tf = preset_import('tf', assert_success=True)
         if weight_pb is None:
             weight_pb = Path.lpips_weights
         # Pack LPIPS network into a tf function
@@ -236,8 +231,11 @@ class LPIPS(Base):
 
     @staticmethod
     def _wrap_frozen_graph(graph_def, inputs, outputs):
+        tf = preset_import('tf', assert_success=True)
+
         def _imports_graph_def():
             tf.compat.v1.import_graph_def(graph_def, name="")
+
         wrapped_import = tf.compat.v1.wrap_function(_imports_graph_def, [])
         import_graph = wrapped_import.graph
         return wrapped_import.prune(
@@ -253,6 +251,7 @@ class LPIPS(Base):
         Returns:
             float: LPIPS computed (lower is better).
         """
+        tf = preset_import('tf', assert_success=True)
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type

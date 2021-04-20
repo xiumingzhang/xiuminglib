@@ -70,7 +70,7 @@ def make_video(
         plt.close('all')
 
     elif method == 'opencv':
-        cv2 = preset_import('cv2')
+        cv2 = preset_import('cv2', assert_success=True)
 
         # TODO: debug codecs (see http://www.fourcc.org/codecs.php)
         if outpath.endswith('.mp4'):
@@ -93,7 +93,7 @@ def make_video(
         vw.release()
 
     elif method == 'video_api':
-        video_api = preset_import('video_api')
+        video_api = preset_import('video_api', assert_success=True)
 
         assert outpath.endswith('.webm'), "`video_api` requires .webm"
 

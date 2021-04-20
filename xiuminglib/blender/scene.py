@@ -2,7 +2,6 @@ from os import remove
 from os.path import dirname, exists
 
 from ..imprt import preset_import
-bpy = preset_import('bpy')
 
 from .. import log, os as xm_os
 logger = log.get_logger()
@@ -20,6 +19,8 @@ def save_blend(outpath=None, delete_overwritten=False):
     Writes
         - A .blend file.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     if outpath is not None:
         # "Save as" scenario: delete and then save
         xm_os.makedirs(dirname(outpath))
@@ -51,4 +52,6 @@ def open_blend(inpath):
     Args:
         inpath (str): E.g., ``'~/foo.blend'``.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     bpy.ops.wm.open_mainfile(filepath=inpath)

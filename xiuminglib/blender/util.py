@@ -1,5 +1,4 @@
 from ..imprt import preset_import
-bpy = preset_import('bpy')
 
 
 def cursor_to(loc):
@@ -11,4 +10,6 @@ def cursor_to(loc):
     Args:
         loc (array_like): 3D coordinates, of length 3.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     bpy.context.scene.cursor.location = loc

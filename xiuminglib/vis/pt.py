@@ -3,12 +3,10 @@ import numpy as np
 
 from .. import const, os as xm_os
 from .general import _savefig
+from ..imprt import preset_import
 
 from ..log import get_logger
 logger = get_logger()
-
-from ..imprt import preset_import
-cv2 = preset_import('cv2')
 
 
 def scatter_on_img(pts, im, size=2, bgr=(0, 0, 255), outpath=None):
@@ -42,6 +40,8 @@ def scatter_on_img(pts, im, size=2, bgr=(0, 0, 255), outpath=None):
     Writes
         - The scatter plot overlaid over the image.
     """
+    cv2 = preset_import('cv2', assert_success=True)
+
     if outpath is None:
         outpath = join(const.Dir.tmp, 'scatter_on_img.png')
 
@@ -81,7 +81,7 @@ def scatter_on_img(pts, im, size=2, bgr=(0, 0, 255), outpath=None):
     xm_os.makedirs(outdir)
 
     # Write to disk
-    cv2.imwrite(outpath, im)
+    cv2.imwrite(outpath, im) # TODO: switch to xm.io.img
 
 
 def uv_on_texmap(uvs, texmap, ft=None, outpath=None, max_n_lines=None,
@@ -122,7 +122,8 @@ def uv_on_texmap(uvs, texmap, ft=None, outpath=None, max_n_lines=None,
 
     # Preprocess input
     if isinstance(texmap, str):
-        texmap = cv2.imread(
+        cv2 = preset_import('cv2', assert_success=True)
+        texmap = cv2.imread( # TODO: switch to xm.io.img
             texmap, cv2.IMREAD_UNCHANGED)[:, :, ::-1] # made RGB
     if len(texmap.shape) == 2:
         add_colorbar = True # for grayscale

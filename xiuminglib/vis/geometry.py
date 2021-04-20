@@ -53,7 +53,7 @@ def normal_as_image(
     Writes
         - The normal image.
     """
-    cv2 = preset_import('cv2')
+    cv2 = preset_import('cv2', assert_success=True)
 
     if outpath is None:
         outpath = join(const.Dir.tmp, 'normal_as_image.png')
@@ -82,7 +82,7 @@ def normal_as_image(
         alpha_uint = (alpha_map * dtype_max).astype(dtype)
         bgr = np.dstack((bgr, alpha_uint))
 
-    cv2.imwrite(outpath, bgr)
+    cv2.imwrite(outpath, bgr) # TODO: switch to io.img.write
 
 
 def depth_as_image(
@@ -106,7 +106,7 @@ def depth_as_image(
     Writes
         - The (anti-aliased) depth image.
     """
-    cv2 = preset_import('cv2')
+    cv2 = preset_import('cv2', assert_success=True)
 
     if outpath is None:
         outpath = join(const.Dir.tmp, 'depth_as_image.png')
@@ -140,4 +140,4 @@ def depth_as_image(
         alpha_uint = (alpha_map * dtype_max).astype(dtype)
         bgr = np.dstack((bgr, alpha_uint))
 
-    cv2.imwrite(outpath, bgr)
+    cv2.imwrite(outpath, bgr) # TODO: switch to io.img.write

@@ -5,9 +5,6 @@ from ..log import get_logger
 logger = get_logger()
 
 from ..imprt import preset_import
-Imath = preset_import('Imath')
-OpenEXR = preset_import('OpenEXR')
-
 from ..os import open_file
 from ..io.img import write_arr
 from ..vis.geometry import depth_as_image, normal_as_image
@@ -47,8 +44,8 @@ class EXR():
         Returns:
             dict: Loaded EXR data.
         """
-        assert OpenEXR is not None, "Import failed: OpenEXR"
-        assert Imath is not None, "Import failed: Imath"
+        Imath = preset_import('Imath', assert_success=True)
+        OpenEXR = preset_import('OpenEXR', assert_success=True)
         pix_type = Imath.PixelType(Imath.PixelType.FLOAT)
         # Load
         data = {}
@@ -106,7 +103,7 @@ class EXR():
             - A .npy file containing an aliased depth map and its alpha map.
             - If ``vis``, a .png image of anti-aliased depth.
         """
-        cv2 = preset_import('cv2')
+        cv2 = preset_import('cv2', assert_success=True)
 
         def assert_all_channels_same(arr):
             for i in range(1, arr.shape[-1]):
@@ -115,15 +112,15 @@ class EXR():
             return arr[..., 0]
 
         # Load alpha
-        arr = cv2.imread(alpha_exr, cv2.IMREAD_UNCHANGED)
+        arr = cv2.imread(alpha_exr, cv2.IMREAD_UNCHANGED) # TODO: switch to xm.io.img
         alpha = assert_all_channels_same(arr)
         # Load depth
-        arr = cv2.imread(self.exr_path, cv2.IMREAD_UNCHANGED)
+        arr = cv2.imread(self.exr_path, cv2.IMREAD_UNCHANGED) # TODO: switch to xm.io.img
         depth = assert_all_channels_same(arr) # these raw values are aliased,
         # so only one crazy big value for the background
         if not outpath.endswith('.npy'):
             outpath += '.npy'
-        np.save(outpath, np.dstack((arr, alpha)))
+        np.save(outpath, np.dstack((arr, alpha))) # TODO: switch to xm.io.np
         if vis:
             depth_as_image(depth, alpha, outpath[:-4] + '.png')
         logger.info("Depth image extractd to %s", outpath)

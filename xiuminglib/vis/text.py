@@ -3,12 +3,12 @@ from io import BytesIO
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from ..log import get_logger
-logger = get_logger()
-
 from .. import const
 from ..os import makedirs, open_file
 from ..imprt import preset_import
+
+from ..log import get_logger
+logger = get_logger()
 
 
 def put_text(
@@ -81,7 +81,7 @@ def text_as_image(
     Returns or Writes
         - An image of the text.
     """
-    cv2 = preset_import('cv2')
+    cv2 = preset_import('cv2', assert_success=True)
 
     if isinstance(imsize, int):
         imsize = (imsize, imsize)

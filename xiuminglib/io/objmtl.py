@@ -4,11 +4,11 @@ from os.path import basename, dirname, join
 from shutil import copy
 import numpy as np
 
-from ..log import get_logger
-logger = get_logger()
-
 from .. import os as xm_os
 from ..imprt import preset_import
+
+from ..log import get_logger
+logger = get_logger()
 
 
 class Obj:
@@ -461,7 +461,7 @@ class Mtl:
         Writes
             - Output .mtl file.
         """
-        cv2 = preset_import('cv2')
+        cv2 = preset_import('cv2', assert_success=True)
         # Validate inputs
         assert (self.mtlfile is not None and self.newmtl is not None), \
             "'mtlfile' and 'newmtl' must not be 'None'"
@@ -485,9 +485,9 @@ class Mtl:
                 if map_Kd_scale == 1:
                     copy(map_Kd_path, outdir)
                 else:
-                    im = cv2.imread(map_Kd_path, cv2.IMREAD_UNCHANGED)
-                    im = cv2.resize(im, None, fx=map_Kd_scale, fy=map_Kd_scale)
-                    cv2.imwrite(join(outdir, basename(map_Kd_path)), im)
+                    im = cv2.imread(map_Kd_path, cv2.IMREAD_UNCHANGED) # TODO: switch to xm.io.img
+                    im = cv2.resize(im, None, fx=map_Kd_scale, fy=map_Kd_scale) # TODO: switch to xm.img
+                    cv2.imwrite(join(outdir, basename(map_Kd_path)), im) # TODO: switch to xm.io.img
         logger.info("Done writing to %s", mtlpath)
 
 

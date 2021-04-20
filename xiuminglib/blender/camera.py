@@ -3,20 +3,12 @@ from os.path import dirname, basename
 from time import time
 import numpy as np
 
-from ..imprt import preset_import
-bpy = preset_import('bpy')
-bmesh = preset_import('bmesh')
-Vector = preset_import('Vector')
-Matrix = preset_import('Matrix')
-Quaternion = preset_import('Quaternion')
-BVHTree = preset_import('BVHTree')
-
 from .object import get_bmesh, raycast
+from ..imprt import preset_import
+from ..geometry.proj import from_homo
 
 from ..log import get_logger
 logger = get_logger()
-
-from ..geometry.proj import from_homo
 
 
 def add_camera(xyz=(0, 0, 0),
@@ -50,6 +42,8 @@ def add_camera(xyz=(0, 0, 0),
     Returns:
         bpy_types.Object: Camera added.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     bpy.ops.object.camera_add()
     cam = bpy.context.active_object
 
@@ -119,6 +113,9 @@ def point_camera_to(cam, xyz_target, up=(0, 0, 1)):
         up (array_like, optional): World vector that, when projected,
             points up in the image plane.
     """
+    Vector = preset_import('Vector', assert_success=True)
+    Quaternion = preset_import('Quaternion', assert_success=True)
+
     failed_ensuring_up_msg = \
         "Camera '%s' pointed to %s, but with no guarantee on up vector" \
         % (cam.name, tuple(xyz_target))
@@ -195,6 +192,8 @@ def intrinsics_compatible_with_scene(cam, eps=1e-6):
     Returns:
         bool: Check result.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     # Camera
     sensor_width_mm = cam.data.sensor_width
     sensor_height_mm = cam.data.sensor_height
@@ -237,6 +236,8 @@ def correct_sensor_height(cam):
     Args:
         cam (bpy_types.Object): Camera.
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     # Camera
     sensor_width_mm = cam.data.sensor_width
 
@@ -286,6 +287,9 @@ def get_camera_matrix(cam, keep_disparity=False):
             - **ext_mat** (*mathutils.Matrix*) -- Camera extrinsics. 4-by-4 if
               ``keep_disparity``; else, 3-by-4.
     """
+    bpy = preset_import('bpy', assert_success=True)
+    Matrix = preset_import('Matrix', assert_success=True)
+
     bpy.context.view_layer.update()
 
     # Check if camera intrinsic parameters comptible with render settings
@@ -414,7 +418,8 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
     Returns:
         numpy.ndarray: Camera :math:`z`-buffer.
     """
-    cv2 = preset_import('cv2')
+    bpy = preset_import('bpy', assert_success=True)
+    cv2 = preset_import('cv2', assert_success=True)
 
     # Validate and standardize error-prone inputs
     if hide is not None:
@@ -482,7 +487,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
 
     # Load z-buffer as array
     exr_path = outpath + '%04d' % scene.frame_current + '.exr'
-    im = cv2.imread(exr_path, cv2.IMREAD_UNCHANGED)
+    im = cv2.imread(exr_path, cv2.IMREAD_UNCHANGED) # TODO: switch to xm.io.img
     assert (
         np.array_equal(im[:, :, 0], im[:, :, 1]) and np.array_equal(
             im[:, :, 0], im[:, :, 2])), (
@@ -551,6 +556,9 @@ def backproject_to_3d(xys, cam, obj_names=None, world_coords=False):
               intersection(s) specified in the same space as ``xyzs``.
     """
     from tqdm import tqdm
+    bpy = preset_import('bpy', assert_success=True)
+    Vector = preset_import('Vector', assert_success=True)
+    BVHTree = preset_import('BVHTree', assert_success=True)
 
     # Standardize inputs
     xys = np.array(xys).reshape(-1, 2)
@@ -682,6 +690,10 @@ def get_visible_vertices(cam, obj, ignore_occlusion=False, hide=None,
     Returns:
         list: Indices of vertices that are visible.
     """
+    bpy = preset_import('bpy', assert_success=True)
+    bmesh = preset_import('bmesh', assert_success=True)
+    BVHTree = preset_import('BVHTree', assert_success=True)
+
     legal = ('zbuffer', 'raycast')
     assert method in legal, \
         "Legal methods: %s, but found '%s'" % (legal, method)
@@ -775,6 +787,8 @@ def get_2d_bounding_box(obj, cam):
             |
             v y (0, h)
     """
+    bpy = preset_import('bpy', assert_success=True)
+
     scene = bpy.context.scene
     scale = scene.render.resolution_percentage / 100.
     w = scene.render.resolution_x * scale

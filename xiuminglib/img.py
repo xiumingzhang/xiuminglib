@@ -1,11 +1,10 @@
 from copy import deepcopy
 import numpy as np
 
+from .imprt import preset_import
+
 from .log import get_logger
 logger = get_logger()
-
-from .imprt import preset_import
-cv2 = preset_import('cv2')
 
 
 def normalize_uint(arr):
@@ -112,6 +111,7 @@ def resize(arr, new_h=None, new_w=None, method='cv2'):
         resized = tensor_resized.numpy()
 
     elif method in ('cv', 'cv2', 'opencv'):
+        cv2 = preset_import('cv2', assert_success=True)
         interp = cv2.INTER_LINEAR if new_h > h else cv2.INTER_AREA
         resized = cv2.resize(arr, (new_w, new_h), interpolation=interp)
 
@@ -138,6 +138,7 @@ def binarize(im, threshold=None):
 
     # RGB to grayscale
     if im_copy.ndim == 3 and im_copy.shape[2] == 3: # h-by-w-by-3
+        cv2 = preset_import('cv2', assert_success=True)
         im_copy = cv2.cvtColor(im_copy, cv2.COLOR_BGR2GRAY)
 
     if im_copy.ndim == 2: # h-by-w
@@ -166,6 +167,8 @@ def remove_islands(im, min_n_pixels, connectivity=4):
     Returns:
         numpy.ndarray: Output image with small islands removed.
     """
+    cv2 = preset_import('cv2', assert_success=True)
+
     # Validate inputs
     assert (len(im.shape) == 2), \
         "'im' needs to have exactly two dimensions"
@@ -367,6 +370,7 @@ def grid_query_unstruct(uvs, values, grid_res, method=None):
 
     if method['func'] == 'griddata':
         from scipy.interpolate import griddata
+        cv2 = preset_import('cv2', assert_success=True)
 
         func_underlying = method.get('func_underlying', 'linear')
         fill_value = method.get('fill_value', (0,))
@@ -509,6 +513,8 @@ def compute_gradients(im):
                 -pi      |       x
                          | -pi/2
     """
+    cv2 = preset_import('cv2', assert_success=True)
+
     # Figure out image size and number of channels
     if im.ndim == 3:
         h, w, c = im.shape
@@ -564,6 +570,7 @@ def gamma_correct(im, gamma=2.2):
     Returns:
         numpy.ndarray: Gamma-corrected image.
     """
+    cv2 = preset_import('cv2', assert_success=True)
     assert im.dtype in ('uint8', 'uint16')
 
     # Don't correct alpha channel, if exists
@@ -692,6 +699,7 @@ def tonemap(hdr, method='gamma', gamma=2.2):
         numpy.ndarray: Tonemapped image :math:`\in [0, 1]`.
     """
     if method == 'reinhard':
+        cv2 = preset_import('cv2', assert_success=True)
         tonemapper = cv2.createTonemapReinhard(1, 1, 0, 0)
         img = tonemapper.process(hdr)
     elif method == 'gamma':
