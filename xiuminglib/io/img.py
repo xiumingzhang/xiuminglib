@@ -1,6 +1,6 @@
 from os.path import dirname
 import numpy as np
-from PIL import Image
+from PIL import Image, ExifTags
 
 from ..log import get_logger
 logger = get_logger()
@@ -49,11 +49,42 @@ def read(path):
         raise ValueError("Use the dedicated `io.hdr.read()` for .hdr")
 
     # Whatever supported by Pillow
-    else:
-        with open_file(path, 'rb') as h:
-            img = Image.open(h)
-            img.load()
-        img = np.array(img)
+    with open_file(path, 'rb') as h:
+        img = Image.open(h)
+        img.load()
+
+    # Handles the EXIF orientation flag
+    exif = img.getexif()
+    if exif is not None and exif:
+        exif = dict(exif)
+        orientation_key = None
+        for orientation_key, _ in ExifTags.TAGS.items():
+            if ExifTags.TAGS[orientation_key] == 'Orientation':
+                break
+        assert orientation_key is not None, "Orientation tag not found"
+        orientation = exif[orientation_key]
+        if orientation in (1, '1'):
+            pass
+        elif orientation in (2, '2'):
+            img = img.transpose(Image.FLIP_LEFT_RIGHT)
+        elif orientation in (3, '3'):
+            img = img.transpose(Image.ROTATE_180)
+        elif orientation in (4, '4'):
+            img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        elif orientation in (5, '5'):
+            img = img.transpose(
+                Image.ROTATE_90).transpose(Image.FLIP_TOP_BOTTOM)
+        elif orientation in (6, '6'):
+            img = img.transpose(Image.ROTATE_270)
+        elif orientation in (7, '7'):
+            img = img.transpose(
+                Image.ROTATE_270).transpose(Image.FLIP_TOP_BOTTOM)
+        elif orientation in (8, '8'):
+            img = img.transpose(Image.ROTATE_90)
+        else:
+            raise ValueError(f"Invalid orientation: {orientation}")
+
+    img = np.array(img)
 
     logger.debug("Image read from:\n\t%s", path)
 
