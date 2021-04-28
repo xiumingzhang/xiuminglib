@@ -54,7 +54,10 @@ def read(path):
         img.load()
 
     # Handles the EXIF orientation flag
-    exif = img.getexif()
+    if hasattr(img, 'getexif'):
+        exif = img.getexif()
+    else:
+        exif = None
     if exif is not None and exif:
         exif = dict(exif)
         orientation_key = None
