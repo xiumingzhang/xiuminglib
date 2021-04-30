@@ -32,12 +32,14 @@ def write_arr(*args, **kwargs):
     return write_float(*args, **kwargs)
 
 
-def read(path):
+def read(path, auto_rotate=False):
     """Reads an image from disk.
 
     Args:
         path (str): Path to the image file. Supported formats: whatever Pillow
             supports.
+        auto_rotate (bool, optional): Whether to auto-rotate the read image
+            array according to its EXIF orientation, if any.
 
     Returns:
         numpy.ndarray: Loaded image.
@@ -54,7 +56,7 @@ def read(path):
         img.load()
 
     # Handles the EXIF orientation flag
-    if hasattr(img, 'getexif'):
+    if auto_rotate and hasattr(img, 'getexif'):
         exif = img.getexif()
     else:
         exif = None
