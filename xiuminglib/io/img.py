@@ -46,7 +46,7 @@ def read(path, auto_rotate=False):
     """
     # EXR and HDR have dedicated loading functions
     if path.endswith('.exr'):
-        raise ValueError("Use the dedicated `io.exr.EXR()` class for .exr")
+        raise ValueError("Use the dedicated `io.exr.read()` for .exr")
     elif path.endswith('.hdr'):
         raise ValueError("Use the dedicated `io.hdr.read()` for .hdr")
 

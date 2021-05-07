@@ -230,12 +230,6 @@ manually install whatever you need:
         and easier than ``apt-get``, which may break other things and usually
         requires ``sudo``.
 
-    OpenEXR
-        ``pip install OpenEXR`` worked for me, but
-        ``conda install -c conda-forge openexr`` did not. You may need to
-        ``sudo apt-get install libopenexr-dev`` first if you do not have
-        ``libopenexr`` yet.
-
     Trimesh
         See
         `their installation guide <https://github.com/mikedh/trimesh/blob/master/docs/install.rst>`_.

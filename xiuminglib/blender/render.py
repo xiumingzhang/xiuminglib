@@ -339,8 +339,7 @@ def render_depth(outprefix, cam=None, obj_names=None, ray_depth=False):
     specified camera.
 
     The EXR data contain an aliased :math:`z` map and an anti-aliased alpha
-    map. See :func:`xiuminglib.io.exr.EXR.extract_depth` for how to extract
-    data.
+    map.
 
     Args:
         outprefix (str): Where to save the .exr maps to, e.g., ``'~/depth'``.
@@ -447,7 +446,6 @@ def render_normal(outpath, cam=None, obj_names=None,
     specified camera.
 
     RGB at each pixel is the (almost unit) normal vector at that location.
-    See :func:`xiuminglib.io.exr.EXR.extract_normal` for how to extract data.
 
     Args:
         outpath (str): The .exr path (so data are raw values, not integer
@@ -622,8 +620,8 @@ def render_lighting_passes(
     """Renders select Cycles' lighting passes of the specified object(s) from
     the specified camera.
 
-    Data are in a single multi-layer .exr file. For how to use the data, see
-    :func:`xiuminglib.io.exr.EXR.extract_intrinsic_images_from_lighting_passes`.
+    Data are in a single multi-layer .exr file. See the code below for what
+    channels are rendered.
 
     Args:
         outpath (str): Where to save the lighting passes to. Should end with
@@ -696,6 +694,7 @@ def render_lighting_passes(
     scene.cycles.samples = n_samples_old
     scene.render.film_transparent = film_transparent_old
 
-    logger.info("Select lighting passes of %s rendered through '%s' to %s",
-                obj_names, cam_name, outpath)
+    logger.info(
+        "Select lighting passes of %s rendered through '%s' to %s",
+        obj_names, cam_name, outpath)
     logger.warning("The scene node tree has changed")

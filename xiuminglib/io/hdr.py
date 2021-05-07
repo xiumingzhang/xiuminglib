@@ -15,7 +15,7 @@ def read(path):
         path (str): Path to the .hdr file.
 
     Returns:
-        numpy.ndarray: Loaded HDR map.
+        numpy.ndarray: Loaded (float) HDR map with RGB channels in order.
     """
     cv2 = preset_import('cv2', assert_success=True)
 

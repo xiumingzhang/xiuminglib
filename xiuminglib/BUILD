@@ -1,7 +1,7 @@
 # For blaze on Google's infrastructure
 
 py_library(
-    name = "no_exr",
+    name = "xiuminglib",
     srcs = glob([
         "*.py",
     ]),
@@ -25,12 +25,12 @@ py_library(
         "//third_party/py/tqdm",
         "//third_party/py/tensorflow",
         # bpy not in third_party, so has to be wrapped into an MPM package
-        # FIXME: Listing OpenEXR and Imath as deps here segfaults bpy
+        # NOTE: Listing OpenEXR and Imath as deps here segfaults bpy
     ],
 )
 
 py_library(
-    name = "xiuminglib",
+    name = "exr",
     srcs = glob([
         "*.py",
     ]),

@@ -6,9 +6,6 @@ from ..linalg import normalize as normalize_vec
 def normalize(normal_map, norm_thres=0.5):
     """Normalizes the normal vector at each pixel of the normal map.
 
-    The normal maps rendered by Blender are *almost* normalized, so this
-    function is called by :func:`xiuminglib.io.exr.EXR.extract_normal`.
-
     Args:
         normal_map (numpy.ndarray): H-by-W-by-3 array of normal vectors.
         norm_thres (float, optional): Normalize only vectors with a norm

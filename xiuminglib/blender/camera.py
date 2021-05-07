@@ -5,6 +5,7 @@ import numpy as np
 
 from .object import get_bmesh, raycast
 from ..imprt import preset_import
+from ..io import exr
 from ..geometry.proj import from_homo
 
 from ..log import get_logger
@@ -487,7 +488,7 @@ def get_camera_zbuffer(cam, save_to=None, hide=None):
 
     # Load z-buffer as array
     exr_path = outpath + '%04d' % scene.frame_current + '.exr'
-    im = cv2.imread(exr_path, cv2.IMREAD_UNCHANGED) # TODO: switch to xm.io.img
+    im = exr.read(exr_path)
     assert (
         np.array_equal(im[:, :, 0], im[:, :, 1]) and np.array_equal(
             im[:, :, 0], im[:, :, 2])), (
