@@ -43,15 +43,16 @@ def transform_space(normal_map, rotmat):
 
 
 def gen_world2local(normal):
-    """Generates rotation matrices that transform world normals to local +Z,
-    world tangents to local +X, and world binormals to local +Y.
+    """Generates rotation matrices that transform world normals to local
+    :math:`+z`, world tangents to local :math:`+x`, and world binormals to
+    local :math:`+y`.
 
     Args:
         normal (numpy.ndarray): any size-by-3 array of normal vectors.
 
     Returns:
-        numpy.ndarray: any size-by-3-by-3 world-to-local rotation matrices,
-            which should be left-multiplied to world coordinates.
+        numpy.ndarray: Any size-by-3-by-3 world-to-local rotation matrices,
+        which should be left-multiplied to world coordinates.
     """
     last_dim_i = normal.ndim - 1
 

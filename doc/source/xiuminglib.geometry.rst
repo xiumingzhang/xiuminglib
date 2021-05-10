@@ -41,6 +41,14 @@ xiuminglib.geometry.pt module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.geometry.rot module
+------------------------------
+
+.. automodule:: xiuminglib.geometry.rot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.geometry.sph module
 ------------------------------
 

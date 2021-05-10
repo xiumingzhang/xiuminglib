@@ -14,7 +14,6 @@ Subpackages
     xiuminglib.blender
     xiuminglib.geometry
     xiuminglib.io
-    xiuminglib.launch
     xiuminglib.vis
 
 Submodules

@@ -17,10 +17,26 @@ xiuminglib.io.exr module
     :undoc-members:
     :show-inheritance:
 
+xiuminglib.io.hdr module
+------------------------
+
+.. automodule:: xiuminglib.io.hdr
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 xiuminglib.io.img module
 ------------------------
 
 .. automodule:: xiuminglib.io.img
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+xiuminglib.io.json module
+-------------------------
+
+.. automodule:: xiuminglib.io.json
     :members:
     :undoc-members:
     :show-inheritance:

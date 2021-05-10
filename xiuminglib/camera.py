@@ -11,10 +11,10 @@ from .linalg import normalize
 class PerspCam:
     r"""Perspective camera in 35mm format.
 
-    This is not an OpenGL/Blender camera (where +x points right, +y up, and
-    -z into the viewing direction), but rather a "CV camera" (where +x points
-    right, +y down, and +z into the viewing direction). See more in
-    :py:attr:`~ext_mat`.
+    This is not an OpenGL/Blender camera (where :math:`+x` points right,
+    :math:`+y` up, and :math:`-z` into the viewing direction), but rather a
+    "CV camera" (where :math:`+x` points right, :math:`+y` down, and :math:`+z`
+    into the viewing direction). See more in :attr:`~ext_mat`.
 
     Because we mostly consider just the camera and the object, we assume the
     object coordinate system (the "local system" in Blender) aligns with (and
@@ -26,8 +26,8 @@ class PerspCam:
         - This class assumes unit pixel aspect ratio (i.e., :math:`f_x = f_y`)
           and no skewing between the sensor plane and optical axis.
         - The active sensor size may be smaller than ``sensor_w`` and
-          ``sensor_h``, depending on ``im_res``. See ``sensor_w_active`` and
-          ``sensor_h_active``.
+          ``sensor_h``, depending on ``im_res``. See :attr:`~sensor_w_active`
+          and :attr:`~sensor_h_active`.
         - ``aov``, ``sensor_h``, and ``sensor_w`` are hardware properties,
           having nothing to do with ``im_res``.
     """
@@ -99,7 +99,7 @@ class PerspCam:
 
     @property
     def up(self):
-        """numpy.ndarray: Up vector: the vector in object space that, when
+        """numpy.ndarray: Up vector, the vector in object space that, when
         projected, points upward on image plane.
         """
         return self._up
@@ -159,7 +159,7 @@ class PerspCam:
 
     @property
     def int_mat(self):
-        """numpy.ndarray: :math:`3\times 3` intrinsics matrix."""
+        r"""numpy.ndarray: :math:`3\times 3` intrinsics matrix."""
         return np.array([
             [self.f_pix, 0, self.im_w / 2],
             [0, self.f_pix, self.im_h / 2],
@@ -185,17 +185,19 @@ class PerspCam:
 
     @property
     def ext_mat(self):
-        """numpy.ndarray: :math:`3\times 4` object-to-camera extrinsics matrix,
+        r"""numpy.ndarray: :math:`3\times 4` object-to-camera extrinsics matrix,
         i.e., rotation and translation that transform a point from object space
         to camera space.
 
         Two coordinate systems involved:
-            1. Object space "obj";
-            2. Desired computer vision camera coordinates "cv":
-                - +x is horizontal, pointing right (to align with pixel
-                  coordinates);
-                - +y is vertical, pointing down;
-                - +z is the look-at direction (because right-handed).
+
+        1. Object space "obj";
+
+        2. Camera space, following the computer vision convention "cv":
+          - :math:`+x` is horizontal, pointing right (to align with pixel
+            coordinates);
+          - :math:`+y` is vertical, pointing down;
+          - :math:`+z` is the look-at direction (because right-handed).
         """
         # cv axes expressed in obj space
         cvz_obj = self.lookat - self.loc
@@ -252,8 +254,8 @@ class PerspCam:
 
     @property
     def ext_mat_4x4(self):
-        """numpy.ndarray: Padding :math:`[0, 0, 0, 1]` to bottom of the 3x4
-        extrinsics matrix to make it invertible.
+        r"""numpy.ndarray: Padding :math:`[0, 0, 0, 1]` to bottom of the
+        :math:`3\times 4` extrinsics matrix to make it invertible.
         """
         return np.vstack((self.ext_mat, [0, 0, 0, 1]))
 
@@ -269,7 +271,7 @@ class PerspCam:
 
     @property
     def proj_mat(self):
-        """numpy.ndarray: :math:`3\times 4` projection matrix, derived from
+        r"""numpy.ndarray: :math:`3\times 4` projection matrix, derived from
         intrinsics and extrinsics.
         """
         return self.int_mat.dot(self.ext_mat)
@@ -329,16 +331,17 @@ class PerspCam:
         return prop_str
 
     def get_obj2cam(self, cam_type='cv', square=False):
-        """Gets the object-to-camera transformation matrix.
+        r"""Gets the object-to-camera transformation matrix.
 
         Args:
-            cam_type (str, optional): Accepted are ``'cv'`` or ``'opencv'`` and
-                ``'opengl'`` or ``'blender'``.
+            cam_type (str, optional): Accepted are ``'cv'``/``'opencv'`` and
+                ``'opengl'``/``'blender'``.
             square (bool, optional): If true, the last row of
                 :math:`[0, 0, 0, 1]` is kept, which makes the matrix invertible.
 
         Returns:
-            numpy.ndarray: 3x4 or 4x4 object-to-camera transformation matrix.
+            numpy.ndarray: :math:`3\times 4` or :math:`4\times 4`
+            object-to-camera transformation matrix.
         """
         cam_type = cam_type.lower()
         if cam_type in ('cv', 'opencv'):
@@ -357,8 +360,8 @@ class PerspCam:
     def get_cam2obj(self, cam_type='cv', square=False):
         """Inverse of :func:`get_obj2cam`.
 
-        One example use of this is computing Blender's ``cam.matrix_world``:
-        calling this with ``cam_type='blender'``.
+        One example use: calling this with ``cam_type='blender'`` gives
+        Blender's ``cam.matrix_world``.
         """
         obj2cam_4x4 = self.get_obj2cam(cam_type=cam_type, square=True)
         cam2obj_4x4 = np.linalg.inv(obj2cam_4x4)
@@ -397,7 +400,7 @@ class PerspCam:
             tree.find('./sensor/film/integer[@name="width"]').attrib['value'])
 
     def proj(self, pts, space='object'):
-        """Projects 3D points to 2D.
+        r"""Projects 3D points to 2D.
 
         Args:
             pts (array_like): 3D point(s) of shape :math:`N\times 3` or
@@ -407,7 +410,7 @@ class PerspCam:
 
         Returns:
             array_like: Vertical and horizontal coordinates of the projections,
-                following:
+            following:
 
             .. code-block:: none
 
@@ -444,9 +447,9 @@ class PerspCam:
             space='object'):
         """Backprojects a depth map to 3D points.
 
-        Resolution of the depth map may be different from :py:attr:`im_h` and
-        :py:attr:`im_w`: :py:attr:`im_h` and :py:attr:`im_w` decide the image
-        coordinate bounds, and the depth resolution decides number of steps.
+        Resolution of the depth map may be different from :attr:`im_h` and
+        :attr:`im_w`: :attr:`im_h` and :attr:`im_w` decide the image coordinate
+        bounds, and the depth resolution decides number of steps.
 
         Args:
             depth (numpy.ndarray): Depth map.
@@ -458,7 +461,7 @@ class PerspCam:
                 specified: ``'object'`` or ``'camera'``.
 
         Returns:
-            numpy.ndarray: XYZ map.
+            numpy.ndarray: :math:`xyz` map.
         """
         if fg_mask is None:
             fg_mask = np.ones(depth.shape, dtype=bool)
@@ -493,16 +496,17 @@ class PerspCam:
         return xyz
 
     def gen_rays(self, spp=1):
-        """Generates ray directions in object space, with the ray origin being
+        r"""Generates ray directions in object space, with the ray origin being
         the camera location.
 
         Args:
             spp (int, optional): Samples (or number of rays) per pixel. Must be
-                a perfect square :math:`S^2` due to uniform supersampling.
+                a perfect square :math:`S^2` due to uniform, deterministic
+                supersampling.
 
         Returns:
             numpy.ndarray: An :math:`H\times W\times S^2\times 3` array of ray
-                directions.
+            directions.
         """
         sps = np.sqrt(spp)
         if sps.is_integer():

@@ -15,11 +15,11 @@ def _warn_degree(angles):
 
 
 def axis_angle_to_rot_mat(axis, theta):
-    """Gets rotation matrix that rotates points around an arbitrary axis by any
+    r"""Gets rotation matrix that rotates points around an arbitrary axis by any
     angle.
 
-    Rotating around the X/Y/Z-axis are special cases of this, where you simply
-    specify the axis to be one of those axes.
+    Rotating around the :math:`x`/:math:`y`/:math:`z` axis are special cases of
+    this, where you simply specify the axis to be one of those axes.
 
     Args:
         axis (array_like): 3-vector that specifies the end point of the
@@ -30,7 +30,7 @@ def axis_angle_to_rot_mat(axis, theta):
 
     Returns:
         numpy.ndarray: :math:`3\times 3` rotation matrix, to be pre-multiplied
-            with the vector to rotate.
+        with the vector to rotate.
     """
     # NOTE: not tested thoroughly. Use with caution!
     axis = np.array(axis)
@@ -54,7 +54,7 @@ def axis_angle_to_rot_mat(axis, theta):
 
 
 def is_rot_mat(mat, tol=1e-6):
-    """Checks if a matrix is a valid rotation matrix.
+    r"""Checks if a matrix is a valid rotation matrix.
 
     Args:
         mat (numpy.ndarray): A :math:`3\times 3` matrix.
@@ -70,11 +70,11 @@ def is_rot_mat(mat, tol=1e-6):
 
 
 def rot_mat_to_euler_angles(rot_mat, tol=1e-6):
-    """Converts a rotation matrix into Euler angles (rotation angles around
-    the x, y, and z axes).
+    r"""Converts a rotation matrix into Euler angles (rotation angles around
+    the :math:`x`, :math:`y`, and :math:`z` axes).
 
     Args:
-        rot_mat (numpy.ndarray): A :math:`3\times 3` rotation matrix.
+        rot_mat (numpy.ndarray): :math:`3\times 3` rotation matrix.
         tol (float, optional): Tolerance for checking singularity.
 
     Returns:
