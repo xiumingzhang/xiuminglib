@@ -189,15 +189,11 @@ class PerspCam:
         i.e., rotation and translation that transform a point from object space
         to camera space.
 
-        Two coordinate systems involved:
-
-        1. Object space "obj";
-
-        2. Camera space, following the computer vision convention "cv":
-          - :math:`+x` is horizontal, pointing right (to align with pixel
-            coordinates);
-          - :math:`+y` is vertical, pointing down;
-          - :math:`+z` is the look-at direction (because right-handed).
+        Two coordinate systems involved: object space "obj" and camera space
+        following the computer vision convention "cv", where :math:`+x`
+        horizontally points right (to align with pixel coordinates), :math:`+y`
+        vertically points down, and :math:`+z` is the look-at direction
+        (because right-handed).
         """
         # cv axes expressed in obj space
         cvz_obj = self.lookat - self.loc
