@@ -7,11 +7,13 @@ def to_homo(pts):
     """Pads 2/3D points to homogeneous, by guessing which dimension to pad.
 
     Args:
-        pts (numpy.ndarray): Input array of 2D or 3D points.
+        pts (array_like): Input array of 2D or 3D points.
 
     Returns:
         numpy.ndarray: Homogeneous coordinates of the input points.
     """
+    pts = np.array(pts)
+
     if pts.ndim == 1:
         pts_homo = np.hstack((pts, 1))
 
