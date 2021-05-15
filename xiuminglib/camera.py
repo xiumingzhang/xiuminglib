@@ -8,6 +8,10 @@ from .geometry.rot import is_rot_mat, rot_mat_to_euler_angles
 from .linalg import normalize
 
 
+GLCAM_TO_CVCAM = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+CVCAM_TO_GLCAM = np.linalg.inv(GLCAM_TO_CVCAM)
+
+
 class PerspCam:
     r"""Perspective camera in 35mm format.
 
@@ -357,7 +361,7 @@ class PerspCam:
         cam_type = cam_type.lower()
         if cam_type in ('cv', 'opencv'):
             obj2cam = self.ext_mat
-        elif cam_type in ('opengl', 'blender'):
+        elif cam_type in ('gl', 'opengl', 'blender'):
             # Additional 180-degree rotation around x-axis
             rot = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
             obj2cam = rot.dot(self.ext_mat)
