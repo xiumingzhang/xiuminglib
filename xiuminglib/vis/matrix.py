@@ -70,12 +70,12 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-    ok_version = '2.0.2'
-    if matplotlib.__version__ != ok_version:
-        logger.warning(
-            ("Developed and tested with Matplotlib %s (you are using %s). "
-             "Known to be buggy with 3.0.0"),
-            ok_version, matplotlib.__version__)
+    buggy_ver = ('3.0.0',)
+    this_ver = matplotlib.__version__
+    if this_ver in buggy_ver:
+        logger.warning((
+            "Developed and tested with Matplotlib 2.0.2. Maybe buggy with "
+            f"the current version: {this_ver}"))
 
     if outpath is None:
         outpath = join(const.Dir.tmp, 'matrix_as_heatmap.png')
@@ -139,4 +139,4 @@ def matrix_as_heatmap(mat, cmap='viridis', center_around_zero=False,
 
     plt.close('all')
 
-    logger.info("Matrix visualized as heatmap to:\n\t%s", outpath)
+    logger.debug("Matrix visualized as heatmap to:\n\t%s", outpath)
