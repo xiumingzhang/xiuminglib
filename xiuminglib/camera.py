@@ -32,10 +32,11 @@ class PerspCam:
           having nothing to do with ``im_res``.
     """
     def __init__(
-            self, f_pix=533.33, im_res=(256, 256),
+            self, name='cam', f_pix=533.33, im_res=(256, 256),
             loc=(1, 1, 1), lookat=(0, 0, 0), up=(0, 1, 0)):
         """
         Args:
+            name (str, optional): Camera name.
             f_pix (float, optional): Focal length in pixel.
             im_res (array_like, optional): Image height and width in pixels.
             loc (array_like, optional): Camera location in object space.
@@ -44,11 +45,22 @@ class PerspCam:
             up (array_like, optional): Vector in object space that, when
                 projected, points upward in image.
         """
-        self._f_pix = f_pix
-        self._im_h, self._im_w = im_res
+        self._name = str(name)
+        self._f_pix = float(f_pix)
+        self._im_h = int(im_res[0])
+        self._im_w = int(im_res[1])
         self._loc = np.array(loc)
         self._lookat = np.array(lookat)
         self._up = np.array(up)
+
+    @property
+    def name(self):
+        """str: Camera name."""
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = str(value)
 
     @property
     def f_pix(self):
@@ -296,7 +308,7 @@ class PerspCam:
             app = app.lower()
         if app is None:
             prop_dict = {
-                'f_mm': self.f_mm, 'f_pix': self.f_pix,
+                'name': self.name, 'f_mm': self.f_mm, 'f_pix': self.f_pix,
                 'sensor_fit_horizontal': self.sensor_fit_horizontal,
                 'sensor_w': self.sensor_w,
                 'sensor_w_active': self.sensor_w_active,
@@ -309,7 +321,8 @@ class PerspCam:
                 'ext_mat': self.ext_mat, 'proj_mat': self.proj_mat}
         elif app == 'blender':
             prop_dict = {
-                'f_mm': self.f_mm, 'im_h': self.im_h, 'im_w': self.im_w,
+                'name': self.name, 'f_mm': self.f_mm,
+                'im_h': self.im_h, 'im_w': self.im_w,
                 'sensor_fit_horizontal': self.sensor_fit_horizontal,
                 'sensor_h': self.sensor_h, 'sensor_w': self.sensor_w,
                 'loc': self.loc, 'rot_euler_deg': self.blender_rot_euler}
