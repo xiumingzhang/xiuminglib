@@ -32,11 +32,11 @@ class PerspCam:
           having nothing to do with ``im_res``.
     """
     def __init__(
-            self, f=50., im_res=(256, 256), loc=(1, 1, 1), lookat=(0, 0, 0),
-            up=(0, 1, 0)):
+            self, f_pix=533.33, im_res=(256, 256),
+            loc=(1, 1, 1), lookat=(0, 0, 0), up=(0, 1, 0)):
         """
         Args:
-            f (float, optional): 35mm format-equivalent focal length in mm.
+            f_pix (float, optional): Focal length in pixel.
             im_res (array_like, optional): Image height and width in pixels.
             loc (array_like, optional): Camera location in object space.
             lookat (array_like, optional): Where the camera points to in
@@ -44,20 +44,20 @@ class PerspCam:
             up (array_like, optional): Vector in object space that, when
                 projected, points upward in image.
         """
-        self._f_mm = f
+        self._f_pix = f_pix
         self._im_h, self._im_w = im_res
         self._loc = np.array(loc)
         self._lookat = np.array(lookat)
         self._up = np.array(up)
 
     @property
-    def f_mm(self):
-        """float: 35mm format-equivalent focal length in mm."""
-        return self._f_mm
+    def f_pix(self):
+        """float: Focal length in pixels."""
+        return self._f_pix
 
-    @f_mm.setter
-    def f_mm(self, value):
-        self._f_mm = float(value)
+    @f_pix.setter
+    def f_pix(self, value):
+        self._f_pix = float(value)
 
     @property
     def im_h(self):
@@ -153,9 +153,13 @@ class PerspCam:
         return self.im_h * self.mm_per_pix
 
     @property
-    def f_pix(self):
-        """float: Focal length in pixels."""
-        return self.f_mm / self.mm_per_pix
+    def f_mm(self):
+        """float: 35mm format-equivalent focal length in mm."""
+        return self.mm_per_pix * self.f_pix
+
+    @f_mm.setter
+    def f_mm(self, value):
+        self._f_pix = float(value) / self.mm_per_pix
 
     @property
     def int_mat(self):
@@ -177,11 +181,9 @@ class PerspCam:
         f_pix = mat[0, 0]
         assert f_pix == mat[1, 1], "X and Y focal lengths are different"
         # Set relevant properties
+        self.f_pix = f_pix
         self.im_w = mat[0, 2] * 2
         self.im_h = mat[1, 2] * 2
-        # This must be after image size updates, because mm_per_pix depends on
-        # the new image size
-        self.f_mm = f_pix * self.mm_per_pix
 
     @property
     def ext_mat(self):
