@@ -544,6 +544,31 @@ class PerspCam:
         ray_dirs = np.stack(ray_dirs, axis=2)
         return ray_dirs # HxWx(S^2)x3
 
+    def resize(self, new_h=None, new_w=None):
+        """Updates the camera intrinsics according to the new size.
+
+        Args:
+            new_h (int, optional): Target height. If ``None``, will be
+                calculated according to the target width, assuming the same
+                aspect ratio.
+            new_w (int, optional): Target width. If ``None``, will be calculated
+                according to the target height, assuming the same aspect ratio.
+        """
+        if new_h is not None and new_w is not None:
+            assert int(self.im_h / self.im_w * new_w) == new_h, \
+                "Aspect ratio change violates the `f_x == f_y` assumption"
+        elif new_h is None and new_w is not None:
+            new_h = int(self.im_h / self.im_w * new_w)
+        elif new_h is not None and new_w is None:
+            new_w = int(self.im_w / self.im_h * new_h)
+        else:
+            raise ValueError(
+                "At least one of new height or width must be given")
+        # Update relevant properties
+        self.f_pix = new_h / float(self.im_h) * self.f_pix
+        self.im_h = new_h
+        self.im_w = new_w
+
 
 def safe_cast_to_int(x):
     """Casts a string or float to integer only when safe.
