@@ -1,12 +1,13 @@
 from os.path import join, dirname
 import numpy as np
 
-from ..log import get_logger
-logger = get_logger()
-
+from .text import put_text
 from .. import const
 from ..os import makedirs
 from ..imprt import preset_import
+
+from ..log import get_logger
+logger = get_logger()
 
 
 def make_video(
@@ -107,4 +108,113 @@ def make_video(
     else:
         raise ValueError(method)
 
-    logger.info("Images written as a video to:\n%s", outpath)
+    logger.debug("Images written as a video to:\n%s", outpath)
+
+
+def make_comparison_video(
+        imgs1, imgs2, bar_width=4, bar_color=(1, 0, 0), sweep_vertically=False,
+        sweeps=1, label1='', label2='', font_size=None, font_ttf=None,
+        label1_top_left_xy=None, label2_top_left_xy=None, **make_video_kwargs):
+    """Writes two lists of images into a comparison video that toggles between
+    two videos with a sweeping bar.
+
+    Args:
+        imgs? (list(numpy.ndarray)): Each image should be of type ``uint8`` or
+            ``uint16`` and of shape H-by-W (grayscale) or H-by-W-by-3 (RGB).
+        bar_width (int, optional): Width of the sweeping bar.
+        bar_color (tuple(float), optional): Bar and label RGB, normalized to
+            :math:`[0,1]`. Defaults to red.
+        sweep_vertically (bool, optional): Whether to sweep vertically or
+            horizontally.
+        sweeps (int, optional): Number of sweeps.
+        label? (str, optional): Label for each video.
+        font_size (int, optional): Font size.
+        font_ttf (str, optional): Path to the .ttf font file. Defaults to Arial.
+        label?_top_left_xy (tuple(int), optional): The XY coordinate of the
+            label's top left corner.
+        make_video_kwargs (dict, optional): Keyword arguments for
+            :func:`make_video`.
+
+    Writes
+        - A comparison video.
+    """
+    # Bar is perpendicular to sweep-along
+    sweep_along = 0 if sweep_vertically else 1
+    bar_along = 1 if sweep_vertically else 0
+
+    # Number of frames
+    n_frames = len(imgs1)
+    assert n_frames == len(imgs2), \
+        "Videos to be compared have different numbers of frames"
+
+    img_shape = imgs1[0].shape
+
+    # Bar color according to image dtype
+    img_dtype = imgs1[0].dtype
+    bar_color = np.array(bar_color, dtype=img_dtype)
+    if np.issubdtype(img_dtype, np.integer):
+        bar_color *= np.iinfo(img_dtype).max
+
+    # Map from frame index to bar location, considering possibly multiple trips
+    bar_locs = []
+    for i in range(sweeps):
+        ind = np.arange(0, img_shape[sweep_along])
+        if i % 2 == 1: # reverse every other trip
+            ind = ind[::-1]
+        bar_locs.append(ind)
+    bar_locs = np.hstack(bar_locs) # all possible locations
+    ind = np.linspace(0, len(bar_locs) - 1, num=n_frames, endpoint=True)
+    bar_locs = [bar_locs[int(x)] for x in ind] # uniformly sampled
+
+    # Label locations
+    if label1_top_left_xy is None:
+        # Label 1 at top left corner
+        label1_top_left_xy = (int(0.1 * img_shape[1]), int(0.05 * img_shape[0]))
+    if label2_top_left_xy is None:
+        if sweep_vertically:
+            # Label 2 at bottom left corner
+            label2_top_left_xy = (
+                int(0.1 * img_shape[1]), int(0.75 * img_shape[0]))
+        else:
+            # Label 2 at top right corner
+            label2_top_left_xy = (
+                int(0.7 * img_shape[1]), int(0.05 * img_shape[0]))
+
+    frames = []
+    for i, (img1, img2) in enumerate(zip(imgs1, imgs2)):
+        assert img1.shape == img_shape, f"`imgs1[{i}]` has a differnet shape"
+        assert img2.shape == img_shape, f"`imgs2[{i}]` has a differnet shape"
+        assert img1.dtype == img_dtype, f"`imgs1[{i}]` has a differnet dtype"
+        assert img2.dtype == img_dtype, f"`imgs2[{i}]` has a differnet dtype"
+
+        # Label the two images
+        img1 = put_text(
+            img1, label1, label_top_left_xy=label1_top_left_xy,
+            font_size=font_size, font_color=bar_color, font_ttf=font_ttf)
+        img2 = put_text(
+            img2, label2, label_top_left_xy=label2_top_left_xy,
+            font_size=font_size, font_color=bar_color, font_ttf=font_ttf)
+
+        # Bar start and end
+        bar_loc = bar_locs[i]
+        bar_width_half = bar_width // 2
+        bar_start = max(0, bar_loc - bar_width_half)
+        bar_end = min(bar_loc + bar_width_half, img_shape[sweep_along])
+
+        # Up to bar start, we show Image 1; bar end onwards, Image 2
+        img1 = np.take(img1, range(bar_start), axis=sweep_along)
+        img2 = np.take(
+            img2, range(bar_end, img_shape[sweep_along]), axis=sweep_along)
+
+        # Between the two images, we show the bar
+        actual_bar_width = img_shape[
+            sweep_along] - img1.shape[sweep_along] - img2.shape[sweep_along]
+        reps = [1, 1, 1]
+        reps[sweep_along] = actual_bar_width
+        reps[bar_along] = img_shape[bar_along]
+        bar_img = np.tile(bar_color, reps)
+
+        frame = np.concatenate((img1, bar_img, img2), axis=sweep_along)
+        frames.append(frame)
+
+    make_video(frames, **make_video_kwargs)
