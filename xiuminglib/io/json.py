@@ -24,8 +24,8 @@ def write(dict_, path):
         json.dump(dict_, h, indent=4, sort_keys=True)
 
 
-def load(path):
-    """Loads a JSON.
+def read(path):
+    """Reads a JSON.
 
     Args:
         path (str): Path to the JSON file.
