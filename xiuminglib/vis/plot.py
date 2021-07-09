@@ -128,7 +128,7 @@ class Plot:
             ax.set_zlabel(self.zlabel, fontsize=self.zlabel_fontsize)
 
     def _set_axis_ticks(self, ax):
-        # FIXME: if xticks is not provided, xticks_fontsize and xticks_rotation have
+        # FIXME: If xticks is not provided, xticks_fontsize and xticks_rotation have
         # no effect, which shouldn't be the case
         if self.xticks is not None:
             ax.set_xticklabels(
@@ -234,7 +234,7 @@ class Plot:
         Writes
             - One or multiple (if ``views`` is provided) views of the 3D plot.
         """
-        from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-import
+        from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-variable
         #
         outpath = join(const.Dir.tmp, 'scatter3d.png') if self.outpath is None \
             else self.outpath
@@ -264,7 +264,7 @@ class Plot:
             self._set_axes_equal(ax, xyz)
         if need_colorbar:
             self.plt.colorbar(plot_objs)
-            # TODO: this seems to mess up equal axes
+            # FIXME: This seems to mess up equal axes
         # Save plot
         outpaths = []
         if outpath.endswith('.png'):
