@@ -14,37 +14,34 @@ def preset_import(name, assert_success=False):
     """A unified importer for both regular and ``google3`` modules, according
     to specified presets/profiles (e.g., ignoring ``ModuleNotFoundError``).
     """
-    if name in ('cv2', 'opencv'):
+    if name == 'cv2':
         try:
             # BUILD dep:
-            # "//third_party/py/cvx2",
+            #     "//third_party/py/cvx2",
             from cvx2 import latest as mod
             # Or
             # BUILD dep:
-            # "//third_party/OpenCVX:cvx2",
+            #     "//third_party/OpenCVX:cvx2",
             # from google3.third_party.OpenCVX import cvx2 as cv2
         except ModuleNotFoundError:
             mod = import_module_404ok('cv2')
 
-    elif name in ('tf', 'tensorflow'):
-        mod = import_module_404ok('tensorflow')
-
     elif name == 'gfile':
         # BUILD deps:
-        # "//pyglib:gfile",
-        # "//file/colossus/cns",
+        #     "//pyglib:gfile",
+        #     "//file/colossus/cns",
         mod = import_module_404ok('google3.pyglib.gfile')
 
     elif name == 'video_api':
-        # BUILD deps:
-        # "//learning/deepmind/video/python:video_api",
+        # BUILD dep:
+        #     "//learning/deepmind/video/python:video_api",
         mod = import_module_404ok(
             'google3.learning.deepmind.video.python.video_api')
 
-    elif name in ('bpy', 'bmesh', 'OpenEXR', 'Imath'):
+    elif name in ('tensorflow', 'bpy', 'bmesh', 'OpenEXR', 'Imath'):
         # BUILD deps:
-        # "//third_party/py/Imath",
-        # "//third_party/py/OpenEXR",
+        #     "//third_party/py/Imath",
+        #     "//third_party/py/OpenEXR",
         mod = import_module_404ok(name)
 
     elif name in ('Vector', 'Matrix', 'Quaternion'):
@@ -53,6 +50,10 @@ def preset_import(name, assert_success=False):
 
     elif name == 'BVHTree':
         mod = import_module_404ok('mathutils.bvhtree')
+        mod = _get_module_class(mod, name)
+
+    elif name == 'Image':
+        mod = import_module_404ok('PIL')
         mod = _get_module_class(mod, name)
 
     else:

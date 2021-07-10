@@ -84,7 +84,8 @@ def resize(arr, new_h=None, new_w=None, method='cv2'):
             according to the target width, assuming the same aspect ratio.
         new_w (int, optional): Target width. If ``None``, will be calculated
             according to the target height, assuming the same aspect ratio.
-        method (str, optional): Accepted values: ``'cv2'`` and ``'tf'``.
+        method (str, optional): Accepted values: ``'cv2'``, ``'tf'``, and
+            ``'pil'``.
 
     Returns:
         numpy.ndarray: Resized image.
@@ -102,6 +103,8 @@ def resize(arr, new_h=None, new_w=None, method='cv2'):
     else:
         raise ValueError("At least one of new height or width must be given")
 
+    method = method.lower()
+
     if method in ('tf', 'tensorflow'):
         tf = preset_import('tensorflow', assert_success=True)
         tf.compat.v1.enable_eager_execution()
@@ -114,6 +117,12 @@ def resize(arr, new_h=None, new_w=None, method='cv2'):
         cv2 = preset_import('cv2', assert_success=True)
         interp = cv2.INTER_LINEAR if new_h > h else cv2.INTER_AREA
         resized = cv2.resize(arr, (new_w, new_h), interpolation=interp)
+
+    elif method in ('pil', 'pillow'):
+        Image = preset_import('Image', assert_success=True)
+        img = Image.fromarray(arr)
+        img = img.resize((new_w, new_h))
+        resized = np.array(img)
 
     else:
         raise NotImplementedError(method)
