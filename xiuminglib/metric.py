@@ -167,7 +167,7 @@ class SSIM(Base):
         Returns:
             float: SSIM computed (higher is better).
         """
-        tf = preset_import('tf', assert_success=True)
+        tf = preset_import('tensorflow', assert_success=True)
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
@@ -219,7 +219,7 @@ class LPIPS(Base):
                 Defaults to the bundled ``net-lin_alex_v0.1.pb``.
         """
         super().__init__(dtype)
-        tf = preset_import('tf', assert_success=True)
+        tf = preset_import('tensorflow', assert_success=True)
         if weight_pb is None:
             weight_pb = Path.lpips_weights
         # Pack LPIPS network into a tf function
@@ -231,7 +231,7 @@ class LPIPS(Base):
 
     @staticmethod
     def _wrap_frozen_graph(graph_def, inputs, outputs):
-        tf = preset_import('tf', assert_success=True)
+        tf = preset_import('tensorflow', assert_success=True)
 
         def _imports_graph_def():
             tf.compat.v1.import_graph_def(graph_def, name="")
@@ -251,7 +251,7 @@ class LPIPS(Base):
         Returns:
             float: LPIPS computed (lower is better).
         """
-        tf = preset_import('tf', assert_success=True)
+        tf = preset_import('tensorflow', assert_success=True)
         self._assert_type(im1)
         self._assert_type(im2)
         im1 = im1.astype(float) # must be cast to an unbounded type
