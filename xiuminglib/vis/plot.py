@@ -20,8 +20,7 @@ class Plot:
             axis_lim=None,
             axis_ticks=None, axis_tick_labels=None,
             axis_tick_label_fontsizes=None, axis_tick_label_rotations=None,
-            grid=True,
-            outpath=None):
+            grid=True):
         """Plotter.
 
         Args:
@@ -51,8 +50,6 @@ class Plot:
                 rotations in degrees, mapping ``'x'``, ``'y'``, or ``'z'``
                 to a float.
             grid (bool, optional): Whether to draw grid.
-            outpath (str, optional): Path to which the plot is saved to. Should
-                end with ``'.png'``, and ``None`` means to ``const.Dir.tmp``.
         """
         import matplotlib
         matplotlib.use('Agg')
@@ -75,7 +72,6 @@ class Plot:
         self.axis_tick_label_rotations = self._init_axis_dict(
             axis_tick_label_rotations)
         self.grid = grid
-        self.outpath = outpath
 
     @staticmethod
     def _init_axis_dict(overrides):
@@ -186,7 +182,7 @@ class Plot:
             else:
                 ax.set_title(self.figtitle, fontsize=self.figtitle_fontsize)
 
-    def bar(self, y, group_width=0.8):
+    def bar(self, y, group_width=0.8, outpath=None):
         """Bar plot.
 
         Args:
@@ -194,12 +190,17 @@ class Plot:
                 or N-array of N groups, each with one bar.
             group_width (float, optional): Width allocated to each group,
                 shared by all bars within the group.
+            outpath (str, optional): Path to which the plot is saved. ``None``
+                means a temporary file in ``const.Dir.tmp``.
+
+        Returns:
+            str: Path to the plot written.
 
         Writes
             - The bar plot.
         """
-        outpath = join(const.Dir.tmp, 'bar.png') if self.outpath is None \
-            else self.outpath
+        if outpath is None:
+            outpath = join(const.Dir.tmp, 'bar.png')
         fig = self._create_fig()
         ax = fig.add_subplot(111)
         self._set_title(ax)
@@ -229,7 +230,8 @@ class Plot:
         return outpath
 
     def scatter3d(
-            self, xyz, colors=None, size=None, equal_axes=False, views=None):
+            self, xyz, colors=None, size=None, equal_axes=False, views=None,
+            outpath=None):
         """3D scatter plot.
 
         Args:
@@ -243,14 +245,19 @@ class Plot:
             views (list(tuple), optional): List of elevation-azimuth angle pairs
                 (in degrees). A good set of views is ``[(30, 0), (30, 45),
                 (30, 90), (30, 135)]``.
+            outpath (str, optional): Path to which the plot is saved. ``None``
+                means a temporary file in ``const.Dir.tmp``.
+
+        Returns:
+            str: Path to the plot written.
 
         Writes
             - One or multiple (if ``views`` is provided) views of the 3D plot.
         """
         from mpl_toolkits.mplot3d import Axes3D # noqa; pylint: disable=unused-variable
         #
-        outpath = join(const.Dir.tmp, 'scatter3d.png') if self.outpath is None \
-            else self.outpath
+        if outpath is None:
+            outpath = join(const.Dir.tmp, 'scatter3d.png')
         fig = self._create_fig()
         ax = fig.add_subplot(111, projection='3d')
         self._set_title(ax)
@@ -297,7 +304,7 @@ class Plot:
         self.plt.close('all')
         return outpaths
 
-    def line(self, xy, width=None, marker=None, marker_size=None):
+    def line(self, xy, width=None, marker=None, marker_size=None, outpath=None):
         """Line/curve plot.
 
         Args:
@@ -306,12 +313,17 @@ class Plot:
             width (float, optional): Line width.
             marker (str, optional): Marker.
             marker_size (float, optional): Marker size.
+            outpath (str, optional): Path to which the plot is saved. ``None``
+                means a temporary file in ``const.Dir.tmp``.
+
+        Returns:
+            str: Path to the plot written.
 
         Writes
             - The line plot.
         """
-        outpath = join(const.Dir.tmp, 'line.png') if self.outpath is None \
-            else self.outpath
+        if outpath is None:
+            outpath = join(const.Dir.tmp, 'line.png')
         fig = self._create_fig()
         ax = fig.add_subplot(111)
         self._set_title(ax)
