@@ -34,6 +34,7 @@ def read_or_write(data_f, fallback=None):
     def load_func(path):
         with open_file(path, 'rb') as h:
             data = np.load(h)
+            data = dict(data)
         return data
 
     def save_func(data, path):
@@ -49,19 +50,19 @@ def read_or_write(data_f, fallback=None):
     # Load or call fallback
     if exists_isdir(data_f)[0]:
         data = load_func(data_f)
-        msg = "Loaded: "
+        msg = "Loaded:"
     else:
         msg = "File doesn't exist "
         if fallback is None:
             data = None
-            msg += "(fallback not provided): "
+            msg += "(fallback not provided):"
         else:
             data = fallback()
             out_dir = dirname(data_f)
             makedirs(out_dir)
             save_func(data, data_f)
-            msg += "(fallback provided); fallback return now saved to: "
-    msg += data_f
+            msg += "(fallback return saved):"
+    msg += "\n\t" + data_f
 
     logger.info(msg)
     return data
