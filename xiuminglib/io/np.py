@@ -34,7 +34,8 @@ def read_or_write(data_f, fallback=None):
     def load_func(path):
         with open_file(path, 'rb') as h:
             data = np.load(h)
-            data = dict(data)
+            if path.endswith('.npz'):
+                data = dict(data)
         return data
 
     def save_func(data, path):
