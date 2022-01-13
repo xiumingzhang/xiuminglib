@@ -1,8 +1,6 @@
 import math
 import numpy as np
 
-from ..linalg import normalize
-
 from ..log import get_logger
 logger = get_logger()
 
