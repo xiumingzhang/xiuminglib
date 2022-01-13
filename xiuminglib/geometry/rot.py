@@ -11,7 +11,15 @@ def _warn_degree(angles):
     if (np.abs(angles) > 2 * np.pi).any():
         logger.warning((
             "Some input value falls outside [-2pi, 2pi]. You sure inputs are "
-            "in radians"))
+            "in radians?"))
+
+
+def rad2deg(x):
+    return x / np.pi * 180
+
+
+def deg2rad(x):
+    return x / 180 * np.pi
 
 
 def is_rot_mat(mat, tol=1e-6):

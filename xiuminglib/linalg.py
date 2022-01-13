@@ -1,5 +1,7 @@
 import numpy as np
 
+from .geometry.rot import rad2deg
+
 
 def is_symmetric(mat, eps=None):
     """Checks if a matrix is symmetric.
@@ -62,9 +64,9 @@ def angle_between(vec1, vec2, radian=True):
     vec2 = np.array(vec2)
     cos = np.dot(vec1, vec2) / np.linalg.norm(vec1) / np.linalg.norm(vec2)
     angle = np.arccos(np.clip(cos, -1, 1))
-    if not radian:
-        angle = angle / np.pi * 180
-    return angle
+    if radian:
+        return angle
+    return rad2deg(angle)
 
 
 def normalize(vecs, axis=0):

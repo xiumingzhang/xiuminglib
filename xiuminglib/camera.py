@@ -5,7 +5,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from .geometry.proj import to_homo, from_homo
-from .geometry.rot import is_rot_mat
+from .geometry.rot import is_rot_mat, rad2deg
 from .linalg import normalize
 
 
@@ -131,7 +131,7 @@ class PerspCam:
         alpha_v = 2 * np.arctan(self.sensor_h / (2 * self.f_mm))
         alpha_h = 2 * np.arctan(self.sensor_w / (2 * self.f_mm))
         alpha = np.array([alpha_v, alpha_h])
-        return alpha / np.pi * 180
+        return rad2deg(alpha)
 
     @property
     def sensor_w(self):
