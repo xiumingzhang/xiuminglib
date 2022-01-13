@@ -2,9 +2,10 @@
 
 import json
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from .geometry.proj import to_homo, from_homo
-from .geometry.rot import is_rot_mat, rot_mat_to_euler_angles
+from .geometry.rot import is_rot_mat
 from .linalg import normalize
 
 
@@ -286,8 +287,9 @@ class PerspCam:
         """numpy.ndarray: Euler rotations in degrees."""
         c2o = self.get_cam2obj(cam_type='blender')
         rot_mat = c2o[:3, :3]
-        euler_angles = rot_mat_to_euler_angles(rot_mat)
-        return euler_angles / np.pi * 180
+        rot = Rotation.from_matrix(rot_mat)
+        euler_angles = rot.as_euler('xyz', degrees=True)
+        return euler_angles
 
     def to_dict(self, app=None):
         """Converts this camera to a dictionary of its properties.
