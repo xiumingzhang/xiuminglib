@@ -304,7 +304,9 @@ class Plot:
         self.plt.close('all')
         return outpaths
 
-    def line(self, xy, width=None, marker=None, marker_size=None, outpath=None):
+    def line(
+            self, xy, width=None, marker=None, marker_size=None,
+            marker_hollow=False, outpath=None):
         """Line/curve plot.
 
         Args:
@@ -313,6 +315,7 @@ class Plot:
             width (float, optional): Line width.
             marker (str, optional): Marker.
             marker_size (float, optional): Marker size.
+            marker_hollow (bool, optional): Whether marker is hollow.
             outpath (str, optional): Path to which the plot is saved. ``None``
                 means a temporary file in ``const.Dir.tmp``.
 
@@ -338,6 +341,8 @@ class Plot:
                 kwargs['marker'] = marker
             if marker_size is not None:
                 kwargs['markersize'] = marker_size
+            if marker_hollow:
+                kwargs['markerfacecolor'] = 'none'
             kwargs_list.append(kwargs)
         # Plot
         plot_objs = []
